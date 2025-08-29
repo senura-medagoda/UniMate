@@ -91,39 +91,87 @@ const MarketPlace_Collection = () => {
         </p>
 
         {/* Category Filter */}
-        <div className={`border border-gray-300 pl-5 py-3 mt-6 ${showFilter ? '' : 'hidden'} sm:block`}>
-          <p className='mb-3 text-sm font-medium'>CATEGORIES</p>
-          <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
-            <label className='flex gap-2'>
-              <input type="checkbox" value="Electronics" onChange={toggleCategory} /> Electronics
+        <div className={`bg-gradient-to-br from-orange-50/90 to-yellow-50/90 backdrop-blur-md rounded-xl p-5 mt-6 border border-orange-200/40 shadow-sm ${showFilter ? '' : 'hidden'} sm:block`}>
+          <p className='mb-4 text-sm font-semibold text-orange-800 uppercase tracking-wide'>Categories</p>
+          <div className='flex flex-col gap-3 text-sm'>
+            <label className='flex items-center gap-3 cursor-pointer group'>
+              <input 
+                type="checkbox" 
+                value="Electronics" 
+                onChange={toggleCategory}
+                className='w-4 h-4 text-orange-600 bg-white/60 border-orange-300 rounded focus:ring-orange-400 focus:ring-2'
+              /> 
+              <span className='text-gray-700 group-hover:text-orange-700 transition-colors font-medium'>Electronics</span>
             </label>
-            <label className='flex gap-2'>
-              <input type="checkbox" value="Furniture" onChange={toggleCategory} /> Furniture
+            <label className='flex items-center gap-3 cursor-pointer group'>
+              <input 
+                type="checkbox" 
+                value="Furniture" 
+                onChange={toggleCategory}
+                className='w-4 h-4 text-orange-600 bg-white/60 border-orange-300 rounded focus:ring-orange-400 focus:ring-2'
+              /> 
+              <span className='text-gray-700 group-hover:text-orange-700 transition-colors font-medium'>Furniture</span>
             </label>
-            <label className='flex gap-2'>
-              <input type="checkbox" value="Clothing" onChange={toggleCategory} /> Clothing
+            <label className='flex items-center gap-3 cursor-pointer group'>
+              <input 
+                type="checkbox" 
+                value="Clothing" 
+                onChange={toggleCategory}
+                className='w-4 h-4 text-orange-600 bg-white/60 border-orange-300 rounded focus:ring-orange-400 focus:ring-2'
+              /> 
+              <span className='text-gray-700 group-hover:text-orange-700 transition-colors font-medium'>Clothing</span>
             </label>
           </div>
         </div>
 
         {/* SubCategory Filter */}
-        <div className={`border border-gray-300 pl-5 py-3 my-5 ${showFilter ? '' : 'hidden'} sm:block`}>
-          <p className='mb-3 text-sm font-medium'>TYPE</p>
-          <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
-            <label className='flex gap-2'>
-              <input type="checkbox" value="Laptop" onChange={toggleSubCategory} /> Laptop
+        <div className={`bg-gradient-to-br from-orange-50/90 to-yellow-50/90 backdrop-blur-md rounded-xl p-5 mt-4 border border-orange-200/40 shadow-sm ${showFilter ? '' : 'hidden'} sm:block`}>
+          <p className='mb-4 text-sm font-semibold text-orange-800 uppercase tracking-wide'>Type</p>
+          <div className='flex flex-col gap-3 text-sm'>
+            <label className='flex items-center gap-3 cursor-pointer group'>
+              <input 
+                type="checkbox" 
+                value="Laptop" 
+                onChange={toggleSubCategory}
+                className='w-4 h-4 text-orange-600 bg-white/60 border-orange-300 rounded focus:ring-orange-400 focus:ring-2'
+              /> 
+              <span className='text-gray-700 group-hover:text-orange-700 transition-colors font-medium'>Laptop</span>
             </label>
-            <label className='flex gap-2'>
-              <input type="checkbox" value="Accessories" onChange={toggleSubCategory} /> Accessories
+            <label className='flex items-center gap-3 cursor-pointer group'>
+              <input 
+                type="checkbox" 
+                value="Accessories" 
+                onChange={toggleSubCategory}
+                className='w-4 h-4 text-orange-600 bg-white/60 border-orange-300 rounded focus:ring-orange-400 focus:ring-2'
+              /> 
+              <span className='text-gray-700 group-hover:text-orange-700 transition-colors font-medium'>Accessories</span>
             </label>
-            <label className='flex gap-2'>
-              <input type="checkbox" value="Topwear" onChange={toggleSubCategory} /> Topwear
+            <label className='flex items-center gap-3 cursor-pointer group'>
+              <input 
+                type="checkbox" 
+                value="Topwear" 
+                onChange={toggleSubCategory}
+                className='w-4 h-4 text-orange-600 bg-white/60 border-orange-300 rounded focus:ring-orange-400 focus:ring-2'
+              /> 
+              <span className='text-gray-700 group-hover:text-orange-700 transition-colors font-medium'>Topwear</span>
             </label>
-            <label className='flex gap-2'>
-              <input type="checkbox" value="Bottomwear" onChange={toggleSubCategory} /> Bottomwear
+            <label className='flex items-center gap-3 cursor-pointer group'>
+              <input 
+                type="checkbox" 
+                value="Bottomwear" 
+                onChange={toggleSubCategory}
+                className='w-4 h-4 text-orange-600 bg-white/60 border-orange-300 rounded focus:ring-orange-400 focus:ring-2'
+              /> 
+              <span className='text-gray-700 group-hover:text-orange-700 transition-colors font-medium'>Bottomwear</span>
             </label>
-            <label className='flex gap-2'>
-              <input type="checkbox" value="Footwear" onChange={toggleSubCategory} /> Footwear
+            <label className='flex items-center gap-3 cursor-pointer group'>
+              <input 
+                type="checkbox" 
+                value="Footwear" 
+                onChange={toggleSubCategory}
+                className='w-4 h-4 text-orange-600 bg-white/60 border-orange-300 rounded focus:ring-orange-400 focus:ring-2'
+              /> 
+              <span className='text-gray-700 group-hover:text-orange-700 transition-colors font-medium'>Footwear</span>
             </label>
           </div>
         </div>
