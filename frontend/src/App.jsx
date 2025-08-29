@@ -1,7 +1,9 @@
 import React from 'react'
 import { Route, Routes } from 'react-router'
 import { ToastContainer, toast } from 'react-toastify';
-
+import IndexPage from "./pages/IndexPage.jsx"
+import JP_index from "./pages/StudentUI/JobPortal/JP_index.jsx"
+import JP_jobs from './pages/StudentUI/JobPortal/JP_jobs.jsx'
 import MarketPlace_Home from "./pages/StudentUI/Marketplace/pages/MarketPlace_Home.jsx"
 import MarketPlace_Collection from "./pages/StudentUI/Marketplace/pages/MarketPlace_Collection.jsx"
 import MarketPlace_About from "./pages/StudentUI/Marketplace/pages/MarketPlace_About.jsx"
@@ -17,37 +19,24 @@ import M_SearchBar from './pages/StudentUI/Marketplace/components/M_SearchBar.js
 
 const App = () => {
   return (
-    <div className='min-h-screen flex flex-col'>
-      {/* Navbar - full width */}
-      
-      
-     
-      <div className='flex-grow px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
-        <ToastContainer />
-        <MarketPlace_Navbar/>
-        <M_SearchBar/>
-        <Routes>
-          <Route path='/' element={<MarketPlace_Home/>}/> {/* Default route */}
-          <Route  path='/M_home' element={<MarketPlace_Home/>}/>
-          <Route path='/M_collection' element={<MarketPlace_Collection/>}/>
-          <Route path='/M_about' element={<MarketPlace_About/>}/>
-          <Route path='/M_contact' element={<MarketPlace_Contact/>}/>
-          <Route path="/M_product/:productId" element={<MarketPlace_Product />} />
-          <Route path="/M_cart" element={<MarketPlace_Cart />} />
-          <Route path="/M_login" element={<MarketPlace_Login />} />
-          <Route path="/M_placeorder" element={<MarketPlace_PlaceOrder />} />
-          <Route path="/M_orders" element={<MarketPlace_Orders />} />
-          
-          {/* 404 Not Found route */}
-          <Route path="*" element={<div className="text-center py-20">
-            <h2 className="text-2xl font-bold">Page Not Found</h2>
-            <p className="text-gray-600 mt-2">The page you're looking for doesn't exist.</p>
-          </div>} />
-        </Routes>
-      </div>
-      
-      {/* Footer - full width, no padding */}
-      <M_Footer/>
+    <div data-theme="emerald" className="relative h-full w-full">
+    
+      <Routes>
+        <Route path="/" element={<IndexPage/>}/>
+        <Route path="/jobdash" element = {<JP_index/>}/>
+        <Route path="/jobs" element = {<JP_jobs/>}/>
+        <Route path='/' element={<MarketPlace_Home/>}/> {/* Default route */}
+        <Route  path='/M_home' element={<MarketPlace_Home/>}/>
+        <Route path='/M_collection' element={<MarketPlace_Collection/>}/>
+        <Route path='/M_about' element={<MarketPlace_About/>}/>
+        <Route path='/M_contact' element={<MarketPlace_Contact/>}/>
+        <Route path="/M_product/:productId" element={<MarketPlace_Product />} />
+        <Route path="/M_cart" element={<MarketPlace_Cart />} />
+        <Route path="/M_login" element={<MarketPlace_Login />} />
+        <Route path="/M_placeorder" element={<MarketPlace_PlaceOrder />} />
+        <Route path="/M_orders" element={<MarketPlace_Orders />} />
+      </Routes>
+
     </div>
   )
 }
