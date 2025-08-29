@@ -3,6 +3,9 @@ import { ShopContext } from '../context/M_ShopContext'
 import { assets } from '../assets/assets';
 import M_Title from '../components/M_Title';
 import M_ProductItem from '../components/M_ProductItem';
+import MarketPlace_Navbar from '../components/MarketPlace_Navbar';
+import M_SearchBar from '../components/M_SearchBar'
+import M_Footer from '../components/M_Footer';
 
 const MarketPlace_Collection = () => {
   
@@ -67,6 +70,11 @@ const MarketPlace_Collection = () => {
 
 
   return (
+    <div>
+    <div className='mr-10 ml-10'>
+      <MarketPlace_Navbar/>
+      <M_SearchBar/>
+      
     <div className='flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t'>
       {/* Left Filters */}
       <div className='min-w-60'>
@@ -151,6 +159,9 @@ const MarketPlace_Collection = () => {
           ))}
         </div>
       </div>
+    </div>
+    </div>
+    <M_Footer/>
     </div>
   )
 }

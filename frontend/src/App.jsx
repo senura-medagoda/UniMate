@@ -1,6 +1,6 @@
 import React from 'react'
 import { Route, Routes } from 'react-router'
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify'
 import IndexPage from "./pages/IndexPage.jsx"
 import JP_index from "./pages/StudentUI/JobPortal/JP_index.jsx"
 import JP_jobs from './pages/StudentUI/JobPortal/JP_jobs.jsx'

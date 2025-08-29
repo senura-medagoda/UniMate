@@ -3,6 +3,7 @@ import M_Title from '../components/M_Title'
 import M_CartTotal from '../components/M_CartTotal'
 import { assets } from '../assets/assets'
 import { ShopContext } from '../context/M_ShopContext'
+import MarketPlace_Navbar from '../components/MarketPlace_Navbar'
 
 const MarketPlace_PlaceOrder = () => {
 
@@ -12,6 +13,8 @@ const MarketPlace_PlaceOrder = () => {
   const {navigate} =useContext(ShopContext);
 
   return (
+    <div className='mr-10 ml-10'>
+      <MarketPlace_Navbar/>
     <div className='flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t'>
       
       {/* --------- Left side--- */}
@@ -77,7 +80,7 @@ const MarketPlace_PlaceOrder = () => {
       </div>
 
 
-
+</div>
     </div>
   )
 }

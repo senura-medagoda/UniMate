@@ -1,12 +1,15 @@
 import React, { useContext } from 'react'
 import { ShopContext } from '../context/M_ShopContext'
 import M_Title from '../components/M_Title';
+import MarketPlace_Navbar from '../components/MarketPlace_Navbar';
 
 const MarketPlace_Orders = () => {
 
   const {products ,currency} =useContext(ShopContext);
 
   return (
+    <div className='mr-10 ml-10'>
+      <MarketPlace_Navbar/>
     <div className='border-t pt-16 mb-20'>
       <div className='text-2xl'>
         <M_Title  text1={'MY '} text2={'ORDERS'}/>
@@ -42,6 +45,7 @@ const MarketPlace_Orders = () => {
             </div>
           ))
         }
+      </div>
       </div>
       
     </div>

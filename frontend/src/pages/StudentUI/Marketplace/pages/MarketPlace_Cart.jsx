@@ -3,6 +3,8 @@ import { ShopContext } from '../context/M_ShopContext'
 import M_Title from '../components/M_Title';
 import { assets } from '../assets/assets';
 import M_CartTotal from '../components/M_CartTotal';
+import MarketPlace_Navbar from '../components/MarketPlace_Navbar'
+import M_Footer from '../components/M_Footer';
 
 const MarketPlace_Cart = () => {
 
@@ -33,6 +35,9 @@ const MarketPlace_Cart = () => {
   },[cartItems])
 
   return (
+    <div>
+    <div className='mr-10 ml-10'>
+      <MarketPlace_Navbar/>
     <div className='border-t pt-14'>
 
       <div className='text-2xl mb-3'>
@@ -83,7 +88,9 @@ const MarketPlace_Cart = () => {
       </div>
 
 
-      
+      </div>
+    </div>
+    <M_Footer/>
     </div>
   )
 }

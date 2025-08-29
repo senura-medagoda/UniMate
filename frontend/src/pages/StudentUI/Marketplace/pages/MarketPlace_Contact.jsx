@@ -2,10 +2,12 @@ import React from 'react'
 import M_Title from '../components/M_Title'
 import { assets } from '../assets/assets'
 import M_NewsletterBox from '../components/M_NewsletterBox'
+import MarketPlace_Navbar from '../components/MarketPlace_Navbar'
 
 const MarketPlace_Contact = () => {
   return (
-    <div>
+    <div className='mr-10 ml-10'>
+      <MarketPlace_Navbar/>
       <div className='text-center text-2xl pt-10 border-t'>
         <M_Title text1={'CONTACT'} text2={'US'}/>
       </div>
