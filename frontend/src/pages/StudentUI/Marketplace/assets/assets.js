@@ -1,6 +1,11 @@
 // ================= Imports =================
 
 // --- Icons & UI ---
+import contactussv from './contact-us-animate.svg'
+import AB from './about-us-page-animate.svg'
+import aboutUS from './Aboutuspage-bro.png'
+import unilogo from './unimatelogo.png'
+import unilogo1 from './unimatelogo1.png'
 import logo from './UniMate.png'
 import bin_icon from './bin_icon.png'
 import cart_icon from './cart_icon.png'
@@ -83,6 +88,11 @@ export const assets = {
   contact_img,
   homepage,
   logo,
+  unilogo,
+  unilogo1,
+  aboutUS,
+  AB,
+  contactussv,
 }
 
 // ================= Products Export =================
@@ -96,6 +106,7 @@ export const products = [
     image: [laptop, laptop_2, laptop_3, laptop_4, laptop_5],
     category: "Electronics",
     subCategory: "Laptop",
+    sizes: ["Regular"],
     date: 1716700000000,
     bestseller: true
   },
@@ -107,6 +118,7 @@ export const products = [
     image: [laptop1, laptop1_2, laptop1_3, laptop1_4],
     category: "Electronics",
     subCategory: "Laptop",
+    sizes: ["Regular"],
     date: 1716705000000,
     bestseller: false
   },
@@ -120,6 +132,7 @@ export const products = [
     image: [mouse, mouse_1, mouse_2],
     category: "Electronics",
     subCategory: "Accessories",
+    sizes: ["Regular"],
     date: 1716710000000,
     bestseller: true
   },
@@ -131,6 +144,7 @@ export const products = [
     image: [mouse1, mouse1_1, mouse1_2, mouse1_3],
     category: "Electronics",
     subCategory: "Accessories",
+    sizes: ["Regular"],
     date: 1716715000000,
     bestseller: false
   },
@@ -144,6 +158,7 @@ export const products = [
     image: [miniprojector],
     category: "Electronics",
     subCategory: "Projector",
+    sizes: ["Regular"],
     date: 1716720000000,
     bestseller: false
   },
@@ -155,6 +170,7 @@ export const products = [
     image: [miniPrinter, miniPrinter_1, miniprinter2],
     category: "Electronics",
     subCategory: "Printer",
+    sizes: ["Regular"],
     date: 1716730000000,
     bestseller: false
   },
@@ -168,6 +184,7 @@ export const products = [
     image: [usb, usb_1, usb_3, usb_4],
     category: "Electronics",
     subCategory: "Storage",
+    sizes: ["Regular"],
     date: 1716740000000,
     bestseller: false
   },
@@ -179,6 +196,7 @@ export const products = [
     image: [Ugreen_usb, Ugreen_usb_2, Ugreen_usb_3, Ugreen_usb_4],
     category: "Electronics",
     subCategory: "Storage",
+    sizes: ['32GB','64GB'],
     date: 1716745000000,
     bestseller: true
   },
@@ -190,7 +208,7 @@ export const products = [
     description: "Soft cotton T-shirt, regular fit, available in multiple colors.",
     price: 800,
     image: [p_img2_1, p_img2_3, p_img2_4],
-    category: "Men",
+    category: "Clothing",
     subCategory: "Topwear",
     sizes: ["M", "L", "XL"],
     date: 1716750000000,
@@ -202,7 +220,7 @@ export const products = [
     description: "Round neck top, stylish and comfortable.",
     price: 900,
     image: [p_img4, p_img5],
-    category: "Women",
+    category: "Clothing",
     subCategory: "Topwear",
     sizes: ["S", "M", "L"],
     date: 1716760000000,
@@ -214,7 +232,7 @@ export const products = [
     description: "Slim fit jeans for kids, durable and comfortable.",
     price: 1100,
     image: [p_img43],
-    category: "Kids",
+    category: "Clothing",
     subCategory: "Bottomwear",
     sizes: ["S", "M", "L", "XL"],
     date: 1716770000000,

@@ -3,7 +3,7 @@ import { assets } from '../assets/assets'
 
 const M_Hero = () => {
   return (
-    <div className='relative overflow-hidden'>
+    <div className='relative overflow-hidden mr-10 ml-10 '>
       {/* Background */}
       <div className='absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50'>
         <div className='absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-purple-300 to-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse'></div>
@@ -48,7 +48,7 @@ const M_Hero = () => {
         </div>
 
         {/* Hero right */}
-        <img src={assets.homepage} className='w-full sm:w-1/2 object-cover' alt='' />
+        <img src={assets.homepage} className='w-full sm:w-1/2 object-cover ' alt='' />
       </div>
     </div>
   )
