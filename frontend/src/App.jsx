@@ -17,7 +17,7 @@ import M_Add from './pages/SecondryUsersUI/Marketplace/pages/M_Add.jsx'
 import Admin_Orders from './pages/SecondryUsersUI/Marketplace/pages/Admin_Orders.jsx'
 import M_List from './pages/SecondryUsersUI/Marketplace/pages/M_List.jsx'
 import UM_stdLogin from './pages/UM_stdLogin.jsx'
-import UM_stdLogin from './pages/UM_stdLogin.jsx'
+
 
 
 
