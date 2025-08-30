@@ -13,14 +13,21 @@ import MarketPlace_Cart from "./pages/StudentUI/Marketplace/pages/MarketPlace_Ca
 import MarketPlace_Login from "./pages/StudentUI/Marketplace/pages/MarketPlace_Login.jsx"
 import MarketPlace_PlaceOrder from "./pages/StudentUI/Marketplace/pages/MarketPlace_PlaceOrder.jsx"
 import MarketPlace_Orders from "./pages/StudentUI/Marketplace/pages/MarketPlace_Orders.jsx"
+import M_Add from './pages/SecondryUsersUI/Marketplace/pages/M_Add.jsx'
+import Admin_Orders from './pages/SecondryUsersUI/Marketplace/pages/Admin_Orders.jsx'
+import M_List from './pages/SecondryUsersUI/Marketplace/pages/M_List.jsx'
+
+
 
 
 
 const App = () => {
   return (
     <div data-theme="emerald" className="relative h-full w-full">
+      
     
       <Routes>
+        
         <Route path="/" element={<IndexPage/>}/>
         <Route path="/jobdash" element = {<JP_index/>}/>
         <Route path="/jobs" element = {<JP_jobs/>}/>
@@ -34,6 +41,10 @@ const App = () => {
         <Route path="/M_login" element={<MarketPlace_Login />} />
         <Route path="/M_placeorder" element={<MarketPlace_PlaceOrder />} />
         <Route path="/M_orders" element={<MarketPlace_Orders />} />
+        <Route path="/A_add" element={<M_Add/>}/>
+        <Route path='/Admin_Orders' element={<Admin_Orders/>}/>
+        <Route path='/M_List' element={<M_List/>}/>
+        
       </Routes>
 
     </div>
