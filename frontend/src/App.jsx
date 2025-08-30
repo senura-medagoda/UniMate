@@ -1,6 +1,6 @@
 import React from 'react'
-import { Route, Routes } from 'react-router'
-import IndexPage from "./pages/IndexPage.jsx"
+import { Route, Routes } from 'react-router';
+import IndexPage from "./pages/IndexPage.jsx";
 import CreateBoardingPlace from './pages/SecondryUsersUI/Accommodation/BordingOwner/createBoardingPlace.jsx';
 import OwnerDashboard from './pages/SecondryUsersUI/Accommodation/BordingOwner/ownerDashboard.jsx';
 
@@ -16,4 +16,4 @@ const App = () => {
   )
 }
 
-export default App
+export default App;
