@@ -12,9 +12,7 @@ import MarketPlace_Cart from "./pages/StudentUI/Marketplace/pages/MarketPlace_Ca
 import MarketPlace_Login from "./pages/StudentUI/Marketplace/pages/MarketPlace_Login.jsx"
 import MarketPlace_PlaceOrder from "./pages/StudentUI/Marketplace/pages/MarketPlace_PlaceOrder.jsx"
 import MarketPlace_Orders from "./pages/StudentUI/Marketplace/pages/MarketPlace_Orders.jsx"
-import MarketPlace_Navbar from './pages/StudentUI/Marketplace/components/MarketPlace_Navbar.jsx'
-import M_Footer from './pages/StudentUI/Marketplace/components/M_Footer.jsx'
-import M_SearchBar from './pages/StudentUI/Marketplace/components/M_SearchBar.jsx'
+
 
 const App = () => {
   return (
