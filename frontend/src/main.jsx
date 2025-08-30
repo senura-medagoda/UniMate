@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import {BrowserRouter} from "react-router";
-import {Toaster} from "react-hot-toast";
+import { ToastContainer } from 'react-toastify';  // Change this
+import 'react-toastify/dist/ReactToastify.css';
 import ShopContextProvider from './pages/StudentUI/Marketplace/context/M_ShopContext.jsx';
 
 createRoot(document.getElementById('root')).render(
@@ -12,7 +13,7 @@ createRoot(document.getElementById('root')).render(
 
     <ShopContextProvider>
  <App />
-      <Toaster/>
+      <ToastContainer />
 
     </ShopContextProvider>
      

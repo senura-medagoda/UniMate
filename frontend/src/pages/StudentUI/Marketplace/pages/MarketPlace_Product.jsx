@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 import { ShopContext } from '../context/M_ShopContext';
 import { assets } from '../assets/assets';
 import M_RelatedProducts from '../components/M_RelatedProducts';
+import MarketPlace_Navbar from '../components/MarketPlace_Navbar';
 
 const MarketPlace_Product = () => {
 
@@ -34,6 +35,8 @@ const MarketPlace_Product = () => {
   },[productId,products])
   
   return productData ? (
+    <div className='mr-10 ml-10'>
+      <MarketPlace_Navbar/>
     <div className='border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100 mb-20'>
 
       {/*product data */}
@@ -107,6 +110,7 @@ const MarketPlace_Product = () => {
 
       <M_RelatedProducts category={productData.category} subCategory={productData.subCategory}/>
 
+    </div>
     </div>
   ): <div className='opacity-0'></div>
 }

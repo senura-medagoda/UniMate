@@ -2,10 +2,15 @@ import React from 'react'
 import M_Title from '../components/M_Title'
 import { assets } from '../assets/assets'
 import M_NewsletterBox from'../components/M_NewsletterBox'
+import MarketPlace_Navbar from '../components/MarketPlace_Navbar'
+import M_Footer from '../components/M_Footer'
 
 const MarketPlace_About = () => {
   return (
     <div>
+    <div className='mr-10 ml-10'>
+      <MarketPlace_Navbar/>
+      
       <div className='text-2xl text-center pt-8 border-t'>
         <M_Title text1={'ABOUT'} text2={'US'}/>
 
@@ -46,8 +51,10 @@ const MarketPlace_About = () => {
             <p className='text-gray-600'>There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable.</p>
           </div>
         </div>
+        
+        </div>
         <M_NewsletterBox/>
-      
+      <M_Footer/>
     </div>
   )
 }
