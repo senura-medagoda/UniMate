@@ -2,6 +2,8 @@ import React from 'react'
 import { Route, Routes } from 'react-router'
 import { ToastContainer, toast } from 'react-toastify'
 import IndexPage from "./pages/IndexPage.jsx"
+import Navbar from './pages/landingComponents/Navbar.jsx'
+import Home from './pages/StudentUI/FoodOrder/pages/Home.jsx'
 import JP_index from "./pages/StudentUI/JobPortal/JP_index.jsx"
 import JP_jobs from './pages/StudentUI/JobPortal/JP_jobs.jsx'
 import MarketPlace_Home from "./pages/StudentUI/Marketplace/pages/MarketPlace_Home.jsx"
@@ -21,6 +23,7 @@ import UM_stdLogin from './pages/UM_stdLogin.jsx'
 
 
 
+
 const App = () => {
   return (
     <div data-theme="emerald" className="relative h-full w-full">
@@ -29,6 +32,7 @@ const App = () => {
       <Routes>
         
         <Route path="/" element={<IndexPage/>}/>
+        <Route path="/food" element={<Home/>}/>
         <Route path="/login-std" element={<UM_stdLogin/>}/>
 
 
@@ -49,6 +53,7 @@ const App = () => {
         <Route path='/Admin_Orders' element={<Admin_Orders/>}/>
         <Route path='/M_List' element={<M_List/>}/>
         
+
       </Routes>
 
     </div>
