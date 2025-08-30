@@ -16,9 +16,8 @@ import MarketPlace_Orders from "./pages/StudentUI/Marketplace/pages/MarketPlace_
 import M_Add from './pages/SecondryUsersUI/Marketplace/pages/M_Add.jsx'
 import Admin_Orders from './pages/SecondryUsersUI/Marketplace/pages/Admin_Orders.jsx'
 import M_List from './pages/SecondryUsersUI/Marketplace/pages/M_List.jsx'
-
-
-
+import UM_HeroIndex from './pages/landingComponents/UM_HeroIndex.jsx'
+import UM_stdLogin from './pages/UM_stdLogin.jsx'
 
 
 
@@ -30,6 +29,10 @@ const App = () => {
       <Routes>
         
         <Route path="/" element={<IndexPage/>}/>
+        <Route path="/login-std" element={<UM_stdLogin/>}/>
+
+
+
         <Route path="/jobdash" element = {<JP_index/>}/>
         <Route path="/jobs" element = {<JP_jobs/>}/>
         <Route path='/mphome' element={<MarketPlace_Home/>}/> {/* Default route */}
