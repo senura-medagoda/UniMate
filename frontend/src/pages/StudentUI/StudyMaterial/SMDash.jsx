@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+
 
 const Home = () => {
   return (
@@ -17,9 +19,11 @@ const Home = () => {
               placeholder="Search..."
               className="px-4 py-2 w-96 rounded-l-md focus:outline-none text-black"
             />
-            <button className="px-4 py-2 bg-orange-500 text-white rounded-r-md hover:bg-orange-600">
-              Search
-            </button>
+            <Link to="/BrowseSM">
+              <button className="px-4 py-2 bg-orange-500 text-white rounded-r-md hover:bg-orange-600">
+                Search
+              </button>
+            </Link>
           </div>
 
           {/* Paragraph */}
@@ -36,26 +40,35 @@ const Home = () => {
 
       {/* Buttons Row */}
       <div className="flex justify-center gap-4 mt-8 flex-wrap ">
-        <button className="h-[100px] w-[150px] px-4 py-2 bg-gray-200 rounded-md hover:bg-orange-500 hover:text-white">
-          Top Rated
-        </button>
+        <Link to="/Top_RecentSM">
+          <button className="h-[100px] w-[150px] px-4 py-2 bg-gray-200 rounded-md hover:bg-orange-500 hover:text-white">
+            Top Rated
+          </button>
+        </Link>
+
         <button className="h-[100px] w-[150px] px-4 py-2 bg-gray-200 rounded-md hover:bg-orange-500 hover:text-white">
           Recent Uploads
         </button>
-        <button className="h-[100px] w-[150px] px-4 py-2 bg-gray-200 rounded-md hover:bg-orange-500 hover:text-white">
-          Request
-        </button>
-        <button className="h-[100px] w-[150px] px-4 py-2 bg-gray-200 rounded-md hover:bg-orange-500 hover:text-white">
-          Upload
-        </button>
-        <button className="h-[100px] w-[150px] px-4 py-2 bg-gray-200 rounded-md hover:bg-orange-500 hover:text-white">
-          Forum
-        </button>
+        <Link to="/RequestSM">
+          <button className="h-[100px] w-[150px] px-4 py-2 bg-gray-200 rounded-md hover:bg-orange-500 hover:text-white">
+            Request
+          </button>
+        </Link>
+        <Link to="/UploadSM">
+          <button className="h-[100px] w-[150px] px-4 py-2 bg-gray-200 rounded-md hover:bg-orange-500 hover:text-white">
+            Upload
+          </button>
+        </Link>
+        <Link to="/ForumSM">
+          <button className="h-[100px] w-[150px] px-4 py-2 bg-gray-200 rounded-md hover:bg-orange-500 hover:text-white">
+            Forum
+          </button>
+        </Link>
       </div>
 
-      </div>
+    </div>
 
-  
+
   );
 };
 
