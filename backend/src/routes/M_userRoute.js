@@ -8,4 +8,5 @@ userRouter.post('/M_register',registerUser)
 userRouter.post('/M_login',loginUser)
 userRouter.post('/M_admin',adminLogin)
 
+
 export default userRouter;

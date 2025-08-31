@@ -6,11 +6,22 @@ import M_Footer from '../components/M_Footer'
 
 const MarketPlace_Navbar = () => {
    const [visible,setVisible] =useState(false);
-   const {setShowSearch ,getCartCount} = useContext(ShopContext);
+   const {setShowSearch ,getCartCount,navigate,token,setToken,setCartItem} = useContext(ShopContext);
+
+  const logout=()=>{
+    navigate('/M_login')
+    localStorage.removeItem('token')
+    setToken('')
+    setCartItem({})
+    
+
+      
+    
+  }
 
   return (
     <div className='flex items-center justify-between py-5 font-medium relative z-50'>
-     <Link to ='/M_home'><img src={assets.unilogo1} className='w-25 h-10' alt="" /></Link> 
+     <Link to ='/M_home'><img src={assets.uni} className='w-25 h-6' alt="" /></Link> 
      <ul className='hidden sm:flex gap-5 text-sm text-gray-700' >
       <NavLink to='/M_home' className='flex flex-col items-center gap-1' >
       <p>HOME</p>
@@ -36,14 +47,21 @@ const MarketPlace_Navbar = () => {
       <img onClick={()=>setShowSearch(true)} src={assets.search_icon} className='w-5 cursor-pointer' alt="" />
 
       <div className='group relative' >
-       <Link to ='/M_login'> <img src={assets.profile_icon} className='w-5 cursor-pointer' alt="" /></Link>
-        <div className='group-hover:block hidden absolute dropdown-menu right-0 pt-4 z-[100]'>
+   
+        <img onClick={()=> token ? null : navigate('/M_login')} src={assets.profile_icon} className='w-5 cursor-pointer' alt="" />
+
+        {/* drop down  */}
+        {
+          token && 
+          <div className='group-hover:block hidden absolute dropdown-menu right-0 pt-4 z-[100]'>
           <div className='flex flex-col gap-2 w-36 py-3 px-5 bg-white text-gray-500 rounded-lg shadow-xl border border-gray-200' >
             <p className='cursor-pointer hover:text-black transition-colors duration-200' >My Profile</p>
-            <p className='cursor-pointer hover:text-black transition-colors duration-200' >Orders</p>
-            <p className='cursor-pointer hover:text-black transition-colors duration-200' >Logout</p>
+            <p onClick={()=>navigate('/M_orders')} className='cursor-pointer hover:text-black transition-colors duration-200' >Orders</p>
+            <p onClick={logout} className='cursor-pointer hover:text-black transition-colors duration-200' >Logout</p>
           </div>
         </div>
+        }
+        
       </div>
       <Link to='/M_cart'className='relative' >
       <img src={assets.cart_icon} className='w-5 min-w-5' alt="" />

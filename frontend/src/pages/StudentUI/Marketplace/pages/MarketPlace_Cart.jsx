@@ -10,8 +10,16 @@ const MarketPlace_Cart = () => {
   const {products, currency, cartItems, updateQuantity, navigate} = useContext(ShopContext);
   const [cartData, setCartData] = useState([]);
 
+
+
+  
+
   useEffect(() => {
-    const tempData = [];
+
+
+    if(products.length > 0){
+
+        const tempData = [];
     for(const items in cartItems) {
       for(const item in cartItems[items]) {
         if (cartItems[items][item] > 0) {
@@ -24,7 +32,12 @@ const MarketPlace_Cart = () => {
       }
     }
     setCartData(tempData);
-  }, [cartItems])
+
+
+    
+  }
+  
+  }, [cartItems,products])
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-amber-50/30 via-orange-50/30 to-yellow-50/30'>

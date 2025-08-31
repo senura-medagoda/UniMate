@@ -14,7 +14,7 @@ const M_LatestCollection = () => {
    useEffect(()=>{
         setLatestProducts(products.slice(0,10));
 
-    },[])
+    },[products])
   return (
     <div className='relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 overflow-hidden'>
        {/* Animated background elements */}

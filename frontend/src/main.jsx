@@ -12,7 +12,7 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter>
 
     <ShopContextProvider>
- <App />
+        <App />
       <ToastContainer />
 
     </ShopContextProvider>

@@ -1,6 +1,7 @@
 // ================= Imports =================
 
 // --- Icons & UI ---
+import uni from './uni.png'
 import contactussv from './contact-us-animate.svg'
 import AB from './about-us-page-animate.svg'
 import aboutUS from './Aboutuspage-bro.png'
@@ -93,6 +94,7 @@ export const assets = {
   aboutUS,
   AB,
   contactussv,
+  uni
 }
 
 // ================= Products Export =================
