@@ -20,7 +20,8 @@ import Admin_Orders from './pages/SecondryUsersUI/Marketplace/pages/Admin_Orders
 import M_List from './pages/SecondryUsersUI/Marketplace/pages/M_List.jsx'
 import UM_stdLogin from './pages/UM_stdLogin.jsx'
 
-
+import CreateBoardingPlace from './pages/SecondryUsersUI/Accommodation/BordingOwner/createBoardingPlace.jsx';
+import OwnerDashboard from './pages/SecondryUsersUI/Accommodation/BordingOwner/ownerDashboard.jsx';
 
 
 
@@ -29,9 +30,11 @@ const App = () => {
     <div data-theme="emerald" className="relative h-full w-full">
       
     
+
       <Routes>
         
         <Route path="/" element={<IndexPage/>}/>
+
         <Route path="/food" element={<Home/>}/>
         <Route path="/login-std" element={<UM_stdLogin/>}/>
 
@@ -52,12 +55,15 @@ const App = () => {
         <Route path="/A_add" element={<M_Add/>}/>
         <Route path='/Admin_Orders' element={<Admin_Orders/>}/>
         <Route path='/M_List' element={<M_List/>}/>
-        
+        <Route path="/create-boarding-place" element={<CreateBoardingPlace />} />
+        <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+
 
       </Routes>
-
     </div>
   )
 }
 
+
 export default App
+
