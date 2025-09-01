@@ -23,6 +23,13 @@ import UM_stdLogin from './pages/UM_stdLogin.jsx'
 import CreateBoardingPlace from './pages/SecondryUsersUI/Accommodation/BordingOwner/createBoardingPlace.jsx';
 import OwnerDashboard from './pages/SecondryUsersUI/Accommodation/BordingOwner/ownerDashboard.jsx';
 
+import SMDash from "./pages/StudentUI/StudyMaterial/SMDash.jsx"
+import Upload from "./pages/StudentUI/StudyMaterial/UploadSM";  // import upload page
+import Brows from "./pages/StudentUI/StudyMaterial/BrowsSM";  // import browspage
+import Req from "./pages/StudentUI/StudyMaterial/RequestSM";  // import browspage
+import TopandRecent from "./pages/StudentUI/StudyMaterial/Top_RecentSM";  // import browspage
+import ForumSMM from "./pages/StudentUI/StudyMaterial/ForumSM"
+
 
 
 const App = () => {
@@ -57,9 +64,19 @@ const App = () => {
         <Route path='/M_List' element={<M_List/>}/>
         <Route path="/create-boarding-place" element={<CreateBoardingPlace />} />
         <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+          
+          
+        <Route path="/StudyMaterialDash" element={<SMDash/>}/>
+        <Route path="/uploadSM" element={<Upload />} />
+        <Route path="/BrowseSM" element={<Brows />} />
+        <Route path="/RequestSM" element={<Req />} />
+        <Route path="/Top_RecentSM" element={<TopandRecent />} />
+        <Route path="/ForumSM" element={<ForumSMM />} />
+
 
 
       </Routes>
+      
     </div>
   )
 }
