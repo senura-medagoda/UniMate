@@ -1,5 +1,7 @@
 import React from 'react'
 import Navbar from './landingComponents/Navbar'
+import UM_Nav from './landingComponents/UM_Nav'
+import UM_HeroIndex from './landingComponents/UM_HeroIndex'
 
 const index = () => {
 
@@ -7,7 +9,8 @@ const index = () => {
   //Comment 2
   return (
     <div className='min-h-screen'> 
-    <Navbar/>
+    <UM_Nav/>
+    <UM_HeroIndex/>
       
     </div>
   )
