@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react'
 import {assets} from '../assets/assets'
 import { Link ,NavLink } from 'react-router'
 import { ShopContext } from '../context/M_ShopContext';
+import M_Footer from '../components/M_Footer'
 
 const MarketPlace_Navbar = () => {
    const [visible,setVisible] =useState(false);
@@ -11,7 +12,7 @@ const MarketPlace_Navbar = () => {
     <div className='flex items-center justify-between py-5 font-medium relative z-50'>
      <Link to ='/M_home'><img src={assets.unilogo1} className='w-25 h-10' alt="" /></Link> 
      <ul className='hidden sm:flex gap-5 text-sm text-gray-700' >
-      <NavLink to='M_home' className='flex flex-col items-center gap-1' >
+      <NavLink to='/M_home' className='flex flex-col items-center gap-1' >
       <p>HOME</p>
         <hr className="w-2/4 border-none h-[2px] bg-gray-700 rounded-full hidden " />
       </NavLink>
