@@ -6,6 +6,10 @@ import Navbar from './pages/landingComponents/Navbar.jsx'
 import Home from './pages/StudentUI/FoodOrder/pages/Home.jsx'
 import JP_index from "./pages/StudentUI/JobPortal/JP_index.jsx"
 import JP_jobs from './pages/StudentUI/JobPortal/JP_jobs.jsx'
+import JP_application from './pages/StudentUI/JobPortal/JP_application.jsx'
+import JP_profile from './pages/StudentUI/JobPortal/JP_profile.jsx'
+
+
 import MarketPlace_Home from "./pages/StudentUI/Marketplace/pages/MarketPlace_Home.jsx"
 import MarketPlace_Collection from "./pages/StudentUI/Marketplace/pages/MarketPlace_Collection.jsx"
 import MarketPlace_About from "./pages/StudentUI/Marketplace/pages/MarketPlace_About.jsx"
@@ -29,6 +33,11 @@ import Brows from "./pages/StudentUI/StudyMaterial/BrowsSM";  // import browspag
 import Req from "./pages/StudentUI/StudyMaterial/RequestSM";  // import browspage
 import TopandRecent from "./pages/StudentUI/StudyMaterial/Top_RecentSM";  // import browspage
 import ForumSMM from "./pages/StudentUI/StudyMaterial/ForumSM"
+import HM_dash from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_dash.jsx'
+import HM_myjobs from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_myjobs.jsx'
+import HM_applicants from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_applicants.jsx'
+import HM_profile from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_profile.jsx'
+import HM_newjob from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_newjob.jsx'
 
 
 
@@ -49,7 +58,16 @@ const App = () => {
 
         <Route path="/jobdash" element = {<JP_index/>}/>
         <Route path="/jobs" element = {<JP_jobs/>}/>
-        <Route path='/mphome' element={<MarketPlace_Home/>}/> {/* Default route */}
+        <Route path="/applications" element = {<JP_application/>}/>
+        <Route path="/jobprofile" element = {<JP_profile/>}/>
+        <Route path="/hmdash" element = {<HM_dash/>}/>
+        <Route path="/myjobs" element = {<HM_myjobs/>}/>
+        <Route path="/applicants" element = {<HM_applicants/>}/>
+        <Route path="/hmprofile" element = {<HM_profile/>}/>
+        <Route path="/addnewjob" element = {<HM_newjob/>}/>
+
+
+        <Route path='/mphome' element={<MarketPlace_Home/>}/> 
         <Route  path='/M_home' element={<MarketPlace_Home/>}/>
         <Route path='/M_collection' element={<MarketPlace_Collection/>}/>
         <Route path='/M_about' element={<MarketPlace_About/>}/>

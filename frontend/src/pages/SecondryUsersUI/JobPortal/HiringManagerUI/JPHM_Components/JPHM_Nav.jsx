@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react'
+import { useState } from 'react';
 import { Link } from 'react-router';
 
+function JPHM_Nav() {
 
-const JP_Nav = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <div className="bg-base-100 shadow-md sticky top-0 z-50">
-      <div className="navbar mx-auto max-w-6xl p-2">
+      <div className="navbar mx-auto max-w-6xl p-4">
         <div className="navbar-start">
           <div className="dropdown">
             <label
@@ -35,10 +36,10 @@ const JP_Nav = () => {
                 tabIndex={0}
                 className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52"
               >
-                <li><Link to ={"/jobdash"}><a>Dashboard</a></Link></li>
-                <li><Link to ={"/jobs"}><a>Jobs</a></Link></li>
-                <li><Link to ={"/applications"}><a>Applications</a></Link></li>
-                <li><Link to ={"/jobprofile"}><a>Profile</a></Link></li>
+                <li><Link to ={"/hmdash"}><a>Dashboard</a></Link></li>
+                <li><Link to ={"/myjobs"}><a>My Jobs</a></Link></li>
+                <li><Link to ={"/applicants"}><a>Applications</a></Link></li>
+                <li><Link to ={"/hmprofile"}><a>Profile</a></Link></li>
               </ul>
             )}
           </div>
@@ -48,10 +49,10 @@ const JP_Nav = () => {
         </div>
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1">
-            <li><Link to ={"/jobdash"}><a className="font-medium">Dashboard</a></Link></li>
-            <li><Link to ={"/jobs"}><a className="font-medium">Jobs</a></Link></li>
-            <li><Link to ={"/applications"}><a className="font-medium">Applications</a></Link></li>
-            <li><Link to ={"/jobprofile"}><a className="font-medium">Profile</a></Link></li>
+            <li><Link to ={"/hmdash"}><a className="font-medium">Dashboard</a></Link></li>
+            <li><Link to ={"/myjobs"}><a className="font-medium">My Jobs</a></Link></li>
+            <li><Link to ={"/applicants"}><a className="font-medium">Applications</a></Link></li>
+            <li><Link to ={"/hmprofile"}><a className="font-medium">Profile</a></Link></li>
           </ul>
         </div>
         <div className="navbar-end">
@@ -62,7 +63,7 @@ const JP_Nav = () => {
               </div>
             </label>
             <ul tabIndex={0} className="mt-3 p-2 shadow menu menu-compact dropdown-content bg-base-100 rounded-box w-52">
-              <li><a>Profile</a></li>
+              <li><Link to ={"/hmprofile"}><a>Profile</a></Link></li>
               <li><a>Settings</a></li>
               <li><a>Logout</a></li>
             </ul>
@@ -70,7 +71,7 @@ const JP_Nav = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default JP_Nav;
+export default JPHM_Nav
