@@ -13,6 +13,10 @@ import plate from './plate.png'
 import order from './order.png'
 import delivery from './delivery.png'
 import choose_food from './choose_food.png'
+import pizza from './pizza.jpg'
+import cart from './cart.png'
+import star from './star.png'
+import star_empty from './star_empty.png'
 
 export const assets = {
     logo,
@@ -29,5 +33,63 @@ export const assets = {
     plate,
     order,
     delivery,
-    choose_food
+    choose_food,
+    cart,
+    star,
+    star_empty
 }
+
+
+export const dummy = [
+    {
+        id: "1",
+        name: "pizza",
+        category: "fast food",
+        price: 100,
+        offerPrice: 80,
+        image: [pizza],
+        descreiption: "Delicious cheese pizza with fresh toppings",
+        createdAt: "2023-10-01T10:00:00Z",
+        updatedAt: "2023-10-01T10:00:00Z",
+        inStock: true
+    },
+
+    {
+        id: "2",
+        name: "pizza",
+        category: "fast food",
+        price: 100,
+        offerPrice: 80,
+        image: [pizza],
+        descreiption: "Delicious cheese pizza with fresh toppings",
+        createdAt: "2023-10-01T10:00:00Z",
+        updatedAt: "2023-10-01T10:00:00Z",
+        inStock: true
+    },
+
+    {
+        id: "3",
+        name: "pizza",
+        category: "fast food",
+        price: 100,
+        offerPrice: 80,
+        image: [pizza],
+        descreiption: "Delicious cheese pizza with fresh toppings",
+        createdAt: "2023-10-01T10:00:00Z",
+        updatedAt: "2023-10-01T10:00:00Z",
+        inStock: true
+    },
+
+    {
+        id: "2",
+        name: "pizza",
+        category: "fast food",
+        price: 100,
+        offerPrice: 80,
+        image: [pizza],
+        descreiption: "Delicious cheese pizza with fresh toppings",
+        createdAt: "2023-10-01T10:00:00Z",
+        updatedAt: "2023-10-01T10:00:00Z",
+        inStock: true
+    }
+]
