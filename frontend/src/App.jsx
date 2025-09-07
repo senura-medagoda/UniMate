@@ -38,6 +38,9 @@ import HM_myjobs from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_myjo
 import HM_applicants from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_applicants.jsx'
 import HM_profile from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_profile.jsx'
 import HM_newjob from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_newjob.jsx'
+import AboutPage from './pages/AboutPage.jsx'
+import ServicesPage from './pages/servicesPage.jsx'
+import ContactPage from './pages/ContactPage.jsx'
 
 
 
@@ -50,6 +53,10 @@ const App = () => {
       <Routes>
         
         <Route path="/" element={<IndexPage/>}/>
+        <Route path="/services" element={<ServicesPage/>}/>
+        <Route path="/about" element={<AboutPage/>}/>
+        <Route path="/contact" element={<ContactPage/>}/>
+
 
         <Route path="/food" element={<Home/>}/>
         <Route path="/login-std" element={<UM_stdLogin/>}/>

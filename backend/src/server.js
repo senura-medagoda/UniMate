@@ -7,6 +7,7 @@ import productRouter from "./routes/M_productRoute.js";
 import { connectDB } from "./config/db.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import BoardingPlaceRoutes from "./routes/BoardingPlaceRoutes.js";
+import jobRoutes from './routes/jobRoutes.js'
 
 
 dotenv.config();
@@ -19,7 +20,12 @@ connectDB()
 connectCloudinary();
 
 // CORS 
-app.use(cors());
+//app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173", // Your Vite frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true // If using cookies/sessions
+}));
 
 
 app.use(express.json());
@@ -32,6 +38,7 @@ app.use("/api/students", studentRoutes);
 app.use('/api/user', userRouter);
 app.use('/api/product', productRouter);
 app.use("/api/boarding-places", BoardingPlaceRoutes);
+app.use('/api/job',jobRoutes)
 
 
 app.listen(PORT, () => {

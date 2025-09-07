@@ -1,12 +1,10 @@
 import mongoose from "mongoose";
-
 const jobSchema = new mongoose.Schema({
 
     title:{
         type:String,
         required:true,
     },
-
     department:{
         type:String,
         required:true,
@@ -66,5 +64,5 @@ const jobSchema = new mongoose.Schema({
 },
     {timestamps:true});
 
-const job = mongoose.model("job",jobSchema)
-export default job 
+const Job = mongoose.model("Job",jobSchema)
+export default Job 
