@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt"
+import bcrypt from "bcryptjs"
 
 const studentSchema = new mongoose.Schema(
     {
@@ -21,23 +21,39 @@ const studentSchema = new mongoose.Schema(
             type:String,
             required:true,
         },
+        s_uni:{
+            type:String,
+            required:true,
+        },
+        s_uniID:{
+            type:String,
+            required:true,
+        },
+        s_NIC:{
+            type:String,
+            required:true, 
+        },
         s_phone:{
             type:String,
             required:true,
-        },   
+        },
+        s_status:{
+            type:String,
+            default:"Unverified",
+        },     
     },  {timestapms:true}
 );
 
 // Hash password before saving
 studentSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
+  if (!this.isModified('s_password')) return next();
+  this.password = await bcrypt.hash(this.s_password, 12);
   next();
 })
 
 //Compare password method
-studentSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
-  return await bcrypt.compare(candidatePassword, userPassword);
+studentSchema.methods.correctPassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.s_password);
 };
 
 const Student = mongoose.model("Student", studentSchema);

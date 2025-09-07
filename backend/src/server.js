@@ -8,6 +8,7 @@ import { connectDB } from "./config/db.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import BoardingPlaceRoutes from "./routes/BoardingPlaceRoutes.js";
 import jobRoutes from './routes/jobRoutes.js'
+import authSTD from './routes/authSTD.js'
 
 
 dotenv.config();
@@ -39,7 +40,7 @@ app.use('/api/user', userRouter);
 app.use('/api/product', productRouter);
 app.use("/api/boarding-places", BoardingPlaceRoutes);
 app.use('/api/job',jobRoutes)
-
+app.use('/api/stdlogin',authSTD)
 
 app.listen(PORT, () => {
     console.log("Server started on PORT: ", PORT);
