@@ -39,8 +39,9 @@ import HM_applicants from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_
 import HM_profile from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_profile.jsx'
 import HM_newjob from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_newjob.jsx'
 import AboutPage from './pages/AboutPage.jsx'
-import ServicesPage from './pages/servicesPage.jsx'
 import ContactPage from './pages/ContactPage.jsx'
+import UM_stdRegister from './pages/UM_stdRegister.jsx'
+import ServicesPage from './pages/ServicesPage.jsx'
 
 
 
@@ -60,6 +61,7 @@ const App = () => {
 
         <Route path="/food" element={<Home/>}/>
         <Route path="/login-std" element={<UM_stdLogin/>}/>
+        <Route path="/stdregister" element={<UM_stdRegister/>}/>
 
 
 
