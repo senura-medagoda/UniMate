@@ -7,7 +7,7 @@ const UM_Nav = () => {
 
   return (
     <div className="bg-base-100 shadow-md sticky top-0 z-50">
-      <div className="navbar mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+      <div className="navbar mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3">
         {/* Logo and Mobile Menu Button */}
         <div className="navbar-start">
           <div className="dropdown">

@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const UM_HeroIndex = () => {
   return (
     <section className="bg-base-100">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 items-center lg:grid-cols-2 py-12 lg:py-24">
           
           {/* Left Column - Text Content */}
