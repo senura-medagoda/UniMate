@@ -66,7 +66,7 @@ const UM_Nav = () => {
         {/* Desktop Login/Register Buttons (End) */}
         <div className="navbar-end hidden lg:flex space-x-2">
           <Link to="/login" className="btn btn-ghost font-medium">Login</Link>
-          <Link to="/join" className="btn btn-primary text-white">Register</Link>
+          <Link to="/stdregister" className="btn btn-primary text-white">Register</Link>
         </div>
 
         {/* Mobile: Show simple Login button if menu is not open */}

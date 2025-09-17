@@ -1,36 +1,64 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
+import api from '../../lib/axios.js'
+import toast from "react-hot-toast"
 
 function UM_HeroRegister() {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    university: '',
-    uniId: '',
-    password: '',
-    confirmPassword: '',
-    agreeToTerms: false
-  });
+  const [s_fname, setFname] = useState("");
+  const [s_lname, setLname] = useState("");
+  const [s_email, setEmail] = useState("");
+  const [s_password, setPass] = useState("");
+  const [s_uni, setUni] = useState("");
+  const [s_uniID, setUID] = useState("");
+  const [confirmPassword, setConfPass] = useState("");
+  const [agreeToTerms, setTerms] = useState(false);
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
 
   const universities = [
-    'University of Technology',
-    'State University',
-    'City College',
-    'Metropolitan University',
-    'Technical Institute',
-    'Science and Arts University'
+    'University of Peradeniya',
+    'SLIIT',
+    'University of Moratuwa',
+    'ICBT',
+    'ACBT',
+    'Horizon Campus'
   ];
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    
+    // Update the corresponding state based on the input name
+    switch (name) {
+      case 'firstName':
+        setFname(value);
+        break;
+      case 'lastName':
+        setLname(value);
+        break;
+      case 'email':
+        setEmail(value);
+        break;
+      case 'university':
+        setUni(value);
+        break;
+      case 'uniId':
+        setUID(value);
+        break;
+      case 'password':
+        setPass(value);
+        break;
+      case 'confirmPassword':
+        setConfPass(value);
+        break;
+      case 'agreeToTerms':
+        setTerms(checked);
+        break;
+      default:
+        break;
+    }
 
+    // Clear error for this field if it exists
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -42,58 +70,73 @@ function UM_HeroRegister() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name required';
-    if (!formData.email.trim()) newErrors.email = 'Email required';
-    if (!formData.university) newErrors.university = 'University required';
-    if (!formData.uniId.trim()) newErrors.uniId = 'Student ID required';
-    if (!formData.password) newErrors.password = 'Password required';
-    if (!formData.confirmPassword) newErrors.confirmPassword = 'Confirm password';
-    if (!formData.agreeToTerms) newErrors.agreeToTerms = 'Agree to terms required';
+    if (!s_fname.trim()) newErrors.firstName = 'First name required';
+    if (!s_lname.trim()) newErrors.lastName = 'Last name required';
+    if (!s_email.trim()) newErrors.email = 'Email required';
+    if (!s_uni) newErrors.university = 'University required';
+    if (!s_uniID.trim()) newErrors.uniId = 'Student ID required';
+    if (!s_password) newErrors.password = 'Password required';
+    if (!confirmPassword) newErrors.confirmPassword = 'Confirm password';
+    if (!agreeToTerms) newErrors.agreeToTerms = 'Agree to terms required';
 
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+    if (s_email && !/\S+@\S+\.\S+/.test(s_email)) {
       newErrors.email = 'Invalid email';
     }
 
-    if (formData.password) {
-      if (formData.password.length < 8) {
+    if (s_password) {
+      if (s_password.length < 8) {
         newErrors.password = 'Min 8 characters';
-      } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(s_password)) {
         newErrors.password = 'Need upper, lower, number';
       }
     }
 
-    if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
+    if (s_password && confirmPassword && s_password !== confirmPassword) {
       newErrors.confirmPassword = 'Passwords mismatch';
     }
 
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const formErrors = validateForm();
     
     if (Object.keys(formErrors).length === 0) {
-      console.log('Form submitted:', formData);
-      alert('Registration successful!');
+      try {
+        await api.post("/students", {
+          s_fname,
+          s_lname,
+          s_email,
+          s_uni,
+          s_uniID,
+          s_password
+        });
+        toast.success("Registered Successfully!")
+        navigate("/login-std")
+      } catch (error) {
+        console.error('Registration error:', error);
+        // Handle error
+      }
     } else {
       setErrors(formErrors);
     }
   };
 
   const isFormValid = () => {
-    return formData.agreeToTerms && 
-           formData.firstName && 
-           formData.lastName && 
-           formData.email && 
-           formData.university && 
-           formData.uniId && 
-           formData.password && 
-           formData.confirmPassword && 
-           formData.password === formData.confirmPassword &&
-           formData.password.length >= 8 &&
-           /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password);
+    return agreeToTerms && 
+           s_fname && 
+           s_lname && 
+           s_email && 
+           s_uni && 
+           s_uniID && 
+           s_password && 
+           confirmPassword && 
+           s_password === confirmPassword &&
+           s_password.length >= 8 &&
+           /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(s_password);
   };
 
   return (
@@ -156,7 +199,7 @@ function UM_HeroRegister() {
                   <input
                     type="text"
                     name="firstName"
-                    value={formData.firstName}
+                    value={s_fname}
                     onChange={handleInputChange}
                     className={`input input-bordered input-sm ${errors.firstName ? 'input-error' : ''}`}
                     placeholder="John"
@@ -171,7 +214,7 @@ function UM_HeroRegister() {
                   <input
                     type="text"
                     name="lastName"
-                    value={formData.lastName}
+                    value={s_lname}
                     onChange={handleInputChange}
                     className={`input input-bordered input-sm ${errors.lastName ? 'input-error' : ''}`}
                     placeholder="Doe"
@@ -187,7 +230,7 @@ function UM_HeroRegister() {
                 <input
                   type="email"
                   name="email"
-                  value={formData.email}
+                  value={s_email}
                   onChange={handleInputChange}
                   className={`input input-bordered input-sm ${errors.email ? 'input-error' : ''}`}
                   placeholder="email@university.edu"
@@ -202,7 +245,7 @@ function UM_HeroRegister() {
                   </label>
                   <select
                     name="university"
-                    value={formData.university}
+                    value={s_uni}
                     onChange={handleInputChange}
                     className={`select select-bordered select-sm ${errors.university ? 'select-error' : ''}`}
                   >
@@ -221,7 +264,7 @@ function UM_HeroRegister() {
                   <input
                     type="text"
                     name="uniId"
-                    value={formData.uniId}
+                    value={s_uniID}
                     onChange={handleInputChange}
                     className={`input input-bordered input-sm ${errors.uniId ? 'input-error' : ''}`}
                     placeholder="ST123456"
@@ -238,7 +281,7 @@ function UM_HeroRegister() {
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
-                    value={formData.password}
+                    value={s_password}
                     onChange={handleInputChange}
                     className={`input input-bordered input-sm w-full ${errors.password ? 'input-error' : ''}`}
                     placeholder="Create password"
@@ -264,7 +307,7 @@ function UM_HeroRegister() {
                 <input
                   type="password"
                   name="confirmPassword"
-                  value={formData.confirmPassword}
+                  value={confirmPassword}
                   onChange={handleInputChange}
                   className={`input input-bordered input-sm ${errors.confirmPassword ? 'input-error' : ''}`}
                   placeholder="Confirm password"
@@ -277,7 +320,7 @@ function UM_HeroRegister() {
                   <input
                     type="checkbox"
                     name="agreeToTerms"
-                    checked={formData.agreeToTerms}
+                    checked={agreeToTerms}
                     onChange={handleInputChange}
                     className="checkbox checkbox-primary checkbox-sm mr-2"
                   />

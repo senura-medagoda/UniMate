@@ -31,11 +31,11 @@ const studentSchema = new mongoose.Schema(
         },
         s_NIC:{
             type:String,
-            required:true, 
+            required:false, 
         },
         s_phone:{
             type:String,
-            required:true,
+            required:false,
         },
         s_status:{
             type:String,

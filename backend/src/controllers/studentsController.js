@@ -24,9 +24,9 @@ export async function getStudentById(req, res) {
 
 export async function addStudent(req, res) {
     try {
-        const { s_fname, s_lname, s_email, s_password, s_uni, s_uniID, s_NIC, s_phone } = req.body;
+        const { s_fname, s_lname, s_email, s_password, s_uni, s_uniID} = req.body;
         const hashedPassword = await bcrypt.hash(s_password, 12);
-        const newStd = new Student({ s_fname, s_lname, s_email, s_password: hashedPassword, s_uni, s_uniID, s_NIC, s_phone });
+        const newStd = new Student({ s_fname, s_lname, s_email, s_password: hashedPassword, s_uni, s_uniID});
         await newStd.save();
         res.status(201).json({ message: "Student added successfully..!" })
     } catch (error) {

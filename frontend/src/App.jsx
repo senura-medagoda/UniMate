@@ -42,6 +42,7 @@ import AboutPage from './pages/AboutPage.jsx'
 import ContactPage from './pages/ContactPage.jsx'
 import UM_stdRegister from './pages/UM_stdRegister.jsx'
 import ServicesPage from './pages/ServicesPage.jsx'
+import StudentDash from './pages/StudentUI/StudentDash.jsx'
 
 
 
@@ -64,6 +65,7 @@ const App = () => {
         <Route path="/stdregister" element={<UM_stdRegister/>}/>
 
 
+        <Route path="/std-dash" element={<StudentDash/>}/>
 
         <Route path="/jobdash" element = {<JP_index/>}/>
         <Route path="/jobs" element = {<JP_jobs/>}/>
