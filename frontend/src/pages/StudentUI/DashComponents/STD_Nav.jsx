@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-function STD_Nav() {
+function STD_Nav({ setUser }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('studentUser');
+    setUser(null);
+    navigate('/')
+  }
   // Sample notifications
   const notifications = [
     { id: 1, message: "Your job application was viewed", time: "2 hours ago", read: false },
@@ -141,8 +148,8 @@ function STD_Nav() {
               <li><Link to="/profile"><a>Profile</a></Link></li>
               <li><Link to="/settings"><a>Settings</a></Link></li>
               <li><a>Help & Support</a></li>
-              <li className="divider mt-0 mb-0"></li>
-              <li><a className="text-error">Logout</a></li>
+              
+              <li><a className="text-error" onClick={handleLogout}>Logout</a></li>
             </ul>
           </div>
         </div>

@@ -1,11 +1,12 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../lib/axios';
+import toast from 'react-hot-toast';
 
-const UM_HeroLoginStd = () => {
+const UM_HeroLoginStd = ({setUser}) => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    s_email: '',
+    s_password: ''
   });
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -25,25 +26,32 @@ const UM_HeroLoginStd = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    try {
-      // Simulate API call for student login
-      console.log('Student login attempt:', { ...formData, rememberMe });
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Store authentication data
-      if (rememberMe) {
-        localStorage.setItem('student_rememberMe', 'true');
-      }
-      
-      // Redirect to student dashboard
-      navigate('/student/dashboard');
-      
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('Login failed. Please check your credentials and try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    // inside handleSubmit after successful API call
+try {
+  const res = await api.post("/stdlogin/login", formData);
+  // backend must return token and user object; adjust if different
+  const token = res.data.token;
+  const userObj = res.data.user ?? res.data; // try both shapes
+
+  if (token) localStorage.setItem("studentToken", token);
+  if (userObj) {
+    localStorage.setItem("studentUser", JSON.stringify(userObj));
+    setUser(userObj);              // update App state (you passed setUser)
+  }
+
+  // optional: rememberMe logic
+  if (rememberMe) localStorage.setItem('student_rememberMe', 'true');
+
+  toast.success("Login Success!");
+  // navigate to dashboard (or back to intended page — see step 4)
+  navigate('/std-dash', { replace: true });
+} catch (err) {
+  console.error('Login error:', err);
+  toast.error('Login failed. Check credentials.');
+} finally {
+  setIsLoading(false);
+}
+
   };
 
   return (
@@ -99,8 +107,8 @@ const UM_HeroLoginStd = () => {
               </label>
               <input
                 type="email"
-                name="email"
-                value={formData.email}
+                name="s_email"
+                value={formData.s_email}
                 onChange={handleInputChange}
                 placeholder="your.id@university.edu"
                 className="input input-bordered w-full input-sm"
@@ -116,8 +124,8 @@ const UM_HeroLoginStd = () => {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
+                  name="s_password"
+                  value={formData.s_password}
                   onChange={handleInputChange}
                   placeholder="Enter your password"
                   className="input input-bordered w-full input-sm pr-10"

@@ -1,14 +1,14 @@
 import React from 'react'
-import UM_Nav from '../landingComponents/UM_Nav'
+
 import STD_HeroDash from './DashComponents/STD_HeroDash'
 import STD_Nav from './DashComponents/STD_Nav'
 
 
-const StudentDash = () => {
+const StudentDash = ({user, setUser}) => {
   return (
     <div className='min-h-screen'>
-        <STD_Nav/>
-        <STD_HeroDash/>
+        <STD_Nav setUser={setUser}/>
+        <STD_HeroDash user={user}/>
     </div>
   )
 }

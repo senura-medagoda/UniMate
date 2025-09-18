@@ -1,6 +1,8 @@
 import React from 'react'
-import { Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
+import { useState ,useEffect} from 'react'
 import { ToastContainer, toast } from 'react-toastify'
+import ProtectedRoute from './utils/ProtectedRoute.jsx'
 import IndexPage from "./pages/IndexPage.jsx"
 import Navbar from './pages/landingComponents/Navbar.jsx'
 import Home from './pages/StudentUI/FoodOrder/pages/Home.jsx'
@@ -43,10 +45,36 @@ import ContactPage from './pages/ContactPage.jsx'
 import UM_stdRegister from './pages/UM_stdRegister.jsx'
 import ServicesPage from './pages/ServicesPage.jsx'
 import StudentDash from './pages/StudentUI/StudentDash.jsx'
+import LoginPage from './pages/LoginPage.jsx'
+import JPA_Dash from './pages/SecondryUsersUI/JobPortal/JPAdminUI/JPA_Dash.jsx'
+import JPA_Jobs from './pages/SecondryUsersUI/JobPortal/JPAdminUI/JPA_Jobs.jsx'
+import JPA_Reports from './pages/SecondryUsersUI/JobPortal/JPAdminUI/JPA_Reports.jsx'
+import JPA_Profile from './pages/SecondryUsersUI/JobPortal/JPAdminUI/JPA_Profile.jsx'
+import JPA_Managers from './pages/SecondryUsersUI/JobPortal/JPAdminUI/JPA_Managers.jsx'
 
 
 
 const App = () => {
+  const [user, setUser] = useState(null);
+
+  // Load user from localStorage on component mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('studentUser');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  // Create a function to update user AND save to localStorage
+  const updateUser = (userData) => {
+    setUser(userData);
+    if (userData) {
+      localStorage.setItem('studentUser', JSON.stringify(userData));
+    } else {
+      localStorage.removeItem('studentUser');
+    }
+  };
+
   return (
     <div data-theme="emerald" className="relative h-full w-full">
       
@@ -58,24 +86,41 @@ const App = () => {
         <Route path="/services" element={<ServicesPage/>}/>
         <Route path="/about" element={<AboutPage/>}/>
         <Route path="/contact" element={<ContactPage/>}/>
+        <Route path="/login" element={<LoginPage/>}/>
 
 
         <Route path="/food" element={<Home/>}/>
-        <Route path="/login-std" element={<UM_stdLogin/>}/>
-        <Route path="/stdregister" element={<UM_stdRegister/>}/>
+        <Route path="/login-std" element={user ? <Navigate to="/std-dash"/> : <UM_stdLogin setUser={updateUser}/>}/>
+        <Route path="/stdregister" element={user ? <Navigate to="/std-dash"/> :<UM_stdRegister/>}/>
 
 
-        <Route path="/std-dash" element={<StudentDash/>}/>
+       <Route
+          path="/std-dash"
+            element={
+            <ProtectedRoute user={user}>
+            <StudentDash user={user} setUser={updateUser} />
+            </ProtectedRoute>
+           }
+        />
 
         <Route path="/jobdash" element = {<JP_index/>}/>
         <Route path="/jobs" element = {<JP_jobs/>}/>
         <Route path="/applications" element = {<JP_application/>}/>
         <Route path="/jobprofile" element = {<JP_profile/>}/>
+
+
         <Route path="/hmdash" element = {<HM_dash/>}/>
         <Route path="/myjobs" element = {<HM_myjobs/>}/>
         <Route path="/applicants" element = {<HM_applicants/>}/>
         <Route path="/hmprofile" element = {<HM_profile/>}/>
         <Route path="/addnewjob" element = {<HM_newjob/>}/>
+
+        <Route path="/jpadmin-dash" element = {<JPA_Dash/>}/>
+        <Route path="/jpadmin-jobs" element = {<JPA_Jobs/>}/>
+        <Route path="/jpadmin-reports" element = {<JPA_Reports/>}/>
+        <Route path="/jpadmin-managers" element = {<JPA_Managers/>}/>
+        <Route path="/jpadmin-profile" element = {<JPA_Profile/>}/>
+
 
 
         <Route path='/mphome' element={<MarketPlace_Home/>}/> 

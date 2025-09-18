@@ -1,9 +1,10 @@
-// components/STD_HeroDash.jsx
 import React from 'react';
 
-const STD_HeroDash = () => {
-  // Sample user data
-  const user = {
+const STD_HeroDash = ({ user }) => {
+  console.log("User object:", user);
+
+  // Use the user prop safely with optional chaining
+  const userData = user || {
     name: "Emily Johnson",
     university: "University of Technology",
     studentId: "STU456789",
@@ -75,18 +76,17 @@ const STD_HeroDash = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-6">
-      <div className="container mx-auto  max-w-6xl px-4">
-        {/* Welcome Header */}
+      <div className="container mx-auto max-w-6xl px-4">
+        {/* Welcome Header - FIXED with safe access */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-              Welcome back, {user.name}!
+              Welcome back, {user?.email || userData.name}!
             </h1>
             <p className="text-gray-600 mt-1">
-              {user.university} • {user.studentId}
+              {userData.university} • {user?.uid || userData.studentId}
             </p>
           </div>
-          
         </div>
 
         {/* Quick Stats */}
@@ -131,7 +131,7 @@ const STD_HeroDash = () => {
               <div className="flex items-start">
                 <div className="bg-blue-100 p-2 rounded-full mr-3">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 01118 0z" />
                   </svg>
                 </div>
                 <div>
