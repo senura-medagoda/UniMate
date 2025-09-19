@@ -13,9 +13,12 @@ import ShopContextProvider from './pages/StudentUI/Marketplace/context/M_ShopCon
 import { OwnerAuthProvider } from './context/ownerAuthContext.jsx';
 
 
-createRoot(document.getElementById('root')).render(
+
+createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
+
+
       <AppContextProvider>
         <ShopContextProvider>
           <OwnerAuthProvider>

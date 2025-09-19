@@ -1,11 +1,19 @@
 import React from 'react'
+import { ToastProvider } from './context/ToastContext'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useState ,useEffect} from 'react'
 import { ToastContainer, toast } from 'react-toastify'
+
+import FD_Home from './pages/StudentUI/FoodOrder/pages/FD_Home.jsx'
+import MenuPage from './pages/StudentUI/FoodOrder/pages/MenuPage.jsx'
+import ShopsPage from './pages/StudentUI/FoodOrder/pages/ShopsPage.jsx'
+import CartPage from './pages/StudentUI/FoodOrder/pages/CartPage.jsx'
+
+
 import ProtectedRoute from './utils/ProtectedRoute.jsx'
 import IndexPage from "./pages/IndexPage.jsx"
-import Navbar from './pages/landingComponents/Navbar.jsx'
 import Home from './pages/StudentUI/FoodOrder/pages/Home.jsx'
+
 import JP_index from "./pages/StudentUI/JobPortal/JP_index.jsx"
 import JP_jobs from './pages/StudentUI/JobPortal/JP_jobs.jsx'
 import JP_application from './pages/StudentUI/JobPortal/JP_application.jsx'
@@ -25,6 +33,7 @@ import M_Add from './pages/SecondryUsersUI/Marketplace/pages/M_Add.jsx'
 import Admin_Orders from './pages/SecondryUsersUI/Marketplace/pages/Admin_Orders.jsx'
 import M_List from './pages/SecondryUsersUI/Marketplace/pages/M_List.jsx'
 import UM_stdLogin from './pages/UM_stdLogin.jsx'
+
 
 import CreateBoardingPlace from './pages/SecondryUsersUI/Accommodation/BordingOwner/createBoardingPlace.jsx';
 import OwnerDashboard from './pages/SecondryUsersUI/Accommodation/BordingOwner/ownerDashboard.jsx';
@@ -65,6 +74,29 @@ import JPA_Managers from './pages/SecondryUsersUI/JobPortal/JPAdminUI/JPA_Manage
 
 
 
+import VendorLogin from './pages/SecondryUsersUI/FoodOrder/FoodSupplierUI/VendorLogin.jsx'
+import VendorSignup from './pages/SecondryUsersUI/FoodOrder/FoodSupplierUI/VendorSignup.jsx'
+import ForgotPassword from './pages/SecondryUsersUI/FoodOrder/FoodSupplierUI/ForgotPassword.jsx'
+import ResetPassword from './pages/SecondryUsersUI/FoodOrder/FoodSupplierUI/ResetPassword.jsx'
+import ShopDetails from './pages/SecondryUsersUI/FoodOrder/FoodSupplierUI/ShopDetails.jsx'
+import MenuDetails from './pages/SecondryUsersUI/FoodOrder/FoodSupplierUI/MenuDetails.jsx'
+import MenuManagement from './pages/SecondryUsersUI/FoodOrder/FoodSupplierUI/pages/MenuManagement.jsx'
+import VendorDashboard from './pages/SecondryUsersUI/FoodOrder/FoodSupplierUI/pages/VendorDashboard.jsx'
+import ProtectedVendorRoute from './pages/SecondryUsersUI/FoodOrder/FoodSupplierUI/components/ProtectedVendorRoute.jsx'
+import { VendorAuthProvider } from './pages/SecondryUsersUI/FoodOrder/FoodSupplierUI/context/VendorAuthContext.jsx'
+
+// Admin imports
+import { 
+  AdminLogin, 
+  AdminDashboard, 
+  VendorsManagement, 
+  ShopsManagement, 
+  Analytics,
+  ProfileSettings,
+  AdminAuthProvider,
+  ProtectedAdminRoute 
+} from './pages/SecondryUsersUI/FoodOrder/FDAdmin'
+
 const App = () => {
   const [user, setUser] = useState(null);
 
@@ -87,6 +119,8 @@ const App = () => {
   };
 
   return (
+
+
     <div data-theme="emerald" className="relative h-full w-full">
       
     
@@ -178,8 +212,89 @@ const App = () => {
 
 
       </Routes>
+
       
     </div>
+
+{/* Sanas conflicts Fix this later*/}
+
+    <ToastProvider>
+      <VendorAuthProvider>
+        <AdminAuthProvider>
+          <div data-theme="emerald" className="relative h-full w-full">
+        
+        <Routes>
+          
+         
+          <Route path="/food" element={<FD_Home/>}/>
+          <Route path="/login-std" element={<UM_stdLogin/>}/>
+
+          <Route path="/menu" element={<MenuPage/>}/>
+          <Route path="/shops" element={<ShopsPage/>}/>
+          <Route path="/cart" element={<CartPage/>}/>
+
+          <Route path="/vendor/login" element={<VendorLogin/>}/>
+          <Route path="/vendor/signup" element={<VendorSignup/>}/>
+          <Route path="/vendor/forgot-password" element={<ForgotPassword/>}/>
+          <Route path="/vendor/reset-password" element={<ResetPassword/>}/>
+     
+          <Route path="/vendor/dashboard" element={
+            <ProtectedVendorRoute>
+              <VendorDashboard/>
+            </ProtectedVendorRoute>
+          }/>
+          <Route path="/vendor/shop-details" element={
+            <ProtectedVendorRoute>
+              <ShopDetails/>
+            </ProtectedVendorRoute>
+          }/>
+          <Route path="/vendor/menu" element={
+            <ProtectedVendorRoute>
+              <MenuDetails/>
+            </ProtectedVendorRoute>
+          }/>
+          <Route path="/vendor/menu-management" element={
+            <ProtectedVendorRoute>
+              <MenuManagement/>
+            </ProtectedVendorRoute>
+          }/>
+
+          
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin/>}/>
+          <Route path="/admin/dashboard" element={
+            <ProtectedAdminRoute>
+              <AdminDashboard/>
+            </ProtectedAdminRoute>
+          }/>
+          <Route path="/admin/vendors" element={
+            <ProtectedAdminRoute requiredPermission="manage_vendors">
+              <VendorsManagement/>
+            </ProtectedAdminRoute>
+          }/>
+          <Route path="/admin/shops" element={
+            <ProtectedAdminRoute requiredPermission="manage_shops">
+              <ShopsManagement/>
+            </ProtectedAdminRoute>
+          }/>
+          <Route path="/admin/analytics" element={
+            <ProtectedAdminRoute requiredPermission="view_analytics">
+              <Analytics/>
+            </ProtectedAdminRoute>
+          }/>
+          <Route path="/admin/profile" element={
+            <ProtectedAdminRoute>
+              <ProfileSettings/>
+            </ProtectedAdminRoute>
+          }/>
+
+        </Routes>
+
+        </div>
+        </AdminAuthProvider>
+      </VendorAuthProvider>
+    </ToastProvider>
+
   )
 }
 
