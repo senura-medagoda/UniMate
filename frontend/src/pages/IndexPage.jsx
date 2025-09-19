@@ -1,5 +1,6 @@
 import React from 'react'
 import Navbar from './landingComponents/Navbar'
+import UM_Nav from './landingComponents/UM_Nav'
 
 const index = () => {
 
@@ -7,7 +8,7 @@ const index = () => {
   //Comment 2
   return (
     <div className='min-h-screen'> 
-    <Navbar/>
+    <UM_Nav/>
       
     </div>
   )
