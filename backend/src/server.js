@@ -7,6 +7,9 @@ import productRouter from "./routes/M_productRoute.js";
 import { connectDB } from "./config/db.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import BoardingPlaceRoutes from "./routes/BoardingPlaceRoutes.js";
+import ownerAuthRoutes from './routes/ownerAuthRoutes.js';
+import BoardingBookingRoutes from './routes/BoardingBookingRoutes.js';
+import NotificationRoutes from './routes/NotificationRoutes.js';
 import jobRoutes from './routes/jobRoutes.js'
 import authSTD from './routes/authSTD.js'
 
@@ -39,6 +42,9 @@ app.use("/api/students", studentRoutes);
 app.use('/api/user', userRouter);
 app.use('/api/product', productRouter);
 app.use("/api/boarding-places", BoardingPlaceRoutes);
+app.use('/api/owner', ownerAuthRoutes);
+app.use('/api/boarding-bookings', BoardingBookingRoutes);
+app.use('/api/notifications', NotificationRoutes);
 app.use('/api/job',jobRoutes)
 app.use('/api/stdlogin',authSTD)
 

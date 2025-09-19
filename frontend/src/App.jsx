@@ -1,5 +1,5 @@
 import React from 'react'
-import { Navigate, Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { useState ,useEffect} from 'react'
 import { ToastContainer, toast } from 'react-toastify'
 import ProtectedRoute from './utils/ProtectedRoute.jsx'
@@ -28,6 +28,17 @@ import UM_stdLogin from './pages/UM_stdLogin.jsx'
 
 import CreateBoardingPlace from './pages/SecondryUsersUI/Accommodation/BordingOwner/createBoardingPlace.jsx';
 import OwnerDashboard from './pages/SecondryUsersUI/Accommodation/BordingOwner/ownerDashboard.jsx';
+import EditBoardingPlace from './pages/SecondryUsersUI/Accommodation/BordingOwner/editBoardingPlace.jsx';
+import OwnerSignup from './pages/SecondryUsersUI/Accommodation/BordingOwner/ownerSignup.jsx';
+import OwnerLogin from './pages/SecondryUsersUI/Accommodation/BordingOwner/ownerLogin.jsx';
+import AdminDash from './pages/SecondryUsersUI/Accommodation/AccAdminUI/AdminDash.jsx';
+import AdminLogin from './pages/SecondryUsersUI/Accommodation/AccAdminUI/AdminLogin.jsx';
+
+// Student Accommodation Pages
+import StudentAccommodationDashboard from './pages/StudentUI/Accommodation/StudentAccommodationDashboard.jsx';
+import BoardingPlacesPage from './pages/StudentUI/Accommodation/BoardingPlacesPage.jsx';
+import MyBookingsPage from './pages/StudentUI/Accommodation/MyBookingsPage.jsx';
+import ServicePage from './pages/StudentUI/Accommodation/ServicesPage.jsx';
 
 import SMDash from "./pages/StudentUI/StudyMaterial/SMDash.jsx"
 import Upload from "./pages/StudentUI/StudyMaterial/UploadSM";  // import upload page
@@ -146,6 +157,23 @@ const App = () => {
         <Route path="/RequestSM" element={<Req />} />
         <Route path="/Top_RecentSM" element={<TopandRecent />} />
         <Route path="/ForumSM" element={<ForumSMM />} />
+
+        {/* Owner Routes */}
+        <Route path="/create-boarding-place" element={<CreateBoardingPlace />} />
+        <Route path="/edit-boarding-place/:placeId" element={<EditBoardingPlace />} />
+        <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+        <Route path="/owner/signup" element={<OwnerSignup />} />
+        <Route path="/owner/login" element={<OwnerLogin />} />
+          
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/accommodation" element={<AdminDash />} />
+          
+        {/* Student Accommodation Routes */}
+        <Route path="/student/accommodation" element={<StudentAccommodationDashboard />} />
+        <Route path="/student/accommodation/boarding-places" element={<BoardingPlacesPage />} />
+        <Route path="/student/accommodation/my-bookings" element={<MyBookingsPage />} />
+        <Route path="/student/accommodation/services" element={<ServicePage />} />
 
 
 
