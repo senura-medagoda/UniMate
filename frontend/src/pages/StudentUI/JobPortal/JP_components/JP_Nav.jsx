@@ -1,5 +1,6 @@
-// components/JP_Nav.jsx
 import React, { useState } from 'react';
+import { Link } from 'react-router';
+
 
 const JP_Nav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -34,11 +35,10 @@ const JP_Nav = () => {
                 tabIndex={0}
                 className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52"
               >
-                <li><a>Dashboard</a></li>
-                <li><a>Jobs</a></li>
-                <li><a>Applications</a></li>
-                <li><a>Resources</a></li>
-                <li><a>Profile</a></li>
+                <li><Link to ={"/jobdash"}><a>Dashboard</a></Link></li>
+                <li><Link to ={"/jobs"}><a>Jobs</a></Link></li>
+                <li><Link to ={"/applications"}><a>Applications</a></Link></li>
+                <li><Link to ={"/jobprofile"}><a>Profile</a></Link></li>
               </ul>
             )}
           </div>
@@ -48,11 +48,10 @@ const JP_Nav = () => {
         </div>
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1">
-            <li><a className="font-medium">Dashboard</a></li>
-            <li><a className="font-medium">Jobs</a></li>
-            <li><a className="font-medium">Applications</a></li>
-            <li><a className="font-medium">Resources</a></li>
-            <li><a className="font-medium">Profile</a></li>
+            <li><Link to ={"/jobdash"}><a className="font-medium">Dashboard</a></Link></li>
+            <li><Link to ={"/jobs"}><a className="font-medium">Jobs</a></Link></li>
+            <li><Link to ={"/applications"}><a className="font-medium">Applications</a></Link></li>
+            <li><Link to ={"/jobprofile"}><a className="font-medium">Profile</a></Link></li>
           </ul>
         </div>
         <div className="navbar-end">

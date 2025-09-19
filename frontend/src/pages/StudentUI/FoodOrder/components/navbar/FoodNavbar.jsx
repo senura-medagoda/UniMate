@@ -1,9 +1,12 @@
+
 import React, { useState, useEffect } from "react";
+
 import { NavLink } from "react-router-dom";
 import { assets } from "../../assets/assets";
 import { useAppContext } from "../context/context.jsx"; // ✅ Import fixed
 
 const Navbar = () => {
+
   const { user, setUser, setshowUserLogin, navigate, cartItems } = useAppContext();
   const [open, setOpen] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
@@ -29,6 +32,7 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
+
 
   const logout = () => {
     setUser(null); // Log the user out
@@ -89,30 +93,36 @@ const Navbar = () => {
 
         {/* Cart */}
         <div className="relative cursor-pointer flex-shrink-0" onClick={() => navigate("/cart")}>
+
           <svg
             width="18"
             height="18"
             viewBox="0 0 14 14"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
+
             className="text-white hover:text-orange-300 transition-colors w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
           >
             <path
               d="M.583.583h2.333l1.564 7.81a1.17 1.17 0 0 0 1.166.94h5.67a1.17 1.17 0 0 0 1.167-.94l.933-4.893H3.5m2.333 8.75a.583.583 0 1 1-1.167 0 .583.583 0 0 1 1.167 0m6.417 0a.583.583 0 1 1-1.167 0 .583.583 0 0 1 1.167 0"
               stroke="currentColor"
+
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
+
           {getCartCount() > 0 && (
             <button className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 lg:-top-2 lg:-right-3 text-xs text-white bg-[#fc944c] w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 rounded-full animate-pulse flex items-center justify-center">
               {getCartCount() > 99 ? '99+' : getCartCount()}
             </button>
           )}
+
         </div>
 
         {/* Login / Profile / Logout */}
         {!user ? (
+
           <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
             <button
               onClick={() => setshowUserLogin(true)}
@@ -156,6 +166,8 @@ const Navbar = () => {
                   Logout
                 </button>
               </div>
+
+        
             </div>
           </div>
         )}
@@ -164,6 +176,7 @@ const Navbar = () => {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setOpen(!open)}
+
         className="md:hidden p-1.5 sm:p-2 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0"
       >
         <svg
@@ -177,11 +190,13 @@ const Navbar = () => {
           ) : (
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           )}
+
         </svg>
       </button>
 
       {/* Mobile Menu */}
       {open && (
+
         <div className="absolute top-full left-0 w-full bg-white/95 backdrop-blur-lg shadow-lg border-t border-gray-200 py-3 sm:py-4 flex flex-col items-start gap-2 sm:gap-3 px-3 sm:px-4 text-sm md:hidden z-50">
           <NavLink to="/food" onClick={() => setOpen(false)} className="w-full px-2 py-2 hover:bg-gray-50 rounded-lg transition-colors font-medium">
             Home
@@ -234,13 +249,16 @@ const Navbar = () => {
                 Vendor Login
               </NavLink>
             </div>
+
           ) : (
             <button
               onClick={() => {
                 setOpen(false);
                 logout();
               }}
+
               className="cursor-pointer px-4 py-2.5 mt-2 bg-[#fc944c] hover:bg-[#ffa669] transition text-white rounded-lg text-sm font-medium w-full"
+
             >
               Logout
             </button>

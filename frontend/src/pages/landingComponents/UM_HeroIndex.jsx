@@ -1,17 +1,16 @@
-// components/UM_HeroIndex.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 
 const UM_HeroIndex = () => {
   return (
     <section className="bg-base-100">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 items-center lg:grid-cols-2 py-12 lg:py-24">
           
           {/* Left Column - Text Content */}
           <div className="text-center lg:text-left space-y-6 order-2 lg:order-1">
             <h1 className="text-4xl font-bold tracking-tight text-neutral sm:text-5xl md:text-6xl">
-              Your All-in-One <span className="text-primary">University Ecosystem</span>
+              Your All-in-One <span className="text-[#fc944c]">University Ecosystem</span>
             </h1>
             
             <p className="mt-6 text-lg text-neutral/80 max-w-3xl mx-auto lg:mx-0">
@@ -20,7 +19,7 @@ const UM_HeroIndex = () => {
             
             {/* Call-to-Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-8">
-              <Link to="/join" className="btn btn-primary btn-lg text-white px-8">
+              <Link to="/join" className="btn bg-[#fc944c] hover:bg-[#ffa669] btn-lg text-white px-8">
                 Get Started
               </Link>
               <Link to="/services" className="btn btn-outline btn-lg px-8">
@@ -31,15 +30,15 @@ const UM_HeroIndex = () => {
             {/* Trust Indicator/Stats */}
             <div className="flex flex-wrap justify-center lg:justify-start gap-6 mt-12 pt-6 border-t border-gray-200">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">5+</div>
+                <div className="text-2xl font-bold text-[#fc944c]">5+</div>
                 <div className="text-sm text-neutral/70">Essential Services</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">1000+</div>
+                <div className="text-2xl font-bold text-[#fc944c]">1000+</div>
                 <div className="text-sm text-neutral/70">Active Students</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">50+</div>
+                <div className="text-2xl font-bold text-[#fc944c]">50+</div>
                 <div className="text-sm text-neutral/70">Partner Businesses</div>
               </div>
             </div>
@@ -57,7 +56,7 @@ const UM_HeroIndex = () => {
               </div>
               
               {/* Floating element for visual interest (optional) */}
-              <div className="absolute -bottom-4 -right-4 bg-primary text-white p-3 rounded-xl shadow-lg hidden lg:block">
+              <div className="absolute -bottom-4 -right-4 bg-[#fc944c] text-white p-3 rounded-xl shadow-lg hidden lg:block">
                 <div className="text-sm font-semibold">Join Our Community!</div>
               </div>
             </div>

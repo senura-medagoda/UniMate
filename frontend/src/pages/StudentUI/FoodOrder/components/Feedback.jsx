@@ -61,7 +61,11 @@ const Feedback = () => {
   };
 
   return (
+
     <div className="feedback-container flex flex-col items-center justify-center bg-white p-8 rounded-lg shadow-lg mb-[150px]">
+
+    <div className="feedback-container flex flex-col items-center justify-center bg-gray-100 p-8 rounded-lg shadow-lg mb-[150px]">
+
       <div
         className={`feedback-card bg-white p-6 rounded-lg shadow-lg transition-opacity duration-1000 ease-in-out ${
           fadeOut ? 'opacity-0' : 'opacity-100'

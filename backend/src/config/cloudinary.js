@@ -1,4 +1,6 @@
-import {v2 as cloudinary} from "cloudinary"
+import { v2 as cloudinary } from 'cloudinary';
+import dotenv from 'dotenv';
+
 
 const connectCloudinary = async () => {
     try {
@@ -19,6 +21,9 @@ const connectCloudinary = async () => {
             console.error('🔄 Image uploads will be disabled until Cloudinary is configured.');
             return false;
         }
+
+dotenv.config();
+
 
         if (process.env.CLOUDINARY_NAME === 'demo' || process.env.CLOUDINARY_API_KEY === 'demo_key') {
             console.error('⚠️  Demo Cloudinary credentials detected!');
@@ -49,4 +54,7 @@ const connectCloudinary = async () => {
     }
 }
 
+
 export default connectCloudinary;
+
+

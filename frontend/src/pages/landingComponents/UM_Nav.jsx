@@ -7,7 +7,7 @@ const UM_Nav = () => {
 
   return (
     <div className="bg-base-100 shadow-md sticky top-0 z-50">
-      <div className="navbar mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+      <div className="navbar mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3">
         {/* Logo and Mobile Menu Button */}
         <div className="navbar-start">
           <div className="dropdown">
@@ -47,7 +47,7 @@ const UM_Nav = () => {
             </ul>
           </div>
           {/* Website Logo - Links to Homepage */}
-          <Link to="/" className="btn btn-ghost normal-case text-xl text-primary">
+          <Link to="/" className="btn btn-ghost normal-case text-xl text-[#fc944c]">
             UniMate
           </Link>
         </div>
@@ -66,7 +66,7 @@ const UM_Nav = () => {
         {/* Desktop Login/Register Buttons (End) */}
         <div className="navbar-end hidden lg:flex space-x-2">
           <Link to="/login" className="btn btn-ghost font-medium">Login</Link>
-          <Link to="/join" className="btn btn-primary text-white">Register</Link>
+          <Link to="/stdregister" className="px-4 py-1 rounded-3xl font-semibold  bg-[#fc944c] text-white">Register</Link>
         </div>
 
         {/* Mobile: Show simple Login button if menu is not open */}

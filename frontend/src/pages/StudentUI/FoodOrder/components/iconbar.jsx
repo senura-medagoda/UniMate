@@ -3,6 +3,7 @@ import { assets } from '../assets/assets';
 
 const IconBar = () => {
   return (
+
     <div className="relative -mt-32 sm:-mt-40 lg:-mt-48 xl:-mt-56 z-10 py-16 sm:py-16 lg:py-20 bg-gradient-to-br from-orange-50/30 via-white to-orange-50/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Responsive Section Header */}
@@ -137,5 +138,46 @@ const IconBar = () => {
     </div>
   );
 };
+{/* Conflict
+    <div className="flex justify-center items-center space-x-10 py-8">
+      <div className="text-center p-4 border border-gray-200 rounded-lg shadow-md max-w-xs">
+        <div className="mb-4">
+          <img 
+            src={assets.choose_food} 
+            alt="Choose your food" 
+            className="mx-auto w-12 h-12" 
+          />
+        </div>
+        <h3 className="text-xl font-semibold text-[#fc944c]">Choose your food</h3>
+        <p className="text-gray-600 font-light">Pick tasty meals crafted with fresh foods for work or home.</p>
+      </div>
+
+      <div className="text-center p-4 border border-gray-200 rounded-lg shadow-md max-w-xs">
+        <div className="mb-4">
+          <img 
+            src={assets.order} 
+            alt="Place your order" 
+            className="mx-auto w-12 h-12" 
+          />
+        </div>
+        <h3 className="text-xl font-semibold text-[#fc944c]">Place your order</h3>
+        <p className="text-gray-600 font-light">Book clean water in safe jugs for you or your whole team.</p>
+      </div>
+
+      <div className="text-center p-4 border border-gray-200 rounded-lg shadow-md max-w-xs">
+        <div className="mb-4">
+          <img 
+            src={assets.delivery} 
+            alt="Wait for delivery" 
+            className="mx-auto w-12 h-12" 
+          />
+        </div>
+        <h3 className="text-xl font-semibold text-[#fc944c]">Wait for delivery</h3>
+        <p className="text-gray-600 font-light">Relax—your meals and water will be brought right to your door.</p>
+      </div>
+    </div>
+  );
+} */}
+
 
 export default IconBar;

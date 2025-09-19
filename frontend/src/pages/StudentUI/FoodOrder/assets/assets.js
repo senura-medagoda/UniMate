@@ -13,10 +13,12 @@ import plate from './plate.png'
 import order from './order.png'
 import delivery from './delivery.png'
 import choose_food from './choose_food.png'
+
 import pizza from './pizza.jpg'
 import cart from './cart.png'
 import star from './star.png'
 import star_empty from './star_empty.png'
+
 
 export const assets = {
     logo,
@@ -33,6 +35,7 @@ export const assets = {
     plate,
     order,
     delivery,
+
     choose_food,
     cart,
     star,
@@ -93,3 +96,7 @@ export const dummy = [
         inStock: true
     }
 ]
+
+    choose_food
+}
+
