@@ -1,35 +1,46 @@
 import React from 'react';
-import { Toaster } from 'react-hot-toast';
-import { AppContextProvider } from '../components/context/context.jsx';
+import { AppContextProvider, useAppContext } from '../components/context/context.jsx';
 import MainBanner from '../components/MainBanner.jsx';
 import FoodNavbar from '../components/navbar/FoodNavbar.jsx';
-import Categories from '../components/Categories.jsx';
+import ShopCards from '../components/ShopCards.jsx';
 import Feedback from '../components/Feedback.jsx';
-import Vendors from '../components/Vendors.jsx';
 import Plate from '../components/Plate.jsx';
 import IconBar from '../components/iconbar.jsx';
 import Footer from '../components/Footer.jsx';
 import Shops from '../components/Shops.jsx';
+import Login from '../components/Login.jsx';
 
-const Home = () => {
+const HomeContent = () => {
+  const { showUserLogin } = useAppContext();
+
+  return (
+    <div>
+      <FoodNavbar />
+      <MainBanner />
+      <ShopCards />
+      <Shops />
+      <Feedback />
+      <Plate />
+      <IconBar />
+      <Footer />
+      
+      {showUserLogin && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="relative">
+            <Login />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const FD_Home = () => {
   return (
     <AppContextProvider>
-      <div>
-        <FoodNavbar />
-        <MainBanner />
-        <Categories />
-        <Shops />
-        <Feedback />
-        <Plate />
-        <Vendors />
-        <IconBar />
-        <Footer />
-        
-        {/* Place the Toaster inside the AppContextProvider */}
-        <Toaster />
-      </div>
+      <HomeContent />
     </AppContextProvider>
   );
 };
 
-export default Home;
+export default FD_Home;

@@ -1,50 +1,92 @@
-import React from 'react';
-import { useAppContext } from '../components/context/context.jsx';
+import React, { useState } from 'react';
+import { useAppContext } from './context/context.jsx';
+import { useToast } from '@/context/ToastContext';
 
 const Login = () => {
-  const { setshowUserLogin } = useAppContext();
+  const { setshowUserLogin, setUser } = useAppContext();
+  const { success: toastSuccess, error: toastError } = useToast();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
 
-  // Optional: Close form when the "Close" button is clicked
+  // Close form when the "Close" button is clicked
   const closeLogin = () => setshowUserLogin(false);
   
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Here you would typically make an API call to authenticate
+    // For now, we'll just simulate a successful login
+    if (formData.email && formData.password) {
+      setUser({ email: formData.email }); // Set user data
+      setshowUserLogin(false); // Close the modal
+      toastSuccess('Login successful!');
+    } else {
+      toastError('Please fill in all fields');
+    }
+  };
 
   return (
-    <div>
-      <button onClick={closeLogin} className="absolute top-5 right-5">Close</button>
-      <form
-        onSubmit={(e) => e.preventDefault()}
-        className="w-full sm:w-[350px] text-center border border-zinc-300 rounded-2xl px-8 bg-white"
-      >
-        <h1 className="text-zinc-900 text-3xl mt-10 font-medium">Login</h1>
-        <p className="text-zinc-500 text-sm mt-2 pb-6">
-          Please sign in to continue
-        </p>
+    <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-zinc-900 text-3xl font-medium">Login</h1>
+        <button 
+          onClick={closeLogin} 
+          className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+        >
+          ×
+        </button>
+      </div>
+      
+      <p className="text-zinc-500 text-sm mb-6">
+        Please sign in to continue
+      </p>
 
-        <div className="flex items-center w-full mt-4 bg-white border border-zinc-300 h-12 rounded-full overflow-hidden pl-6 gap-2">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex items-center w-full bg-white border border-zinc-300 h-12 rounded-full overflow-hidden pl-6 gap-2">
           <input
             type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
             placeholder="Email id"
             className="bg-transparent text-zinc-600 placeholder-zinc-500 outline-none text-sm w-full h-full"
             required
           />
         </div>
 
-        <div className="flex items-center mt-4 w-full bg-white border border-zinc-300 h-12 rounded-full overflow-hidden pl-6 gap-2">
+        <div className="flex items-center w-full bg-white border border-zinc-300 h-12 rounded-full overflow-hidden pl-6 gap-2">
           <input
             type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
             placeholder="Password"
             className="bg-transparent text-zinc-600 placeholder-zinc-500 outline-none text-sm w-full h-full"
             required
           />
         </div>
 
-        <button type="submit" className="mt-2 w-full h-11 rounded-full text-white bg-indigo-500 hover:opacity-90 transition-opacity">
+        <button 
+          type="submit" 
+          className="w-full h-11 rounded-full text-white bg-[#fc944c] hover:bg-[#ffa669] transition-colors font-medium"
+        >
           Login
         </button>
 
-        <p className="text-zinc-500 text-sm mt-3 mb-11">
+        <p className="text-zinc-500 text-sm text-center">
           Don't have an account?{' '}
-          <button type="button" className="text-indigo-500">
+          <button type="button" className="text-[#fc944c] hover:text-[#ffa669] font-medium">
             Register
           </button>
         </p>
