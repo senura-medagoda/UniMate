@@ -2,7 +2,6 @@ import React from 'react'
 import { Route, Routes } from 'react-router'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-
 import IndexPage from "./pages/IndexPage.jsx"
 import JP_index from "./pages/StudentUI/JobPortal/JP_index.jsx"
 import JP_jobs from './pages/StudentUI/JobPortal/JP_jobs.jsx'
@@ -18,9 +17,12 @@ import MarketPlace_Orders from "./pages/StudentUI/Marketplace/pages/MarketPlace_
 
 import M_Add from './pages/SecondryUsersUI/Marketplace/pages/M_Add.jsx'
 import Admin_Orders from './pages/SecondryUsersUI/Marketplace/pages/Admin_Orders.jsx'
+import TrackOrders from './pages/SecondryUsersUI/Marketplace/pages/TrackOrders.jsx'
 import M_List from './pages/SecondryUsersUI/Marketplace/pages/M_List.jsx'
 import M_login from './pages/SecondryUsersUI/Marketplace/components/M_login.jsx'
 import M_Analytics from './pages/SecondryUsersUI/Marketplace/pages/M_Analytics.jsx'
+import M_ResellRequests from './pages/SecondryUsersUI/Marketplace/pages/M_ResellRequests.jsx'
+import M_ResellItems from './pages/SecondryUsersUI/Marketplace/pages/M_ResellItems.jsx'
 
 const App = () => {
   return (
@@ -46,7 +48,10 @@ const App = () => {
         <Route path="/A_login" element={<M_List />} />
         <Route path="/A_add" element={<M_Add />} />
         <Route path="/Admin_Orders" element={<Admin_Orders />} />
+        <Route path="/Track_Orders" element={<TrackOrders />} />
         <Route path='/M_Analytics' element={<M_Analytics/>}/>
+        <Route path='/M_resell_requests' element={<M_ResellRequests/>}/>
+        <Route path='/M_resell_items' element={<M_ResellItems/>}/>
       </Routes>
 
       {/* Toast container for global notifications */}

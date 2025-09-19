@@ -6,7 +6,7 @@ const addProduct = async (req, res) => {
     try {
         
         
-        const { name, description, price, category, subCategory, size, bestseller } = req.body
+        const { name, description, price, stock, category, subCategory, size, bestseller } = req.body
 
         // Check if files exist before accessing them
         const image1 = req.files.image1 && req.files.image1[0]
@@ -16,7 +16,7 @@ const addProduct = async (req, res) => {
 
         const images = [image1, image2, image3, image4].filter((item) => item !== undefined)
 
-        console.log(name, description, price, category, subCategory, size, bestseller)
+        console.log(name, description, price, stock, category, subCategory, size, bestseller)
         console.log("Images:", images)
 
         // Upload images to Cloudinary
@@ -35,6 +35,7 @@ const addProduct = async (req, res) => {
             description,
             category,
             price: Number(price),
+            stock: Number(stock),
             subCategory,
             bestseller: bestseller === "true" ? true : false,
             sizes: JSON.parse(size), // Assuming size is sent as JSON string
@@ -96,4 +97,53 @@ const singleProduct = async (req, res) => {
     }
 }
 
-export { addProduct, listProducts, removeProduct, singleProduct }
+//function for update product
+const updateProduct = async (req, res) => {
+    try {
+        const { productId, name, description, price, stock, category, subCategory, size, bestseller } = req.body
+
+        // Check if files exist before accessing them
+        const image1 = req.files?.image1 && req.files.image1[0]
+        const image2 = req.files?.image2 && req.files.image2[0]
+        const image3 = req.files?.image3 && req.files.image3[0]
+        const image4 = req.files?.image4 && req.files.image4[0]
+
+        const images = [image1, image2, image3, image4].filter((item) => item !== undefined)
+
+        let updateData = {
+            name,
+            description,
+            category,
+            price: Number(price),
+            stock: Number(stock),
+            subCategory,
+            bestseller: bestseller === "true" ? true : false,
+            sizes: JSON.parse(size),
+        }
+
+        // Only update images if new ones are provided
+        if (images.length > 0) {
+            let imagesUrl = await Promise.all(
+                images.map(async (item) => {
+                    let result = await cloudinary.uploader.upload(item.path, { resource_type: 'image' });
+                    return result.secure_url
+                })
+            )
+            updateData.image = imagesUrl
+        }
+
+        const product = await productModel.findByIdAndUpdate(productId, updateData, { new: true });
+        
+        res.json({ 
+            success: true, 
+            message: "Product updated successfully",
+            product
+        })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+export { addProduct, listProducts, removeProduct, singleProduct, updateProduct }

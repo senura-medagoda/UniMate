@@ -72,6 +72,9 @@ const MarketPlace_Product = () => {
 
           </div>
           <p className='mt-5 text-3xl font-medium'> {currency}{productData.price}</p>
+          <p className='mt-3 text-lg font-medium text-green-600'>
+            Stock Available: {productData.stock || 0} units
+          </p>
           <p className='mt-5 text-gray-500 md:w-4/5'>{productData.description}</p>
           <div className='flex flex-col gap-4 my-8'>
             <p>Select Size</p>
@@ -83,7 +86,17 @@ const MarketPlace_Product = () => {
             </div>
 
           </div>
-          <button onClick={()=>addToCart(productData._id,size)} className='bg-orange-400 text-white px-8 py-3 text-sm active:bg-gray-700 '>ADD TO CART</button>
+          <button 
+            onClick={()=>addToCart(productData._id,size)} 
+            disabled={!productData.stock || productData.stock <= 0}
+            className={`px-8 py-3 text-sm ${
+              !productData.stock || productData.stock <= 0 
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                : 'bg-orange-400 text-white active:bg-gray-700'
+            }`}
+          >
+            {!productData.stock || productData.stock <= 0 ? 'OUT OF STOCK' : 'ADD TO CART'}
+          </button>
          <hr className='mt-8 sm:w-4/5'/>
          <div className='text-sm text-gray-500 mt-5 flex flex-col gap-1'>
           <p>100% Original product. </p>

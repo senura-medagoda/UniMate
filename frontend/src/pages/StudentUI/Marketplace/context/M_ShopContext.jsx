@@ -185,10 +185,15 @@ import { useNavigate } from "react-router";
 
     useEffect(()=>{
         if (!token && localStorage.getItem('token')) {
-            setToken(localStorage.getItem('token'))
-            getUserCart(localStorage.getItem('token'))
+            const storedToken = localStorage.getItem('token');
+            console.log('Found stored token:', storedToken);
+            setToken(storedToken)
+            getUserCart(storedToken)
+        } else if (token) {
+            console.log('Token already exists, fetching cart...');
+            getUserCart(token)
         }
-    },[])
+    },[token])
 
     const value ={
         products,currency,delivery_fee,

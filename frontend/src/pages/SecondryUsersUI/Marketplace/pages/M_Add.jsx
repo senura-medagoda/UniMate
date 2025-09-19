@@ -26,10 +26,29 @@ const M_Add = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("");
   const [category, setCategory] = useState("Electronics");
   const [subCategory, setSubCategory] = useState("Laptop");
   const [bestseller, setBestseller] = useState(false);
   const [sizes, setSizes] = useState([]);
+
+  // Category and subcategory mapping
+  const categorySubcategories = {
+    "Electronics": ["Laptop", "Mobile Phones", "Tablets", "Accessories", "Gadgets"],
+    "Furniture": ["Study Tables", "Chairs", "Beds / Mattresses", "Storage Units"],
+    "Clothing": ["Topwear", "Bottomwear", "Footwear", "Accessories"],
+    "Books & Stationery": ["Textbooks", "Notebooks", "Study Guides", "Stationery"],
+    "Hostel & Essentials": ["Kitchen Items", "Bedding", "Toiletries"],
+    "Sports & Fitness": ["Sportswear", "Balls, Rackets, Bats"]
+  };
+
+  // Handle category change and reset subcategory
+  const handleCategoryChange = (e) => {
+    const newCategory = e.target.value;
+    setCategory(newCategory);
+    // Reset subcategory to first option of new category
+    setSubCategory(categorySubcategories[newCategory][0]);
+  };
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
@@ -39,6 +58,7 @@ const M_Add = () => {
       formData.append("name", name);
       formData.append("description", description);
       formData.append("price", price);
+      formData.append("stock", stock);
       formData.append("category", category);
       formData.append("subCategory", subCategory);
       formData.append("bestseller", bestseller);
@@ -148,25 +168,29 @@ const M_Add = () => {
                 <div>
                   <p className="mb-2">Product category</p>
                   <select
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={handleCategoryChange}
                     className="w-full px-3 py-2 max-w-[500px] border-2 border-orange-200"
                   >
                     <option value="Electronics">Electronics</option>
                     <option value="Furniture">Furniture</option>
                     <option value="Clothing">Clothing</option>
+                    <option value="Books & Stationery">Books & Stationery</option>
+                    <option value="Hostel & Essentials">Hostel & Essentials</option>
+                    <option value="Sports & Fitness">Sports & Fitness</option>
                   </select>
                 </div>
                 <div>
                   <p className="mb-2">Sub category</p>
                   <select
                     onChange={(e) => setSubCategory(e.target.value)}
+                    value={subCategory}
                     className="w-full px-3 py-2 max-w-[500px] border-2 border-orange-200"
                   >
-                    <option value="Laptop">Laptop</option>
-                    <option value="Accessories">Accessories</option>
-                    <option value="Topwear">Topwear</option>
-                    <option value="Bottomwear">Bottomwear</option>
-                    <option value="Footwear">Footwear</option>
+                    {categorySubcategories[category]?.map((subCat) => (
+                      <option key={subCat} value={subCat}>
+                        {subCat}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -178,6 +202,20 @@ const M_Add = () => {
                     className="w-full px-3 py-2 max-w-[500px] border-2 border-orange-200"
                     type="Number"
                     placeholder="25"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <p className="mb-2">Stock Quantity</p>
+                  <input
+                    onChange={(e) => setStock(e.target.value)}
+                    value={stock}
+                    className="w-full px-3 py-2 max-w-[500px] border-2 border-orange-200"
+                    type="Number"
+                    placeholder="10"
+                    min="0"
+                    required
                   />
                 </div>
               </div>
