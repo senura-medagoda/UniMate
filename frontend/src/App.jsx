@@ -1,3 +1,6 @@
+
+
+
 import React from 'react'
 import { ToastProvider } from './context/ToastContext'
 import { Navigate, Route, Routes } from 'react-router-dom'
@@ -12,6 +15,7 @@ import CartPage from './pages/StudentUI/FoodOrder/pages/CartPage.jsx'
 
 import ProtectedRoute from './utils/ProtectedRoute.jsx'
 import IndexPage from "./pages/IndexPage.jsx"
+
 import Home from './pages/StudentUI/FoodOrder/pages/Home.jsx'
 
 import JP_index from "./pages/StudentUI/JobPortal/JP_index.jsx"
@@ -55,6 +59,17 @@ import Brows from "./pages/StudentUI/StudyMaterial/BrowsSM";  // import browspag
 import Req from "./pages/StudentUI/StudyMaterial/RequestSM";  // import browspage
 import TopandRecent from "./pages/StudentUI/StudyMaterial/Top_RecentSM";  // import browspage
 import ForumSMM from "./pages/StudentUI/StudyMaterial/ForumSM"
+import Nav from "./pages/StudentUI/StudyMaterial/Components/Navbar.jsx"
+import Footer from "./pages/StudentUI/StudyMaterial/Components/Footer.jsx"
+import RequestedSM from "./pages/StudentUI/StudyMaterial/RequestedSM";
+import Admin from "./pages/SecondryUsersUI/StudyMaterial/SMAdminUI/AdminDash.jsx"
+import About from "./pages/StudentUI/StudyMaterial/About.jsx"
+import MyUploads from "./pages/StudentUI/StudyMaterial/MyUploads.jsx"
+import MyRequests from "./pages/StudentUI/StudyMaterial/MyRequests.jsx"
+import Profile from "./pages/StudentUI/StudyMaterial/Profile.jsx"
+
+
+
 import HM_dash from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_dash.jsx'
 import HM_myjobs from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_myjobs.jsx'
 import HM_applicants from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_applicants.jsx'
@@ -97,6 +112,7 @@ import {
   ProtectedAdminRoute 
 } from './pages/SecondryUsersUI/FoodOrder/FDAdmin'
 
+
 const App = () => {
   const [user, setUser] = useState(null);
 
@@ -119,6 +135,7 @@ const App = () => {
   };
 
   return (
+
 
 
     <div data-theme="emerald" className="relative h-full w-full">
@@ -185,12 +202,20 @@ const App = () => {
         <Route path="/owner/dashboard" element={<OwnerDashboard />} />
           
           
+  
+          
+        <Route path="/SMAdminDashboard" element={<Admin/>}/>
         <Route path="/StudyMaterialDash" element={<SMDash/>}/>
         <Route path="/uploadSM" element={<Upload />} />
         <Route path="/BrowseSM" element={<Brows />} />
         <Route path="/RequestSM" element={<Req />} />
+        <Route path="/RequestedSM" element={<RequestedSM />} />
         <Route path="/Top_RecentSM" element={<TopandRecent />} />
         <Route path="/ForumSM" element={<ForumSMM />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/my-uploads" element={<MyUploads />} />
+        <Route path="/my-requests" element={<MyRequests />} />
+        <Route path="/profile" element={<Profile />} />
 
         {/* Owner Routes */}
         <Route path="/create-boarding-place" element={<CreateBoardingPlace />} />
@@ -214,6 +239,7 @@ const App = () => {
       </Routes>
 
       
+
     </div>
 
 {/* Sanas conflicts Fix this later*/}

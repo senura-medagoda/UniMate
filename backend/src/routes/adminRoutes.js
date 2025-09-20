@@ -1,5 +1,6 @@
 import express from "express";
 import {
+
     registerAdmin,
     loginAdmin,
     getAdminProfile,
@@ -16,7 +17,20 @@ import {
     getPendingShops,
     approveVendor,
     rejectVendor,
-    getPendingVendors
+    getPendingVendors,
+  
+    getDashboardStats,
+    getAllComplaints,
+     updateComplaintStatus,
+   getAllUsers,
+  getUserById,
+  banUser,
+  suspendUser,
+  reactivateUser,
+  deleteMaterial,
+  deleteForumPost,
+  getAnalyticsReport,
+  createComplaint
 } from "../controllers/adminController.js";
 import {
     getAdminNotifications,
@@ -51,6 +65,33 @@ router.get("/shops/:shopId", adminAuth, canManageShops, getShopDetails);
 router.put("/shops/:shopId/status", adminAuth, canManageShops, toggleShopStatus);
 router.put("/shops/:shopId/approve", adminAuth, canManageShops, approveShop);
 router.put("/shops/:shopId/reject", adminAuth, canManageShops, rejectShop);
+
+
+
+//Tharuka
+// Dashboard stats
+router.get("/stats", getDashboardStats);
+
+// Analytics and reports
+router.get("/analytics", getAnalyticsReport);
+
+// Complaint management
+router.get("/complaints", getAllComplaints);
+router.put("/complaints/:id", updateComplaintStatus);
+router.post("/complaints", createComplaint);
+
+// User management
+router.get("/users", getAllUsers);
+router.get("/users/:userId", getUserById);
+router.put("/users/:userId/ban", banUser);
+router.put("/users/:userId/suspend", suspendUser);
+router.put("/users/:userId/reactivate", reactivateUser);
+
+// Content moderation
+router.delete("/materials/:materialId", deleteMaterial);
+router.delete("/forum/posts/:postId", deleteForumPost);
+//Tharuka>>
+
 
 // Notification routes
 router.get("/notifications", adminAuth, async (req, res) => {
@@ -114,5 +155,6 @@ router.put("/notifications/read-all", adminAuth, async (req, res) => {
         });
     }
 });
+
 
 export default router;
