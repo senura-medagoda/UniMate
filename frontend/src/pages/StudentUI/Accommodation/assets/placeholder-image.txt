@@ -1,0 +1,20 @@
+This is a placeholder for custom images.
+You can replace this file with actual images like:
+- unimate-logo.png
+- boarding-place-1.jpg
+- boarding-place-2.jpg
+- etc.
+
+The images should be placed in this assets folder and referenced in the components.
+
+
+
+
+
+
+
+
+
+
+
+

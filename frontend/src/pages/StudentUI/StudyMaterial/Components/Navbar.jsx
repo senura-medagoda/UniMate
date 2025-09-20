@@ -1,8 +1,14 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUser, FaSignOutAlt, FaCog, FaChartBar, FaBook } from "react-icons/fa";
 
+
+
+
 const Navbar = () => {
+
+  const Navbar = () => {
     const [openProfile, setOpenProfile] = useState(false);
     const [user] = useState({
         name: "Student User",
@@ -40,7 +46,9 @@ const Navbar = () => {
     };
 
     return (
-        <div className="bg-orange-900 shadow-lg">
+        
+  
+          <div className="bg-orange-900 shadow-lg">
             <nav className="navbar flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
                 {/* Logo */}
                 <div className="logo flex items-center">
@@ -147,6 +155,8 @@ const Navbar = () => {
                 </div>
             </nav>
         </div>
+
+
     );
 };
 

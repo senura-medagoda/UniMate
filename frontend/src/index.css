@@ -1,3 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Poppins&family=Prata&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@keyframes custom-enter {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes custom-leave {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-custom-enter {
+  animation: custom-enter 0.3s ease-out;
+}
+
+.animate-custom-leave {
+  animation: custom-leave 0.3s ease-in;
+}
