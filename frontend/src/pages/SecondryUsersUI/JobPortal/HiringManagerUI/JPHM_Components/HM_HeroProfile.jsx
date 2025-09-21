@@ -1,8 +1,30 @@
-import React from 'react'
-import { useState } from 'react'
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+import { 
+  Edit, 
+  Save, 
+  X, 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Building2,
+  Globe,
+  Linkedin,
+  Settings,
+  Bell,
+  Shield,
+  Award,
+  TrendingUp,
+  Users,
+  Briefcase,
+  Target,
+  CheckCircle,
+  Calendar,
+  FileText
+} from 'lucide-react'
 
 function HM_HeroProfile() {
-
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
     name: 'Dr. Sarah Johnson',
@@ -28,14 +50,12 @@ function HM_HeroProfile() {
   };
 
   const handleSave = () => {
-    // In a real app, this would save to the backend
     console.log('Saving profile:', profileData);
     setIsEditing(false);
     alert('Profile updated successfully!');
   };
 
   const handleCancel = () => {
-    // In a real app, this would revert changes
     setIsEditing(false);
   };
 
@@ -46,111 +66,149 @@ function HM_HeroProfile() {
     activePositions: 5
   }
 
+  const recentActivity = [
+    {
+      id: 1,
+      action: 'Posted new job',
+      details: 'Software Developer Intern',
+      time: '2 hours ago',
+      icon: <Briefcase className="w-4 h-4" />
+    },
+    {
+      id: 2,
+      action: 'Reviewed applications',
+      details: '5 new applications for Research Assistant',
+      time: '1 day ago',
+      icon: <FileText className="w-4 h-4" />
+    },
+    {
+      id: 3,
+      action: 'Hired candidate',
+      details: 'Sarah Johnson for Campus Tour Guide',
+      time: '3 days ago',
+      icon: <CheckCircle className="w-4 h-4" />
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 py-6">
-      <div className="mx-auto max-w-6xl px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">Profile Settings</h1>
-            <p className="text-gray-600 mt-2">Manage your personal and professional information</p>
+        <motion.div 
+          className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="mb-6 lg:mb-0">
+            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+              <span className="text-transparent bg-clip-text" style={{ background: 'linear-gradient(to right, #fc944c, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Profile</span> Settings
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl">
+              Manage your personal and professional information. Keep your profile updated for better recruitment results.
+            </p>
           </div>
-          <div className="flex space-x-2 mt-4 md:mt-0">
+          <div className="flex gap-3">
             {isEditing ? (
               <>
-                <button onClick={handleCancel} className="btn btn-outline">
+                <motion.button 
+                  onClick={handleCancel} 
+                  className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <X className="w-4 h-4" />
                   Cancel
-                </button>
-                <button onClick={handleSave} className="btn btn-primary">
+                </motion.button>
+                <motion.button 
+                  onClick={handleSave} 
+                  className="px-6 py-3 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                  style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Save className="w-4 h-4" />
                   Save Changes
-                </button>
+                </motion.button>
               </>
             ) : (
-              <button onClick={() => setIsEditing(true)} className="btn btn-primary">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
+              <motion.button 
+                onClick={() => setIsEditing(true)} 
+                className="px-6 py-3 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Edit className="w-4 h-4" />
                 Edit Profile
-              </button>
+              </motion.button>
             )}
           </div>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
           {/* Left Column - Profile Card */}
-          <div className="lg:col-span-1">
-            <div className="bg-base-100 rounded-lg shadow-md p-6 sticky top-6">
+          <motion.div 
+            className="lg:col-span-1"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sticky top-6">
               <div className="flex flex-col items-center text-center">
-                <div className="avatar mb-4">
-                  <div className="w-24 h-24 rounded-full bg-primary text-primary-content text-3xl font-bold flex items-center justify-center">
-                    {profileData.name.split(' ').map(name => name[0]).join('')}
-                  </div>
+                <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-3xl mb-4">
+                  {profileData.name.split(' ').map(name => name[0]).join('')}
                 </div>
                 
-                <h2 className="text-xl font-bold">{profileData.name}</h2>
-                <p className="text-gray-600">{profileData.title}</p>
-                <p className="text-gray-500 text-sm mt-1">{profileData.department}</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">{profileData.name}</h2>
+                <p className="text-gray-600 mb-1">{profileData.title}</p>
+                <p className="text-gray-500 text-sm mb-6">{profileData.department}</p>
                 
-                <div className="divider my-4"></div>
+                <div className="w-full h-px bg-gray-200 mb-6"></div>
                 
-                <div className="w-full space-y-3">
-                  <div className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-gray-700">{profileData.email}</span>
+                <div className="w-full space-y-4">
+                  <div className="flex items-center gap-3 text-sm">
+                    <Mail className="w-4 h-4 text-gray-500" />
+                    <span className="text-gray-600">{profileData.email}</span>
                   </div>
-                  
-                  <div className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    <span className="text-gray-700">{profileData.phone}</span>
+                  <div className="flex items-center gap-3 text-sm">
+                    <Phone className="w-4 h-4 text-gray-500" />
+                    <span className="text-gray-600">{profileData.phone}</span>
                   </div>
-                  
-                  <div className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="text-gray-700">{profileData.office}</span>
+                  <div className="flex items-center gap-3 text-sm">
+                    <MapPin className="w-4 h-4 text-gray-500" />
+                    <span className="text-gray-600">{profileData.office}</span>
                   </div>
-                </div>
-                
-                <div className="divider my-4"></div>
-                
-                <h3 className="font-semibold text-lg mb-3">Hiring Stats</h3>
-                <div className="grid grid-cols-2 gap-4 w-full">
-                  <div className="stat p-0">
-                    <div className="stat-title">Jobs Posted</div>
-                    <div className="stat-value text-primary text-xl">{stats.jobsPosted}</div>
-                  </div>
-                  <div className="stat p-0">
-                    <div className="stat-title">Applicants</div>
-                    <div className="stat-value text-secondary text-xl">{stats.applicantsReviewed}</div>
-                  </div>
-                  <div className="stat p-0">
-                    <div className="stat-title">Hiring Rate</div>
-                    <div className="stat-value text-accent text-xl">{stats.hiringRate}</div>
-                  </div>
-                  <div className="stat p-0">
-                    <div className="stat-title">Active Roles</div>
-                    <div className="stat-value text-info text-xl">{stats.activePositions}</div>
+                  <div className="flex items-center gap-3 text-sm">
+                    <Building2 className="w-4 h-4 text-gray-500" />
+                    <span className="text-gray-600">{profileData.company}</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Right Column - Edit Form */}
-          <div className="lg:col-span-2">
-            <div className="bg-base-100 rounded-lg shadow-md p-6 mb-6">
-              <h2 className="text-2xl font-semibold mb-6">Personal Information</h2>
+          {/* Right Column - Edit Form and Stats */}
+          <div className="lg:col-span-2 space-y-8">
+            
+            {/* Personal Information */}
+            <motion.div 
+              className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <User className="w-6 h-6" style={{ color: '#fc944c' }} />
+                Personal Information
+              </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Full Name</span>
+                    <span className="label-text font-semibold">Full Name</span>
                   </label>
                   {isEditing ? (
                     <input 
@@ -158,16 +216,16 @@ function HM_HeroProfile() {
                       name="name"
                       value={profileData.name}
                       onChange={handleInputChange}
-                      className="input input-bordered" 
+                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
                     />
                   ) : (
-                    <div className="text-gray-700 p-2">{profileData.name}</div>
+                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.name}</div>
                   )}
                 </div>
                 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Job Title</span>
+                    <span className="label-text font-semibold">Job Title</span>
                   </label>
                   {isEditing ? (
                     <input 
@@ -175,16 +233,16 @@ function HM_HeroProfile() {
                       name="title"
                       value={profileData.title}
                       onChange={handleInputChange}
-                      className="input input-bordered" 
+                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
                     />
                   ) : (
-                    <div className="text-gray-700 p-2">{profileData.title}</div>
+                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.title}</div>
                   )}
                 </div>
                 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Department</span>
+                    <span className="label-text font-semibold">Department</span>
                   </label>
                   {isEditing ? (
                     <input 
@@ -192,33 +250,16 @@ function HM_HeroProfile() {
                       name="department"
                       value={profileData.department}
                       onChange={handleInputChange}
-                      className="input input-bordered" 
+                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
                     />
                   ) : (
-                    <div className="text-gray-700 p-2">{profileData.department}</div>
+                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.department}</div>
                   )}
                 </div>
                 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Office Location</span>
-                  </label>
-                  {isEditing ? (
-                    <input 
-                      type="text" 
-                      name="office"
-                      value={profileData.office}
-                      onChange={handleInputChange}
-                      className="input input-bordered" 
-                    />
-                  ) : (
-                    <div className="text-gray-700 p-2">{profileData.office}</div>
-                  )}
-                </div>
-                
-                <div className="form-control md:col-span-2">
-                  <label className="label">
-                    <span className="label-text">Email Address</span>
+                    <span className="label-text font-semibold">Email</span>
                   </label>
                   {isEditing ? (
                     <input 
@@ -226,16 +267,16 @@ function HM_HeroProfile() {
                       name="email"
                       value={profileData.email}
                       onChange={handleInputChange}
-                      className="input input-bordered" 
+                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
                     />
                   ) : (
-                    <div className="text-gray-700 p-2">{profileData.email}</div>
+                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.email}</div>
                   )}
                 </div>
                 
-                <div className="form-control md:col-span-2">
+                <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Phone Number</span>
+                    <span className="label-text font-semibold">Phone</span>
                   </label>
                   {isEditing ? (
                     <input 
@@ -243,39 +284,65 @@ function HM_HeroProfile() {
                       name="phone"
                       value={profileData.phone}
                       onChange={handleInputChange}
-                      className="input input-bordered" 
+                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
                     />
                   ) : (
-                    <div className="text-gray-700 p-2">{profileData.phone}</div>
+                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.phone}</div>
                   )}
                 </div>
                 
-                <div className="form-control md:col-span-2">
+                <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Bio</span>
+                    <span className="label-text font-semibold">Office Location</span>
                   </label>
                   {isEditing ? (
-                    <textarea 
-                      name="bio"
-                      value={profileData.bio}
+                    <input 
+                      type="text" 
+                      name="office"
+                      value={profileData.office}
                       onChange={handleInputChange}
-                      className="textarea textarea-bordered h-24" 
+                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
                     />
                   ) : (
-                    <div className="text-gray-700 p-2">{profileData.bio}</div>
+                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.office}</div>
                   )}
                 </div>
               </div>
-            </div>
+
+              <div className="form-control mt-6">
+                <label className="label">
+                  <span className="label-text font-semibold">Bio</span>
+                </label>
+                {isEditing ? (
+                  <textarea 
+                    name="bio"
+                    value={profileData.bio}
+                    onChange={handleInputChange}
+                    className="textarea textarea-bordered w-full h-24 focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
+                    placeholder="Tell us about yourself..."
+                  />
+                ) : (
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg min-h-[6rem]">{profileData.bio}</div>
+                )}
+              </div>
+            </motion.div>
 
             {/* Company Information */}
-            <div className="bg-base-100 rounded-lg shadow-md p-6 mb-6">
-              <h2 className="text-2xl font-semibold mb-6">Company Information</h2>
+            <motion.div 
+              className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <Building2 className="w-6 h-6" style={{ color: '#fc944c' }} />
+                Company Information
+              </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Company/University</span>
+                    <span className="label-text font-semibold">Company</span>
                   </label>
                   {isEditing ? (
                     <input 
@@ -283,16 +350,16 @@ function HM_HeroProfile() {
                       name="company"
                       value={profileData.company}
                       onChange={handleInputChange}
-                      className="input input-bordered" 
+                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
                     />
                   ) : (
-                    <div className="text-gray-700 p-2">{profileData.company}</div>
+                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.company}</div>
                   )}
                 </div>
                 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Website</span>
+                    <span className="label-text font-semibold">Website</span>
                   </label>
                   {isEditing ? (
                     <input 
@@ -300,16 +367,16 @@ function HM_HeroProfile() {
                       name="companyWebsite"
                       value={profileData.companyWebsite}
                       onChange={handleInputChange}
-                      className="input input-bordered" 
+                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
                     />
                   ) : (
-                    <div className="text-gray-700 p-2">{profileData.companyWebsite}</div>
+                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.companyWebsite}</div>
                   )}
                 </div>
                 
                 <div className="form-control md:col-span-2">
                   <label className="label">
-                    <span className="label-text">LinkedIn Profile</span>
+                    <span className="label-text font-semibold">LinkedIn Profile</span>
                   </label>
                   {isEditing ? (
                     <input 
@@ -317,54 +384,100 @@ function HM_HeroProfile() {
                       name="linkedin"
                       value={profileData.linkedin}
                       onChange={handleInputChange}
-                      className="input input-bordered" 
+                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
                     />
                   ) : (
-                    <div className="text-gray-700 p-2">{profileData.linkedin}</div>
+                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.linkedin}</div>
                   )}
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Preferences */}
-            <div className="bg-base-100 rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-semibold mb-6">Notification Preferences</h2>
+            {/* Statistics */}
+            <motion.div 
+              className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            >
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <TrendingUp className="w-6 h-6" style={{ color: '#fc944c' }} />
+                Your Statistics
+              </h2>
               
-              <div className="space-y-4">
-                <div className="form-control">
-                  <label className="label cursor-pointer justify-start">
-                    <input 
-                      type="checkbox" 
-                      name="notifications"
-                      checked={profileData.notifications}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      className="checkbox checkbox-primary mr-3" 
-                    />
-                    <span className="label-text">Email me about new applications</span>
-                  </label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Briefcase className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{stats.jobsPosted}</div>
+                  <div className="text-sm text-gray-600">Jobs Posted</div>
                 </div>
                 
-                <div className="form-control">
-                  <label className="label cursor-pointer justify-start">
-                    <input 
-                      type="checkbox" 
-                      name="newsletter"
-                      checked={profileData.newsletter}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      className="checkbox checkbox-primary mr-3" 
-                    />
-                    <span className="label-text">Subscribe to hiring tips newsletter</span>
-                  </label>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Users className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{stats.applicantsReviewed}</div>
+                  <div className="text-sm text-gray-600">Applicants Reviewed</div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Target className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{stats.hiringRate}</div>
+                  <div className="text-sm text-gray-600">Hiring Rate</div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Award className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{stats.activePositions}</div>
+                  <div className="text-sm text-gray-600">Active Positions</div>
                 </div>
               </div>
-            </div>
+            </motion.div>
+
+            {/* Recent Activity */}
+            <motion.div 
+              className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.0 }}
+            >
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <Calendar className="w-6 h-6" style={{ color: '#fc944c' }} />
+                Recent Activity
+              </h2>
+              
+              <div className="space-y-4">
+                {recentActivity.map((activity, index) => (
+                  <motion.div 
+                    key={activity.id}
+                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 1.2 + index * 0.1, duration: 0.4 }}
+                  >
+                    <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white">
+                      {activity.icon}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900">{activity.action}</h3>
+                      <p className="text-sm text-gray-600">{activity.details}</p>
+                    </div>
+                    <div className="text-sm text-gray-500">{activity.time}</div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default HM_HeroProfile
+export default HM_HeroProfile;

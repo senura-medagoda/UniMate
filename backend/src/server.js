@@ -22,6 +22,7 @@ import BoardingBookingRoutes from './routes/BoardingBookingRoutes.js';
 import NotificationRoutes from './routes/NotificationRoutes.js';
 import jobRoutes from './routes/jobRoutes.js'
 import authSTD from './routes/authSTD.js'
+import hmRoutes from './routes/HM_Routes.js'
 
 
 
@@ -77,6 +78,7 @@ app.use('/api/boarding-bookings', BoardingBookingRoutes);
 app.use('/api/notifications', NotificationRoutes);
 app.use('/api/job',jobRoutes)
 app.use('/api/stdlogin',authSTD)
+app.use('/api/hm', hmRoutes)
 
 app.use("/api/study-materials/requests", materialRequestRoutes);
 app.use("/api/study-materials", studyMaterialRoutes);

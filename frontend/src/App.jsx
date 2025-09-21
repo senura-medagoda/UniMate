@@ -99,6 +99,7 @@ import {
   AdminAuthProvider,
   ProtectedAdminRoute
 } from './pages/SecondryUsersUI/FoodOrder/FDAdmin'
+import AdminLoginPage from './pages/AdminLogins/AdminLoginPage.jsx'
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -130,6 +131,9 @@ const App = () => {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
+
+        <Route path="/admin-login" element={<AdminLoginPage />} />
+
 
         <Route path="/food" element={<Home />} />
         <Route path="/login-std" element={user ? <Navigate to="/std-dash" /> : <UM_stdLogin setUser={updateUser} />} />

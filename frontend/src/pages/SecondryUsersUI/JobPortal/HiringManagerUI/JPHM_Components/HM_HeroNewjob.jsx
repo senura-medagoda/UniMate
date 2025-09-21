@@ -1,9 +1,31 @@
-import React from 'react'
-import { useState } from 'react'
+import React, { useState } from 'react'
+import { Link } from 'react-router';
+import { motion } from 'framer-motion'
+import { 
+  ArrowLeft, 
+  Plus, 
+  Save, 
+  X, 
+  Briefcase, 
+  MapPin, 
+  DollarSign, 
+  Calendar,
+  Clock,
+  FileText,
+  Users,
+  Target,
+  CheckCircle,
+  AlertCircle,
+  Building2,
+  Globe,
+  Award,
+  BookOpen,
+  Lightbulb,
+  Shield
+} from 'lucide-react'
 
 function HM_HeroNewjob() {
-
-    const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     title: '',
     department: '',
     jobType: '',
@@ -17,6 +39,9 @@ function HM_HeroNewjob() {
     benefits: ''
   });
 
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -27,260 +52,473 @@ function HM_HeroNewjob() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // In a real app, this would submit to your backend
     console.log('Form submitted:', formData);
     alert('Job position created successfully!');
-    // Reset form or redirect to jobs list
   };
 
   const handleBack = () => {
-    // In a real app, this would navigate back
     console.log('Going back to jobs list');
-    // navigation.goBack() or similar
-  }
+  };
 
-  return (
-     <div className="min-h-screen bg-gray-50 py-6">
-      <div className="mx-auto max-w-4xl px-4">
-        {/* Header with Back Button */}
-        <div className="flex items-center mb-6">
-          <button 
-            onClick={handleBack}
-            className="btn btn-ghost btn-sm mr-4"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Jobs
-          </button>
-          <h1 className="text-3xl font-bold text-gray-800">Create New Job Position</h1>
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const jobTypes = [
+    { value: 'On-Campus', label: 'On-Campus', icon: <Building2 className="w-4 h-4" /> },
+    { value: 'Internship', label: 'Internship', icon: <BookOpen className="w-4 h-4" /> },
+    { value: 'Part-Time', label: 'Part-Time', icon: <Clock className="w-4 h-4" /> },
+    { value: 'Work-Study', label: 'Work-Study', icon: <Award className="w-4 h-4" /> },
+    { value: 'Research', label: 'Research', icon: <Lightbulb className="w-4 h-4" /> },
+    { value: 'Remote', label: 'Remote', icon: <Globe className="w-4 h-4" /> }
+  ];
+
+  const stepTitles = [
+    'Basic Information',
+    'Job Description',
+    'Requirements & Responsibilities',
+    'Review & Submit'
+  ];
+
+  const renderStepIndicator = () => (
+    <div className="flex items-center justify-center mb-8">
+      {Array.from({ length: totalSteps }, (_, index) => (
+        <div key={index} className="flex items-center">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
+            currentStep > index + 1 
+              ? 'bg-green-500 text-white' 
+              : currentStep === index + 1 
+              ? 'text-white' 
+              : 'bg-gray-200 text-gray-600'
+          }`}
+          style={{
+            background: currentStep === index + 1 
+              ? 'linear-gradient(to right, #fc944c, #f97316)' 
+              : currentStep > index + 1 
+              ? '#10b981' 
+              : '#e5e7eb'
+          }}>
+            {currentStep > index + 1 ? <CheckCircle className="w-5 h-5" /> : index + 1}
+          </div>
+          {index < totalSteps - 1 && (
+            <div className={`w-16 h-1 mx-2 ${
+              currentStep > index + 1 ? 'bg-green-500' : 'bg-gray-200'
+            }`} />
+          )}
         </div>
+      ))}
+    </div>
+  );
 
-        <div className="bg-base-100 rounded-lg shadow-md p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information Section */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-primary">Basic Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Job Title*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    className="input input-bordered"
-                    placeholder="e.g., Software Developer Intern"
-                    required
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Department*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="department"
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    className="input input-bordered"
-                    placeholder="e.g., Computer Science Department"
-                    required
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Job Type*</span>
-                  </label>
-                  <select
-                    name="jobType"
-                    value={formData.jobType}
-                    onChange={handleInputChange}
-                    className="select select-bordered"
-                    required
-                  >
-                    <option value="">Select Job Type</option>
-                    <option value="On-Campus">On-Campus</option>
-                    <option value="Internship">Internship</option>
-                    <option value="Part-Time">Part-Time</option>
-                    <option value="Work-Study">Work-Study</option>
-                    <option value="Research">Research</option>
-                    <option value="Remote">Remote</option>
-                  </select>
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Location*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    className="input input-bordered"
-                    placeholder="e.g., Main Campus, Science Building"
-                    required
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Compensation*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="pay"
-                    value={formData.pay}
-                    onChange={handleInputChange}
-                    className="input input-bordered"
-                    placeholder="e.g., $15/hr, Stipend + Housing, Course Credit"
-                    required
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Application Deadline*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="applicationDeadline"
-                    value={formData.applicationDeadline}
-                    onChange={handleInputChange}
-                    className="input input-bordered"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Job Description Section */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-primary">Job Description</h2>
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Position Overview*</span>
+                  <span className="label-text font-semibold flex items-center gap-2">
+                    <Briefcase className="w-4 h-4" />
+                    Job Title *
+                  </span>
                 </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
                   onChange={handleInputChange}
-                  className="textarea textarea-bordered h-24"
-                  placeholder="Describe the role, its purpose, and how it contributes to your department..."
+                  className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="e.g., Software Developer Intern"
                   required
                 />
               </div>
-            </div>
 
-            {/* Responsibilities Section */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-primary">Key Responsibilities</h2>
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">What will the student be doing?*</span>
+                  <span className="label-text font-semibold flex items-center gap-2">
+                    <Building2 className="w-4 h-4" />
+                    Department *
+                  </span>
                 </label>
-                <textarea
-                  name="responsibilities"
-                  value={formData.responsibilities}
+                <input
+                  type="text"
+                  name="department"
+                  value={formData.department}
                   onChange={handleInputChange}
-                  className="textarea textarea-bordered h-32"
-                  placeholder="List the main tasks and responsibilities... (one per line)"
+                  className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="e.g., Computer Science Department"
                   required
                 />
-                <label className="label">
-                  <span className="label-text-alt">Enter each responsibility on a new line</span>
-                </label>
               </div>
-            </div>
 
-            {/* Qualifications Section */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-primary">Qualifications & Requirements</h2>
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Required Skills & Qualifications*</span>
+                  <span className="label-text font-semibold">Job Type *</span>
                 </label>
-                <textarea
-                  name="qualifications"
-                  value={formData.qualifications}
+                <div className="grid grid-cols-2 gap-3">
+                  {jobTypes.map((type) => (
+                    <label key={type.value} className="cursor-pointer">
+                      <input
+                        type="radio"
+                        name="jobType"
+                        value={type.value}
+                        checked={formData.jobType === type.value}
+                        onChange={handleInputChange}
+                        className="sr-only"
+                      />
+                      <div className={`p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-3 ${
+                        formData.jobType === type.value
+                          ? 'border-orange-500 bg-orange-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}>
+                        {type.icon}
+                        <span className="font-medium">{type.label}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-semibold flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    Location *
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
                   onChange={handleInputChange}
-                  className="textarea textarea-bordered h-32"
-                  placeholder="List the required skills, courses, experience... (one per line)"
+                  className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="e.g., Main Campus, Science Building"
                   required
                 />
-                <label className="label">
-                  <span className="label-text-alt">Enter each qualification on a new line</span>
-                </label>
               </div>
-            </div>
 
-            {/* Benefits Section */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-primary">Benefits & Perks</h2>
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">What does this position offer?</span>
+                  <span className="label-text font-semibold flex items-center gap-2">
+                    <DollarSign className="w-4 h-4" />
+                    Compensation *
+                  </span>
                 </label>
-                <textarea
-                  name="benefits"
-                  value={formData.benefits}
+                <input
+                  type="text"
+                  name="pay"
+                  value={formData.pay}
                   onChange={handleInputChange}
-                  className="textarea textarea-bordered h-24"
-                  placeholder="List any benefits, learning opportunities, or perks... (one per line)"
+                  className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="e.g., $15/hr, Stipend + Housing, Course Credit"
+                  required
                 />
-                <label className="label">
-                  <span className="label-text-alt">Enter each benefit on a new line</span>
-                </label>
               </div>
-            </div>
 
-            {/* Form Actions */}
-            <div className="flex flex-col-reverse md:flex-row justify-end gap-4 pt-6 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={handleBack}
-                className="btn btn-outline md:w-auto"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary md:w-auto"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Create Job Position
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Help Text */}
-        <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <div className="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-              <h3 className="font-semibold text-blue-800">Tips for creating effective job postings:</h3>
-              <ul className="text-blue-700 text-sm mt-1 list-disc list-inside">
-                <li>Be specific about required skills and qualifications</li>
-                <li>Highlight what makes this position valuable for students</li>
-                <li>Include information about flexible scheduling if available</li>
-                <li>Specify any required commitment hours per week</li>
-              </ul>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-semibold flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Application Deadline *
+                  </span>
+                </label>
+                <input
+                  type="date"
+                  name="applicationDeadline"
+                  value={formData.applicationDeadline}
+                  onChange={handleInputChange}
+                  className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  required
+                />
+              </div>
             </div>
           </div>
-        </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-semibold flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Position Overview *
+                </span>
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                className="textarea textarea-bordered w-full h-32 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Describe the role, its purpose, and how it contributes to your department..."
+                required
+              />
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-semibold flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  Key Responsibilities *
+                </span>
+              </label>
+              <textarea
+                name="responsibilities"
+                value={formData.responsibilities}
+                onChange={handleInputChange}
+                className="textarea textarea-bordered w-full h-32 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="List the main duties and responsibilities for this position..."
+                required
+              />
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-semibold flex items-center gap-2">
+                  <Award className="w-4 h-4" />
+                  Benefits & Perks
+                </span>
+              </label>
+              <textarea
+                name="benefits"
+                value={formData.benefits}
+                onChange={handleInputChange}
+                className="textarea textarea-bordered w-full h-24 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="List any benefits, perks, or additional opportunities..."
+              />
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-semibold flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Required Qualifications *
+                </span>
+              </label>
+              <textarea
+                name="requirements"
+                value={formData.requirements}
+                onChange={handleInputChange}
+                className="textarea textarea-bordered w-full h-32 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="List the required skills, education, experience, and qualifications..."
+                required
+              />
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-semibold flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  Preferred Qualifications
+                </span>
+              </label>
+              <textarea
+                name="qualifications"
+                value={formData.qualifications}
+                onChange={handleInputChange}
+                className="textarea textarea-bordered w-full h-32 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="List any preferred skills or qualifications that would be nice to have..."
+              />
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div className="bg-gray-50 rounded-xl p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Review Your Job Posting</h3>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Job Title</label>
+                    <p className="text-gray-900">{formData.title || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Department</label>
+                    <p className="text-gray-900">{formData.department || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Job Type</label>
+                    <p className="text-gray-900">{formData.jobType || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Location</label>
+                    <p className="text-gray-900">{formData.location || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Compensation</label>
+                    <p className="text-gray-900">{formData.pay || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Deadline</label>
+                    <p className="text-gray-900">{formData.applicationDeadline || 'Not specified'}</p>
+                  </div>
+                </div>
+                
+                {formData.description && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Description</label>
+                    <p className="text-gray-900 whitespace-pre-wrap">{formData.description}</p>
+                  </div>
+                )}
+                
+                {formData.responsibilities && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Responsibilities</label>
+                    <p className="text-gray-900 whitespace-pre-wrap">{formData.responsibilities}</p>
+                  </div>
+                )}
+                
+                {formData.requirements && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Requirements</label>
+                    <p className="text-gray-900 whitespace-pre-wrap">{formData.requirements}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Header Section */}
+        <motion.div 
+          className="flex items-center mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <motion.button 
+            onClick={handleBack}
+            className="mr-6 p-3 bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Jobs
+          </motion.button>
+          <div>
+            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900">
+              Create <span className="text-transparent bg-clip-text" style={{ background: 'linear-gradient(to right, #fc944c, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>New Job</span>
+            </h1>
+            <p className="text-lg text-gray-600 mt-2">Post a new job opportunity for students</p>
+          </div>
+        </motion.div>
+
+        {/* Step Indicator */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          {renderStepIndicator()}
+        </motion.div>
+
+        {/* Form Container */}
+        <motion.div 
+          className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          {/* Step Header */}
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-6">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                {currentStep}
+              </div>
+              {stepTitles[currentStep - 1]}
+            </h2>
+            <p className="text-orange-100 mt-2">
+              Step {currentStep} of {totalSteps}
+            </p>
+          </div>
+
+          {/* Form Content */}
+          <form onSubmit={handleSubmit} className="p-8">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              {renderStepContent()}
+            </motion.div>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+              <motion.button
+                type="button"
+                onClick={prevStep}
+                disabled={currentStep === 1}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 ${
+                  currentStep === 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+                whileHover={currentStep > 1 ? { scale: 1.05 } : {}}
+                whileTap={currentStep > 1 ? { scale: 0.95 } : {}}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Previous
+              </motion.button>
+
+              <div className="flex gap-3">
+                {currentStep < totalSteps ? (
+                  <motion.button
+                    type="button"
+                    onClick={nextStep}
+                    className="px-8 py-3 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                    style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Next Step
+                    <ArrowLeft className="w-4 h-4 rotate-180" />
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    type="submit"
+                    className="px-8 py-3 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                    style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Save className="w-4 h-4" />
+                    Create Job Posting
+                  </motion.button>
+                )}
+              </div>
+            </div>
+          </form>
+        </motion.div>
       </div>
     </div>
-  )
+  );
 }
 
-export default HM_HeroNewjob
+export default HM_HeroNewjob;

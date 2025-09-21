@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import api from '../../lib/axios.js'
 import toast from "react-hot-toast"
+import stdImg4 from './Images/std_img4.jpg'
 
 function UM_HeroRegister() {
   const [s_fname, setFname] = useState("");
@@ -140,142 +141,196 @@ function UM_HeroRegister() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="flex flex-col lg:flex-row">
-          {/* Compact Image Section */}
-          <div className="lg:w-2/5 bg-gradient-to-br from-blue-600 to-purple-600 p-6 text-white flex flex-col justify-center">
-            <div className="text-center lg:text-left">
-              <div className="flex justify-center lg:justify-start mb-4">
-                <div className="bg-white/20 p-3 rounded-xl">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l-9 5m9-5v6" />
-                  </svg>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="flex flex-col lg:flex-row min-h-[600px]">
+          {/* Image Section with std_img4.jpg */}
+          <div 
+            className="lg:w-2/5 relative bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url(${stdImg4})`,
+              backgroundPosition: 'center',
+              backgroundSize: 'cover'
+            }}
+          >
+            {/* Overlay for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/80 via-blue-900/70 to-purple-900/80"></div>
+            
+            {/* Content */}
+            <div className="relative z-10 p-6 sm:p-8 text-white flex flex-col justify-center h-full min-h-[300px] lg:min-h-full">
+              <div className="text-center lg:text-left">
+                <div className="flex justify-center lg:justify-start mb-6">
+                  <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl border border-white/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 sm:h-14 sm:w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l-9 5m9-5v6" />
+                    </svg>
+                  </div>
                 </div>
-              </div>
-              
-              <h2 className="text-2xl font-bold mb-3">Join Unimate</h2>
-              <p className="text-sm mb-4 opacity-90">
-                Your university life platform for accommodation, food, jobs, and more.
-              </p>
-              
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>Student accommodation</span>
-                </div>
-                <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>Campus food ordering</span>
-                </div>
-                <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>Job opportunities</span>
+                
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
+                  Join UniMate
+                </h2>
+                <p className="text-sm sm:text-base mb-6 opacity-95 leading-relaxed">
+                  Your comprehensive university life platform for accommodation, food ordering, job opportunities, and academic success.
+                </p>
+                
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-center lg:justify-start">
+                    <div className="bg-emerald-500/20 p-1 rounded-full mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="font-medium">Student accommodation</span>
+                  </div>
+                  <div className="flex items-center justify-center lg:justify-start">
+                    <div className="bg-emerald-500/20 p-1 rounded-full mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="font-medium">Campus food ordering</span>
+                  </div>
+                  <div className="flex items-center justify-center lg:justify-start">
+                    <div className="bg-emerald-500/20 p-1 rounded-full mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="font-medium">Job opportunities</span>
+                  </div>
+                  <div className="flex items-center justify-center lg:justify-start">
+                    <div className="bg-emerald-500/20 p-1 rounded-full mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="font-medium">Academic support</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Compact Form Section */}
-          <div className="lg:w-3/5 p-6">
-            <div className="text-center lg:text-left mb-4">
-              <h1 className="text-2xl font-bold text-gray-800">Student Registration</h1>
-              <p className="text-gray-600 text-sm mt-1">Create your account in minutes</p>
+          {/* Form Section */}
+          <div className="lg:w-3/5 p-6 sm:p-8 lg:p-10">
+            <div className="text-center lg:text-left mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Student Registration</h1>
+              <p className="text-gray-600 text-sm sm:text-base">Create your account in minutes and start your university journey</p>
             </div>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                 <div className="form-control">
                   <label className="label py-1">
-                    <span className="label-text text-sm">First Name*</span>
+                    <span className="label-text text-sm font-medium">First Name*</span>
                   </label>
                   <input
                     type="text"
                     name="firstName"
                     value={s_fname}
                     onChange={handleInputChange}
-                    className={`input input-bordered input-sm ${errors.firstName ? 'input-error' : ''}`}
+                    className={`input input-bordered w-full ${errors.firstName ? 'input-error border-red-500' : 'border-gray-300 focus:border-emerald-500'} transition-colors`}
                     placeholder="John"
                   />
-                  {errors.firstName && <span className="text-red-500 text-xs mt-1">{errors.firstName}</span>}
+                  {errors.firstName && <span className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {errors.firstName}
+                  </span>}
                 </div>
 
                 <div className="form-control">
                   <label className="label py-1">
-                    <span className="label-text text-sm">Last Name*</span>
+                    <span className="label-text text-sm font-medium">Last Name*</span>
                   </label>
                   <input
                     type="text"
                     name="lastName"
                     value={s_lname}
                     onChange={handleInputChange}
-                    className={`input input-bordered input-sm ${errors.lastName ? 'input-error' : ''}`}
+                    className={`input input-bordered w-full ${errors.lastName ? 'input-error border-red-500' : 'border-gray-300 focus:border-emerald-500'} transition-colors`}
                     placeholder="Doe"
                   />
-                  {errors.lastName && <span className="text-red-500 text-xs mt-1">{errors.lastName}</span>}
+                  {errors.lastName && <span className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {errors.lastName}
+                  </span>}
                 </div>
               </div>
 
               <div className="form-control">
                 <label className="label py-1">
-                  <span className="label-text text-sm">Email*</span>
+                  <span className="label-text text-sm font-medium">Email*</span>
                 </label>
                 <input
                   type="email"
                   name="email"
                   value={s_email}
                   onChange={handleInputChange}
-                  className={`input input-bordered input-sm ${errors.email ? 'input-error' : ''}`}
+                  className={`input input-bordered w-full ${errors.email ? 'input-error border-red-500' : 'border-gray-300 focus:border-emerald-500'} transition-colors`}
                   placeholder="email@university.edu"
                 />
-                {errors.email && <span className="text-red-500 text-xs mt-1">{errors.email}</span>}
+                {errors.email && <span className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.email}
+                </span>}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                 <div className="form-control">
                   <label className="label py-1">
-                    <span className="label-text text-sm">University*</span>
+                    <span className="label-text text-sm font-medium">University*</span>
                   </label>
                   <select
                     name="university"
                     value={s_uni}
                     onChange={handleInputChange}
-                    className={`select select-bordered select-sm ${errors.university ? 'select-error' : ''}`}
+                    className={`select select-bordered w-full ${errors.university ? 'select-error border-red-500' : 'border-gray-300 focus:border-emerald-500'} transition-colors`}
                   >
                     <option value="">Select University</option>
                     {universities.map((uni, index) => (
                       <option key={index} value={uni}>{uni}</option>
                     ))}
                   </select>
-                  {errors.university && <span className="text-red-500 text-xs mt-1">{errors.university}</span>}
+                  {errors.university && <span className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {errors.university}
+                  </span>}
                 </div>
 
                 <div className="form-control">
                   <label className="label py-1">
-                    <span className="label-text text-sm">Student ID*</span>
+                    <span className="label-text text-sm font-medium">Student ID*</span>
                   </label>
                   <input
                     type="text"
                     name="uniId"
                     value={s_uniID}
                     onChange={handleInputChange}
-                    className={`input input-bordered input-sm ${errors.uniId ? 'input-error' : ''}`}
+                    className={`input input-bordered w-full ${errors.uniId ? 'input-error border-red-500' : 'border-gray-300 focus:border-emerald-500'} transition-colors`}
                     placeholder="ST123456"
                   />
-                  {errors.uniId && <span className="text-red-500 text-xs mt-1">{errors.uniId}</span>}
+                  {errors.uniId && <span className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {errors.uniId}
+                  </span>}
                 </div>
               </div>
 
               <div className="form-control">
                 <label className="label py-1">
-                  <span className="label-text text-sm">Password*</span>
+                  <span className="label-text text-sm font-medium">Password*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -283,36 +338,52 @@ function UM_HeroRegister() {
                     name="password"
                     value={s_password}
                     onChange={handleInputChange}
-                    className={`input input-bordered input-sm w-full ${errors.password ? 'input-error' : ''}`}
+                    className={`input input-bordered w-full pr-12 ${errors.password ? 'input-error border-red-500' : 'border-gray-300 focus:border-emerald-500'} transition-colors`}
                     placeholder="Create password"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400"
+                    className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
+                    {showPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
                   </button>
                 </div>
-                {errors.password && <span className="text-red-500 text-xs mt-1">{errors.password}</span>}
+                {errors.password && <span className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.password}
+                </span>}
               </div>
 
               <div className="form-control">
                 <label className="label py-1">
-                  <span className="label-text text-sm">Confirm Password*</span>
+                  <span className="label-text text-sm font-medium">Confirm Password*</span>
                 </label>
                 <input
                   type="password"
                   name="confirmPassword"
                   value={confirmPassword}
                   onChange={handleInputChange}
-                  className={`input input-bordered input-sm ${errors.confirmPassword ? 'input-error' : ''}`}
+                  className={`input input-bordered w-full ${errors.confirmPassword ? 'input-error border-red-500' : 'border-gray-300 focus:border-emerald-500'} transition-colors`}
                   placeholder="Confirm password"
                 />
-                {errors.confirmPassword && <span className="text-red-500 text-xs mt-1">{errors.confirmPassword}</span>}
+                {errors.confirmPassword && <span className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.confirmPassword}
+                </span>}
               </div>
 
               <div className="form-control">
@@ -322,28 +393,33 @@ function UM_HeroRegister() {
                     name="agreeToTerms"
                     checked={agreeToTerms}
                     onChange={handleInputChange}
-                    className="checkbox checkbox-primary checkbox-sm mr-2"
+                    className="checkbox checkbox-primary checkbox-sm mr-3"
                   />
-                  <span className="label-text text-xs">
-                    I agree to the <a href="#" className="link link-primary">Terms</a> and <a href="#" className="link link-primary">Privacy Policy</a>
+                  <span className="label-text text-xs sm:text-sm">
+                    I agree to the <a href="#" className="link link-primary hover:link-hover">Terms</a> and <a href="#" className="link link-primary hover:link-hover">Privacy Policy</a>
                   </span>
                 </label>
-                {errors.agreeToTerms && <span className="text-red-500 text-xs mt-1">{errors.agreeToTerms}</span>}
+                {errors.agreeToTerms && <span className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.agreeToTerms}
+                </span>}
               </div>
 
-              <div className="form-control mt-4">
+              <div className="form-control mt-6">
                 <button
                   type="submit"
-                  className={`btn btn-primary btn-sm ${!isFormValid() ? 'btn-disabled' : ''}`}
+                  className={`btn w-full ${!isFormValid() ? 'btn-disabled bg-gray-300 text-gray-500 cursor-not-allowed' : 'btn-primary bg-emerald-600 hover:bg-emerald-700 text-white'} transition-all duration-200 font-medium py-3`}
                   disabled={!isFormValid()}
                 >
-                  Create Account
+                  {!isFormValid() ? 'Complete all fields to continue' : 'Create Account'}
                 </button>
               </div>
 
-              <div className="text-center mt-3">
-                <p className="text-gray-600 text-xs">
-                  Already have an account? <a href="#" className="link link-primary">Sign in</a>
+              <div className="text-center mt-4">
+                <p className="text-gray-600 text-xs sm:text-sm">
+                  Already have an account? <a href="/login-std" className="link link-primary hover:link-hover font-medium">Sign in</a>
                 </p>
               </div>
             </form>

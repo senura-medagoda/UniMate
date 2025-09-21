@@ -1,12 +1,35 @@
-import React from 'react'
-import { useState } from 'react'
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+import { 
+  Search, 
+  Filter, 
+  Eye, 
+  Download, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Calendar,
+  FileText,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  XCircle,
+  Star,
+  User,
+  GraduationCap,
+  Award,
+  ArrowRight,
+  Users,
+  TrendingUp,
+  Target
+} from 'lucide-react'
 
 function HM_HeroApplicants() {
-    const [selectedJob, setSelectedJob] = useState('all');
-    const [statusFilter, setStatusFilter] = useState('all');
-    const [searchTerm, setSearchTerm] = useState('');
+  const [selectedJob, setSelectedJob] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
-    const [jobs] = useState([
+  const [jobs] = useState([
     { id: 'all', title: 'All Positions' },
     { id: 1, title: 'Software Developer Intern', department: 'Computer Science' },
     { id: 2, title: 'Research Assistant - Biology', department: 'Biology Department' },
@@ -24,7 +47,12 @@ function HM_HeroApplicants() {
       coverLetter: true,
       skills: ['JavaScript', 'React', 'Python'],
       match: 92,
-      notes: 'Strong portfolio, previous internship experience'
+      notes: 'Strong portfolio, previous internship experience',
+      email: 'sarah.johnson@email.com',
+      phone: '(555) 123-4567',
+      university: 'University of Technology',
+      gpa: '3.8',
+      year: 'Senior'
     },
     {
       id: 2,
@@ -36,7 +64,12 @@ function HM_HeroApplicants() {
       coverLetter: true,
       skills: ['Java', 'Spring Boot', 'SQL'],
       match: 87,
-      notes: 'Good academic record, needs technical interview'
+      notes: 'Good academic record, needs technical interview',
+      email: 'michael.chen@email.com',
+      phone: '(555) 234-5678',
+      university: 'State University',
+      gpa: '3.6',
+      year: 'Junior'
     },
     {
       id: 3,
@@ -48,58 +81,85 @@ function HM_HeroApplicants() {
       coverLetter: false,
       skills: ['Lab Techniques', 'Data Analysis', 'PCR'],
       match: 95,
-      notes: 'Perfect match, has previous research experience'
+      notes: 'Perfect match, has previous research experience',
+      email: 'emma.rodriguez@email.com',
+      phone: '(555) 345-6789',
+      university: 'Research Institute',
+      gpa: '3.9',
+      year: 'Graduate'
     },
     {
       id: 4,
       name: 'James Wilson',
       position: 'Campus Tour Guide',
-      status: 'rejected',
+      status: 'offer',
       appliedDate: '2023-10-17',
       resume: 'james_wilson_resume.pdf',
       coverLetter: true,
-      skills: ['Public Speaking', 'Communication', 'Leadership'],
-      match: 78,
-      notes: 'Limited availability during required hours'
+      skills: ['Public Speaking', 'Leadership', 'Communication'],
+      match: 89,
+      notes: 'Excellent communication skills, offered position',
+      email: 'james.wilson@email.com',
+      phone: '(555) 456-7890',
+      university: 'Community College',
+      gpa: '3.7',
+      year: 'Sophomore'
     },
     {
       id: 5,
-      name: 'Olivia Martinez',
-      position: 'Software Developer Intern',
-      status: 'new',
-      appliedDate: '2023-10-16',
-      resume: 'olivia_martinez_resume.pdf',
-      coverLetter: true,
-      skills: ['C++', 'Algorithms', 'Data Structures'],
-      match: 84,
-      notes: 'Strong problem-solving skills, coding competition winner'
-    },
-    {
-      id: 6,
-      name: 'David Kim',
+      name: 'Lisa Park',
       position: 'Research Assistant - Biology',
-      status: 'offer',
-      appliedDate: '2023-10-15',
-      resume: 'david_kim_resume.pdf',
+      status: 'rejected',
+      appliedDate: '2023-10-16',
+      resume: 'lisa_park_resume.pdf',
       coverLetter: true,
-      skills: ['Microbiology', 'Cell Culture', 'Statistics'],
-      match: 91,
-      notes: 'Offer sent, waiting for response'
+      skills: ['Chemistry', 'Lab Safety', 'Research'],
+      match: 78,
+      notes: 'Good candidate but lacks specific lab experience',
+      email: 'lisa.park@email.com',
+      phone: '(555) 567-8901',
+      university: 'Tech University',
+      gpa: '3.5',
+      year: 'Junior'
     }
   ]);
 
-  const statusOptions = [
-    { value: 'all', label: 'All Statuses' },
-    { value: 'new', label: 'New', color: 'badge-info' },
-    { value: 'reviewed', label: 'Reviewed', color: 'badge-primary' },
-    { value: 'interview', label: 'Interview', color: 'badge-warning' },
-    { value: 'offer', label: 'Offer', color: 'badge-success' },
-    { value: 'rejected', label: 'Rejected', color: 'badge-error' }
-  ];
+  const getStatusConfig = (status) => {
+    const configs = {
+      new: { 
+        color: 'bg-blue-100 text-blue-800 border-blue-200', 
+        icon: <AlertCircle className="w-4 h-4" />,
+        text: 'New'
+      },
+      reviewed: { 
+        color: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
+        icon: <Eye className="w-4 h-4" />,
+        text: 'Reviewed'
+      },
+      interview: { 
+        color: 'bg-purple-100 text-purple-800 border-purple-200', 
+        icon: <Calendar className="w-4 h-4" />,
+        text: 'Interview'
+      },
+      offer: { 
+        color: 'bg-green-100 text-green-800 border-green-200', 
+        icon: <CheckCircle className="w-4 h-4" />,
+        text: 'Offer'
+      },
+      rejected: { 
+        color: 'bg-red-100 text-red-800 border-red-200', 
+        icon: <XCircle className="w-4 h-4" />,
+        text: 'Rejected'
+      }
+    };
+    return configs[status] || configs.new;
+  };
 
-  const getStatusBadge = (status) => {
-    const statusObj = statusOptions.find(opt => opt.value === status);
-    return <span className={`badge badge-sm ${statusObj?.color || 'badge-info'}`}>{statusObj?.label}</span>;
+  const getMatchColor = (match) => {
+    if (match >= 90) return 'text-green-600 bg-green-100';
+    if (match >= 80) return 'text-yellow-600 bg-yellow-100';
+    if (match >= 70) return 'text-orange-600 bg-orange-100';
+    return 'text-red-600 bg-red-100';
   };
 
   const filteredApplicants = applicants.filter(applicant => {
@@ -121,194 +181,247 @@ function HM_HeroApplicants() {
     rejected: applicants.filter(a => a.status === 'rejected').length
   };
 
-  return (
+  const renderApplicantCard = (applicant, index) => {
+    const statusConfig = getStatusConfig(applicant.status);
+    
+    return (
+      <motion.div
+        key={applicant.id}
+        className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.1, duration: 0.4 }}
+        whileHover={{ y: -2 }}
+      >
+        <div className="p-6">
+          <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+            {/* Left Column - Basic Info */}
+            <div className="flex-1">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                    {applicant.name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">{applicant.name}</h3>
+                    <p className="text-gray-600">{applicant.position}</p>
+                    <p className="text-sm text-gray-500">{applicant.university} • {applicant.year}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${statusConfig.color}`}>
+                    {statusConfig.icon}
+                    {statusConfig.text}
+                  </span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getMatchColor(applicant.match)}`}>
+                    {applicant.match}% Match
+                  </span>
+                </div>
+              </div>
 
-    <div className="min-h-screen bg-gray-50 py-6">
-      <div className="mx-auto max-w-6xl px-4">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">Applicant Management</h1>
-            <p className="text-gray-600 mt-2">Review and manage applicants for your positions</p>
-          </div>
-          <div className="flex items-center mt-4 md:mt-0">
-            <span className="text-sm text-gray-600 mr-2">Total Applicants:</span>
-            <span className="text-lg font-semibold text-primary">{applicants.length}</span>
-          </div>
-        </div>
+              {/* Contact Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-gray-500" />
+                  <span className="text-gray-600">{applicant.email}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-gray-500" />
+                  <span className="text-gray-600">{applicant.phone}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-gray-500" />
+                  <span className="text-gray-600">GPA: {applicant.gpa}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <span className="text-gray-600">Applied: {applicant.appliedDate}</span>
+                </div>
+              </div>
 
-        {/* Filters Section */}
-        <div className="bg-base-100 rounded-lg shadow-md p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="label">
-                <span className="label-text">Filter by Position</span>
-              </label>
-              <select 
-                className="select select-bordered w-full"
-                value={selectedJob}
-                onChange={(e) => setSelectedJob(e.target.value)}
-              >
-                {jobs.map(job => (
-                  <option key={job.id} value={job.id}>
-                    {job.title}
-                  </option>
-                ))}
-              </select>
+              {/* Skills */}
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Skills</h4>
+                <div className="flex flex-wrap gap-2">
+                  {applicant.skills.map((skill, idx) => (
+                    <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notes */}
+              {applicant.notes && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Notes</h4>
+                  <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{applicant.notes}</p>
+                </div>
+              )}
             </div>
-            
-            <div>
-              <label className="label">
-                <span className="label-text">Filter by Status</span>
-              </label>
-              <select 
-                className="select select-bordered w-full"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                {statusOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className="label">
-                <span className="label-text">Search Applicants</span>
-              </label>
-              <div className="relative">
-                <input 
-                  type="text" 
-                  placeholder="Name, position, or skills..." 
-                  className="input input-bordered w-full pl-10" 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+
+            {/* Right Column - Actions */}
+            <div className="lg:w-48 flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
+                <button className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  View Profile
+                </button>
+                <button className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                  <Download className="w-4 h-4" />
+                  Download Resume
+                </button>
+                {applicant.coverLetter && (
+                  <button className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Cover Letter
+                  </button>
+                )}
+              </div>
+
+              <div className="border-t border-gray-200 pt-3">
+                <div className="flex gap-2">
+                  <button 
+                    className="flex-1 py-2 px-3 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-1"
+                    style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Accept
+                  </button>
+                  <button className="flex-1 py-2 px-3 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-1">
+                    <XCircle className="w-4 h-4" />
+                    Reject
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </motion.div>
+    );
+  };
 
-        {/* Status Summary */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          {statusOptions.filter(opt => opt.value !== 'all').map(option => (
-            <div key={option.value} className="stats shadow bg-base-100">
-              <div className="stat">
-                <div className="stat-title">{option.label}</div>
-                <div className="stat-value">{statusCounts[option.value]}</div>
-                <div className="stat-desc">Applicants</div>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Header Section */}
+        <motion.div 
+          className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="mb-6 lg:mb-0">
+            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+              <span className="text-transparent bg-clip-text" style={{ background: 'linear-gradient(to right, #fc944c, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Applications</span> Management
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl">
+              Review and manage applicants for your positions. Find the best candidates for your team.
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className="text-3xl font-bold text-gray-900">{applicants.length}</div>
+              <div className="text-sm text-gray-600">Total Applicants</div>
+            </div>
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
+              <Users className="w-8 h-8 text-white" />
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Stats Overview */}
+        <motion.div 
+          className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          {[
+            { key: 'new', label: 'New', count: statusCounts.new, color: 'bg-blue-500' },
+            { key: 'reviewed', label: 'Reviewed', count: statusCounts.reviewed, color: 'bg-yellow-500' },
+            { key: 'interview', label: 'Interview', count: statusCounts.interview, color: 'bg-purple-500' },
+            { key: 'offer', label: 'Offer', count: statusCounts.offer, color: 'bg-green-500' },
+            { key: 'rejected', label: 'Rejected', count: statusCounts.rejected, color: 'bg-red-500' }
+          ].map((stat) => (
+            <div key={stat.key} className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 text-center">
+              <div className={`w-12 h-12 ${stat.color} rounded-full flex items-center justify-center mx-auto mb-2`}>
+                <Users className="w-6 h-6 text-white" />
               </div>
+              <div className="text-2xl font-bold text-gray-900">{stat.count}</div>
+              <div className="text-sm text-gray-600">{stat.label}</div>
             </div>
           ))}
-        </div>
+        </motion.div>
+
+        {/* Filters Section */}
+        <motion.div 
+          className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search applicants..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+              />
+            </div>
+
+            {/* Job Filter */}
+            <select
+              value={selectedJob}
+              onChange={(e) => setSelectedJob(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+            >
+              {jobs.map(job => (
+                <option key={job.id} value={job.id}>{job.title}</option>
+              ))}
+            </select>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+            >
+              <option value="all">All Status</option>
+              <option value="new">New</option>
+              <option value="reviewed">Reviewed</option>
+              <option value="interview">Interview</option>
+              <option value="offer">Offer</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </motion.div>
 
         {/* Applicants List */}
-        <div className="bg-base-100 rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-semibold mb-6">
-            {filteredApplicants.length} Applicant{filteredApplicants.length !== 1 ? 's' : ''} Found
-          </h2>
-          
-          {filteredApplicants.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="table table-zebra w-full">
-                <thead>
-                  <tr>
-                    <th>Applicant</th>
-                    <th>Position</th>
-                    <th>Status</th>
-                    <th>Skills</th>
-                    <th>Match</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredApplicants.map(applicant => (
-                    <tr key={applicant.id}>
-                      <td>
-                        <div className="flex items-center space-x-3">
-                          <div className="avatar placeholder">
-                            <div className="bg-neutral-focus text-neutral-content rounded-full w-12">
-                              <span>{applicant.name.split(' ').map(n => n[0]).join('')}</span>
-                            </div>
-                          </div>
-                          <div>
-                            <div className="font-bold">{applicant.name}</div>
-                            <div className="text-sm text-gray-500">
-                              Applied: {applicant.appliedDate}
-                              {applicant.coverLetter && (
-                                <span className="ml-2 text-primary">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                  </svg>
-                                  Cover Letter
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{applicant.position}</td>
-                      <td>{getStatusBadge(applicant.status)}</td>
-                      <td>
-                        <div className="flex flex-wrap gap-1">
-                          {applicant.skills.slice(0, 3).map(skill => (
-                            <span key={skill} className="badge badge-outline badge-sm">{skill}</span>
-                          ))}
-                          {applicant.skills.length > 3 && (
-                            <span className="badge badge-ghost badge-sm">+{applicant.skills.length - 3}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="flex items-center">
-                          <div className="radial-progress bg-base-200 border-4 border-base-200" style={{"--value": applicant.match, "--size": "3rem"}}>
-                            <span className="text-xs font-bold">{applicant.match}%</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="flex space-x-2">
-                          <button className="btn btn-ghost btn-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            View
-                          </button>
-                          <button className="btn btn-primary btn-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                            </svg>
-                            Contact
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <motion.div
+          className="space-y-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          {filteredApplicants.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl shadow-lg border border-gray-100">
+              <Users className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-2xl font-bold text-gray-700 mb-2">No applicants found</h3>
+              <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
             </div>
           ) : (
-            <div className="text-center py-12">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <h3 className="text-xl font-semibold text-gray-700">No applicants found</h3>
-              <p className="text-gray-500 mt-2">Try adjusting your filters or search term</p>
-            </div>
+            filteredApplicants.map(renderApplicantCard)
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
-
-  )
+  );
 }
 
-export default HM_HeroApplicants
+export default HM_HeroApplicants;

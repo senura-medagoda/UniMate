@@ -8,6 +8,11 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+        primary: '#fc944c',
+        'primary-dark': '#e67e22',
+        'primary-light': '#f39c12',
+      },
       fontFamily: {
         poppins: ['Poppins', 'sans-serif'],
         

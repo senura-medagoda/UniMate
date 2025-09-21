@@ -1,82 +1,196 @@
 // components/UM_Nav.jsx
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom'; // Ensure you have react-router-dom installed
+import { Link, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Menu, X, User, LogIn } from 'lucide-react';
 
 const UM_Nav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+
+  const navItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Services', path: '/services' },
+    { name: 'About Us', path: '/about' },
+    { name: 'Contact', path: '/contact' }
+  ];
+
+  const isActive = (path) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
+  };
 
   return (
-    <div className="bg-base-100 shadow-md sticky top-0 z-50">
-      <div className="navbar mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3">
-        {/* Logo and Mobile Menu Button */}
-        <div className="navbar-start">
-          <div className="dropdown">
-            <label
-              tabIndex={0}
-              className="btn btn-ghost lg:hidden"
-              onClick={() => setIsMenuOpen((prev) => !prev)}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+    <motion.nav 
+      className="bg-white/95 backdrop-blur-sm shadow-lg sticky top-0 z-50 border-b border-gray-200/50"
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 lg:h-20">
+          
+          {/* Logo */}
+          <motion.div 
+            className="flex-shrink-0"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Link to="/" className="flex items-center">
+              <img 
+                src="/Logo.png" 
+                alt="UniMate Logo" 
+                className="h-8 w-auto lg:h-10"
+              />
+            </Link>
+          </motion.div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-8">
+            {navItems.map((item, index) => (
+              <motion.div
+                key={item.name}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h8m-8 6h16"}
-                />
-              </svg>
-            </label>
-            {/* Mobile Menu Dropdown */}
-            <ul
-              tabIndex={0}
-              className={`menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52 ${isMenuOpen ? 'block' : 'hidden'}`}
-            >
-              {/* Added Home Link */}
-              <li><Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link></li>
-              <li><Link to="/services" onClick={() => setIsMenuOpen(false)}>Services</Link></li>
-              <li><Link to="/about" onClick={() => setIsMenuOpen(false)}>About Us</Link></li>
-              <li><Link to="/contact" onClick={() => setIsMenuOpen(false)}>Contact</Link></li>
-              <hr className="my-2" />
-              <li><Link to="/login" onClick={() => setIsMenuOpen(false)} className="font-semibold justify-center">Login</Link></li>
-              <li><Link to="/join" onClick={() => setIsMenuOpen(false)} className="btn btn-primary btn-sm text-white mt-2 justify-center">Register</Link></li>
-            </ul>
+                <Link
+                  to={item.path}
+                  className={`font-medium transition-colors duration-200 relative group ${
+                    isActive(item.path) 
+                      ? 'text-primary' 
+                      : 'text-gray-700 hover:text-primary'
+                  }`}
+                >
+                  {item.name}
+                  <span className={`absolute -bottom-1 left-0 h-0.5 bg-primary transition-all duration-300 ${
+                    isActive(item.path) 
+                      ? 'w-full' 
+                      : 'w-0 group-hover:w-full'
+                  }`}></span>
+                </Link>
+              </motion.div>
+            ))}
           </div>
-          {/* Website Logo - Links to Homepage */}
-          <Link to="/" className="btn btn-ghost normal-case text-xl text-[#fc944c]">
-            UniMate
-          </Link>
+
+          {/* Desktop Auth Buttons */}
+          <div className="hidden lg:flex items-center space-x-4">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <Link
+                to="/login"
+                className="flex items-center gap-2 text-gray-700 hover:text-primary font-medium transition-colors duration-200"
+              >
+                <LogIn className="w-4 h-4" />
+                Login
+              </Link>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              <Link
+                to="/stdregister"
+                className="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              >
+                Register
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden">
+            <motion.button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 rounded-lg text-gray-700 hover:text-primary hover:bg-gray-100 transition-colors duration-200"
+              whileTap={{ scale: 0.95 }}
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </motion.button>
+          </div>
         </div>
 
-        {/* Desktop Menu Items (Center) */}
-        <div className="navbar-center hidden lg:flex">
-          <ul className="menu menu-horizontal px-1 space-x-2">
-            {/* Added Home Link */}
-            <li><Link to="/" className="font-medium hover:text-primary">Home</Link></li>
-            <li><Link to="/services" className="font-medium hover:text-primary">Services</Link></li>
-            <li><Link to="/about" className="font-medium hover:text-primary">About Us</Link></li>
-            <li><Link to="/contact" className="font-medium hover:text-primary">Contact</Link></li>
-          </ul>
-        </div>
-
-        {/* Desktop Login/Register Buttons (End) */}
-        <div className="navbar-end hidden lg:flex space-x-2">
-          <Link to="/login" className="btn btn-ghost font-medium">Login</Link>
-          <Link to="/stdregister" className="px-4 py-1 rounded-3xl font-semibold  bg-[#fc944c] text-white">Register</Link>
-        </div>
-
-        {/* Mobile: Show simple Login button if menu is not open */}
-        <div className="navbar-end lg:hidden">
-          {!isMenuOpen && (
-            <Link to="/login" className="btn btn-ghost btn-sm">Login</Link>
-          )}
-        </div>
+        {/* Mobile Menu */}
+        <motion.div
+          className={`lg:hidden ${isMenuOpen ? 'block' : 'hidden'}`}
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ 
+            opacity: isMenuOpen ? 1 : 0, 
+            height: isMenuOpen ? 'auto' : 0 
+          }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="px-2 pt-2 pb-3 space-y-1 bg-white/95 backdrop-blur-sm rounded-lg mt-2 shadow-lg border border-gray-200/50">
+            {navItems.map((item, index) => (
+              <motion.div
+                key={item.name}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ 
+                  opacity: isMenuOpen ? 1 : 0, 
+                  x: isMenuOpen ? 0 : -20 
+                }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                <Link
+                  to={item.path}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`block px-3 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                    isActive(item.path)
+                      ? 'text-primary bg-primary/10'
+                      : 'text-gray-700 hover:text-primary hover:bg-gray-100'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              </motion.div>
+            ))}
+            
+            <div className="border-t border-gray-200 my-2"></div>
+            
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ 
+                opacity: isMenuOpen ? 1 : 0, 
+                x: isMenuOpen ? 0 : -20 
+              }}
+              transition={{ duration: 0.3, delay: 0.4 }}
+            >
+              <Link
+                to="/login"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-primary hover:bg-gray-100 rounded-lg font-medium transition-colors duration-200"
+              >
+                <LogIn className="w-4 h-4" />
+                Login
+              </Link>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ 
+                opacity: isMenuOpen ? 1 : 0, 
+                x: isMenuOpen ? 0 : -20 
+              }}
+              transition={{ duration: 0.3, delay: 0.5 }}
+            >
+              <Link
+                to="/stdregister"
+                onClick={() => setIsMenuOpen(false)}
+                className="block w-full text-center bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 mt-2"
+              >
+                Register
+              </Link>
+            </motion.div>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.nav>
   );
 };
 
