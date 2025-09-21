@@ -1,852 +1,363 @@
-import AdminModel from "../models/AdminModel.js";
-import VendorModel from "../models/VendorModel.js";
-import ShopModel from "../models/ShopModel.js";
-import jwt from "jsonwebtoken";
-import { createAdminNotification } from "../services/notificationService.js";
+import { StudyMaterial } from "../models/StudyMaterial.js";
+import { ForumPost } from "../models/ForumPost.js";
+import { Complaint } from "../models/Complaint.js";
+import { User } from "../models/User.js";
 
-// Generate JWT Token for admin
-const generateAdminToken = (adminId, role) => {
-    return jwt.sign({ adminId, role, isAdmin: true }, process.env.JWT_SECRET, {
-        expiresIn: '24h'
-    });
-};
-
-// Admin Registration (Super Admin only)
-export const registerAdmin = async (req, res) => {
-    try {
-        const {
-            username,
-            email,
-            password,
-            fullName,
-            role = 'food_admin',
-            permissions = [],
-            phone,
-            department = 'Food Delivery'
-        } = req.body;
-
-        // Check if admin already exists
-        const existingAdmin = await AdminModel.findOne({
-            $or: [{ email }, { username }]
-        });
-
-        if (existingAdmin) {
-            return res.status(400).json({
-                success: false,
-                message: "Admin with this email or username already exists"
-            });
-        }
-
-        const admin = new AdminModel({
-            username,
-            email,
-            password,
-            fullName,
-            role,
-            permissions,
-            phone,
-            department
-        });
-
-        await admin.save();
-
-        const token = generateAdminToken(admin._id, admin.role);
-
-        res.status(201).json({
-            success: true,
-            message: "Admin registered successfully",
-            data: {
-                admin: admin.getPublicProfile(),
-                token
-            }
-        });
-
-    } catch (error) {
-        console.error("Admin registration error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
-    }
-};
-
-// Admin Login
-export const loginAdmin = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        const admin = await AdminModel.findOne({ email });
-
-        if (!admin) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid email or password"
-            });
-        }
-
-        if (!admin.isActive) {
-            return res.status(401).json({
-                success: false,
-                message: "Account is deactivated"
-            });
-        }
-
-        const isPasswordValid = await admin.comparePassword(password);
-
-        if (!isPasswordValid) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid email or password"
-            });
-        }
-
-        // Update last login
-        admin.lastLogin = new Date();
-        await admin.save();
-
-        const token = generateAdminToken(admin._id, admin.role);
-
-        res.status(200).json({
-            success: true,
-            message: "Login successful",
-            data: {
-                admin: admin.getPublicProfile(),
-                token
-            }
-        });
-
-    } catch (error) {
-        console.error("Admin login error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
-    }
-};
-
-// Get Admin Profile
-export const getAdminProfile = async (req, res) => {
-    try {
-        const admin = await AdminModel.findById(req.adminId);
-
-        if (!admin) {
-            return res.status(404).json({
-                success: false,
-                message: "Admin not found"
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            data: admin.getPublicProfile()
-        });
-
-    } catch (error) {
-        console.error("Get admin profile error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
-    }
-};
-
-// Update Admin Profile
-export const updateAdminProfile = async (req, res) => {
-    try {
-        const { username, email, fullName, phone, department, permissions } = req.body;
-        const adminId = req.adminId;
-
-        // Check if admin exists
-        const admin = await AdminModel.findById(adminId);
-        if (!admin) {
-            return res.status(404).json({
-                success: false,
-                message: "Admin not found"
-            });
-        }
-
-        // Check if email is already taken by another admin
-        if (email && email !== admin.email) {
-            const existingAdmin = await AdminModel.findOne({ email, _id: { $ne: adminId } });
-            if (existingAdmin) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Email is already taken by another admin"
-                });
-            }
-        }
-
-        // Check if username is already taken by another admin
-        if (username && username !== admin.username) {
-            const existingAdmin = await AdminModel.findOne({ username, _id: { $ne: adminId } });
-            if (existingAdmin) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Username is already taken by another admin"
-                });
-            }
-        }
-
-        // Update admin profile
-        const updateData = {};
-        if (username) updateData.username = username;
-        if (email) updateData.email = email;
-        if (fullName) updateData.fullName = fullName;
-        if (phone !== undefined) updateData.phone = phone;
-        if (department) updateData.department = department;
-        if (permissions) updateData.permissions = permissions;
-
-        const updatedAdmin = await AdminModel.findByIdAndUpdate(
-            adminId,
-            updateData,
-            { new: true, runValidators: true }
-        );
-
-        res.status(200).json({
-            success: true,
-            message: "Profile updated successfully",
-            data: updatedAdmin.getPublicProfile()
-        });
-
-    } catch (error) {
-        console.error("Update admin profile error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
-    }
-};
-
-// Get Dashboard Statistics
+// @desc Get admin dashboard stats
 export const getDashboardStats = async (req, res) => {
-    try {
-        const [
-            totalVendors,
-            activeVendors,
-            totalShops,
-            activeShops,
-            pendingVendors,
-            recentVendors
-        ] = await Promise.all([
-            VendorModel.countDocuments(),
-            VendorModel.countDocuments({ isActive: true }),
-            ShopModel.countDocuments(),
-            ShopModel.countDocuments({ isActive: true }),
-            VendorModel.countDocuments({ approvalStatus: 'pending' }),
-            VendorModel.find()
-                .sort({ createdAt: -1 })
-                .limit(5)
-                .select('businessName ownerName email createdAt approvalStatus isApproved')
-        ]);
+  try {
+    const [
+      totalUsers,
+      totalMaterials,
+      totalPosts,
+      totalComplaints,
+      pendingComplaints
+    ] = await Promise.all([
+      User.countDocuments(),
+      StudyMaterial.countDocuments(),
+      ForumPost.countDocuments(),
+      Complaint.countDocuments(),
+      Complaint.countDocuments({ status: "pending" })
+    ]);
 
-        // Get shop information for each recent vendor
-        const recentVendorsWithShops = await Promise.all(
-            recentVendors.map(async (vendor) => {
-                const shops = await ShopModel.find({ vendorId: vendor._id })
-                    .select('businessName address approvalStatus isApproved createdAt')
-                    .sort({ createdAt: -1 })
-                    .limit(1);
-                
-                return {
-                    ...vendor.toObject(),
-                    shops: shops
-                };
-            })
-        );
-
-        const stats = {
-            vendors: {
-                total: totalVendors,
-                active: activeVendors,
-                pending: pendingVendors,
-                inactive: totalVendors - activeVendors
-            },
-            shops: {
-                total: totalShops,
-                active: activeShops,
-                inactive: totalShops - activeShops
-            },
-            recentVendors: recentVendorsWithShops
-        };
-
-        res.status(200).json({
-            success: true,
-            data: stats
-        });
-
-    } catch (error) {
-        console.error("Get dashboard stats error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
-    }
+    res.json({
+      totalUsers,
+      totalMaterials,
+      totalPosts,
+      totalComplaints,
+      pendingApprovals: pendingComplaints
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch dashboard stats", error: error.message });
+  }
 };
 
-// Get All Vendors (Admin)
-export const getAllVendors = async (req, res) => {
-    try {
-        const { page = 1, limit = 10, search, status, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
-
-        const query = {};
-
-        if (search) {
-            query.$or = [
-                { businessName: { $regex: search, $options: 'i' } },
-                { ownerName: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
-            ];
-        }
-
-        if (status) {
-            if (status === 'active') query.isActive = true;
-            if (status === 'inactive') query.isActive = false;
-            if (status === 'pending') query.approvalStatus = 'pending';
-        }
-
-        const sortOptions = {};
-        sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
-
-        const vendors = await VendorModel.find(query)
-            .select('-password')
-            .sort(sortOptions)
-            .limit(limit * 1)
-            .skip((page - 1) * limit);
-
-        const total = await VendorModel.countDocuments(query);
-
-        res.status(200).json({
-            success: true,
-            data: {
-                vendors,
-                totalPages: Math.ceil(total / limit),
-                currentPage: parseInt(page),
-                total
-            }
-        });
-
-    } catch (error) {
-        console.error("Get all vendors error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
-    }
+// @desc Get all complaints
+export const getAllComplaints = async (req, res) => {
+  try {
+    const { status, type, category } = req.query;
+    let query = {};
+    
+    if (status) query.status = status;
+    if (type) query.type = type;
+    if (category) query.category = category;
+    
+    const complaints = await Complaint.find(query)
+      .sort({ createdAt: -1 })
+      .limit(50);
+    
+    res.json(complaints);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch complaints", error: error.message });
+  }
 };
 
-// Get All Shops (Admin)
-export const getAllShops = async (req, res) => {
-    try {
-        const { page = 1, limit = 10, search, status, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
-
-        const query = {};
-
-        if (search) {
-            query.$or = [
-                { businessName: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
-                { 'address.city': { $regex: search, $options: 'i' } }
-            ];
-        }
-
-        if (status) {
-            if (status === 'active') query.isActive = true;
-            if (status === 'inactive') query.isActive = false;
-            if (status === 'open') query.isOpen = true;
-            if (status === 'closed') query.isOpen = false;
-        }
-
-        const sortOptions = {};
-        sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
-
-        const shops = await ShopModel.find(query)
-            .populate('vendorId', 'businessName ownerName email')
-            .sort(sortOptions)
-            .limit(limit * 1)
-            .skip((page - 1) * limit);
-
-        const total = await ShopModel.countDocuments(query);
-
-        res.status(200).json({
-            success: true,
-            data: {
-                shops,
-                totalPages: Math.ceil(total / limit),
-                currentPage: parseInt(page),
-                total
-            }
-        });
-
-    } catch (error) {
-        console.error("Get all shops error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
+// @desc Update complaint status
+export const updateComplaintStatus = async (req, res) => {
+  try {
+    const { status, adminNotes } = req.body;
+    const { id } = req.params;
+    
+    const complaint = await Complaint.findById(id);
+    if (!complaint) {
+      return res.status(404).json({ message: "Complaint not found" });
     }
+    
+    complaint.status = status;
+    if (adminNotes) complaint.adminNotes = adminNotes;
+    if (status === "resolved" || status === "rejected") {
+      complaint.resolvedBy = "admin"; // TODO: Get from auth middleware
+      complaint.resolvedAt = new Date();
+    }
+    
+    await complaint.save();
+    res.json(complaint);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update complaint", error: error.message });
+  }
 };
 
-// Toggle Vendor Status
-export const toggleVendorStatus = async (req, res) => {
-    try {
-        const { vendorId } = req.params;
-        const { isActive } = req.body;
-
-        const vendor = await VendorModel.findByIdAndUpdate(
-            vendorId,
-            { isActive },
-            { new: true }
-        );
-
-        if (!vendor) {
-            return res.status(404).json({
-                success: false,
-                message: "Vendor not found"
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: `Vendor ${isActive ? 'activated' : 'deactivated'} successfully`,
-            data: vendor.getPublicProfile()
-        });
-
-    } catch (error) {
-        console.error("Toggle vendor status error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
-    }
+// @desc Get all users
+export const getAllUsers = async (req, res) => {
+  try {
+    const { status, role, campus } = req.query;
+    let query = {};
+    
+    if (status) query.status = status;
+    if (role) query.role = role;
+    if (campus) query.campus = campus;
+    
+    const users = await User.find(query)
+      .select('-password -emailVerificationToken -passwordResetToken')
+      .sort({ createdAt: -1 })
+      .limit(50);
+    
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch users", error: error.message });
+  }
 };
 
-// Toggle Shop Status
-export const toggleShopStatus = async (req, res) => {
-    try {
-        const { shopId } = req.params;
-        const { isActive } = req.body;
-
-        const shop = await ShopModel.findByIdAndUpdate(
-            shopId,
-            { isActive },
-            { new: true }
-        ).populate('vendorId', 'businessName ownerName email');
-
-        if (!shop) {
-            return res.status(404).json({
-                success: false,
-                message: "Shop not found"
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: `Shop ${isActive ? 'activated' : 'deactivated'} successfully`,
-            data: shop
-        });
-
-    } catch (error) {
-        console.error("Toggle shop status error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
+// @desc Get user by ID
+export const getUserById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const user = await User.findById(userId)
+      .select('-password -emailVerificationToken -passwordResetToken');
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
+    
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch user", error: error.message });
+  }
 };
 
-// Get Vendor Details
-export const getVendorDetails = async (req, res) => {
-    try {
-        const { vendorId } = req.params;
-
-        const vendor = await VendorModel.findById(vendorId).select('-password');
-        const shops = await ShopModel.find({ vendorId }).select('-vendorId');
-
-        if (!vendor) {
-            return res.status(404).json({
-                success: false,
-                message: "Vendor not found"
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            data: {
-                vendor,
-                shops
-            }
-        });
-
-    } catch (error) {
-        console.error("Get vendor details error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
+// @desc Ban user
+export const banUser = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const { userId } = req.params;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
+    
+    user.status = "banned";
+    user.banReason = reason;
+    user.bannedAt = new Date();
+    user.bannedBy = "admin"; // TODO: Get from auth middleware
+    
+    await user.save();
+    res.json({ message: "User banned successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to ban user", error: error.message });
+  }
 };
 
-// Get Shop Details
-export const getShopDetails = async (req, res) => {
-    try {
-        const { shopId } = req.params;
-
-        const shop = await ShopModel.findById(shopId)
-            .populate('vendorId', 'businessName ownerName email phone');
-
-        if (!shop) {
-            return res.status(404).json({
-                success: false,
-                message: "Shop not found"
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            data: shop
-        });
-
-    } catch (error) {
-        console.error("Get shop details error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
+// @desc Suspend user
+export const suspendUser = async (req, res) => {
+  try {
+    const { reason, duration } = req.body; // duration in days
+    const { userId } = req.params;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
+    
+    user.status = "suspended";
+    user.suspensionReason = reason;
+    user.suspendedUntil = new Date(Date.now() + duration * 24 * 60 * 60 * 1000);
+    
+    await user.save();
+    res.json({ message: "User suspended successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to suspend user", error: error.message });
+  }
 };
 
-// Approve Shop
-export const approveShop = async (req, res) => {
-    try {
-        const { shopId } = req.params;
-        const adminId = req.adminId;
-
-        const shop = await ShopModel.findById(shopId).populate('vendorId', 'businessName ownerName email');
-
-        if (!shop) {
-            return res.status(404).json({
-                success: false,
-                message: "Shop not found"
-            });
-        }
-
-        if (shop.approvalStatus === 'approved') {
-            return res.status(400).json({
-                success: false,
-                message: "Shop is already approved"
-            });
-        }
-
-        // Update shop approval status
-        shop.isApproved = true;
-        shop.approvalStatus = 'approved';
-        shop.approvedAt = new Date();
-        shop.approvedBy = adminId;
-        await shop.save();
-
-        // Send notification to other admins
-        try {
-            await createAdminNotification(
-                'shop_approved',
-                'Shop Approved',
-                `Shop "${shop.businessName}" has been approved and is now live.`,
-                {
-                    shopId: shop._id,
-                    shopName: shop.businessName,
-                    vendorId: shop.vendorId._id,
-                    approvedAt: shop.approvedAt
-                },
-                'medium',
-                `/admin/shops/${shopId}`
-            );
-        } catch (notificationError) {
-            console.error('Error sending notification:', notificationError);
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Shop approved successfully",
-            data: shop
-        });
-
-    } catch (error) {
-        console.error("Approve shop error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
+// @desc Reactivate user
+export const reactivateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
+    
+    user.status = "active";
+    user.suspensionReason = undefined;
+    user.suspendedUntil = undefined;
+    user.banReason = undefined;
+    user.bannedAt = undefined;
+    user.bannedBy = undefined;
+    
+    await user.save();
+    res.json({ message: "User reactivated successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to reactivate user", error: error.message });
+  }
 };
 
-// Reject Shop
-export const rejectShop = async (req, res) => {
-    try {
-        const { shopId } = req.params;
-        const { rejectionReason } = req.body;
-        const adminId = req.adminId;
-
-        const shop = await ShopModel.findById(shopId).populate('vendorId', 'businessName ownerName email');
-
-        if (!shop) {
-            return res.status(404).json({
-                success: false,
-                message: "Shop not found"
-            });
-        }
-
-        if (shop.approvalStatus === 'rejected') {
-            return res.status(400).json({
-                success: false,
-                message: "Shop is already rejected"
-            });
-        }
-
-        // Update shop rejection status
-        shop.isApproved = false;
-        shop.approvalStatus = 'rejected';
-        shop.rejectionReason = rejectionReason || 'No reason provided';
-        shop.approvedBy = adminId;
-        await shop.save();
-
-        // Send notification to other admins
-        try {
-            await createAdminNotification(
-                'shop_rejected',
-                'Shop Rejected',
-                `Shop "${shop.businessName}" has been rejected. Reason: ${shop.rejectionReason}`,
-                {
-                    shopId: shop._id,
-                    shopName: shop.businessName,
-                    vendorId: shop.vendorId._id,
-                    rejectionReason: shop.rejectionReason,
-                    rejectedAt: new Date()
-                },
-                'medium',
-                `/admin/shops/${shopId}`
-            );
-        } catch (notificationError) {
-            console.error('Error sending notification:', notificationError);
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Shop rejected successfully",
-            data: shop
-        });
-
-    } catch (error) {
-        console.error("Reject shop error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
+// @desc Delete material (admin)
+export const deleteMaterial = async (req, res) => {
+  try {
+    const { materialId } = req.params;
+    
+    const material = await StudyMaterial.findById(materialId);
+    if (!material) {
+      return res.status(404).json({ message: "Material not found" });
     }
+    
+    await StudyMaterial.findByIdAndDelete(materialId);
+    res.json({ message: "Material deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete material", error: error.message });
+  }
 };
 
-// Get Pending Shops
-export const getPendingShops = async (req, res) => {
-    try {
-        const { page = 1, limit = 10 } = req.query;
-
-        const shops = await ShopModel.find({ approvalStatus: 'pending' })
-            .populate('vendorId', 'businessName ownerName email phone')
-            .sort({ createdAt: -1 })
-            .limit(limit * 1)
-            .skip((page - 1) * limit);
-
-        const total = await ShopModel.countDocuments({ approvalStatus: 'pending' });
-
-        res.status(200).json({
-            success: true,
-            data: {
-                shops,
-                totalPages: Math.ceil(total / limit),
-                currentPage: parseInt(page),
-                total
-            }
-        });
-
-    } catch (error) {
-        console.error("Get pending shops error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
+// @desc Delete forum post (admin)
+export const deleteForumPost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    
+    const post = await ForumPost.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
     }
+    
+    await ForumPost.findByIdAndDelete(postId);
+    res.json({ message: "Post deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete post", error: error.message });
+  }
 };
 
-// Approve Vendor
-export const approveVendor = async (req, res) => {
-    try {
-        const { vendorId } = req.params;
-        const adminId = req.adminId;
+// @desc Get analytics report
+export const getAnalyticsReport = async (req, res) => {
+  try {
+    // Top materials by likes
+    const topMaterials = await StudyMaterial.find()
+      .sort({ likeCount: -1, downloadCount: -1 })
+      .limit(10)
+      .select('title subject likeCount downloadCount rating uploadedBy');
 
-        const vendor = await VendorModel.findById(vendorId);
-
-        if (!vendor) {
-            return res.status(404).json({
-                success: false,
-                message: "Vendor not found"
-            });
+    // Top contributors
+    const topContributors = await StudyMaterial.aggregate([
+      {
+        $group: {
+          _id: "$uploadedBy",
+          materialsCount: { $sum: 1 },
+          totalLikes: { $sum: "$likeCount" },
+          totalDownloads: { $sum: "$downloadCount" },
+          averageRating: { $avg: "$rating" }
         }
+      },
+      { $sort: { materialsCount: -1 } },
+      { $limit: 10 }
+    ]);
 
-        if (vendor.approvalStatus === 'approved') {
-            return res.status(400).json({
-                success: false,
-                message: "Vendor is already approved"
-            });
+    // Materials by campus
+    const materialsByCampus = await StudyMaterial.aggregate([
+      {
+        $group: {
+          _id: "$campus",
+          count: { $sum: 1 }
         }
+      },
+      { $sort: { count: -1 } }
+    ]);
 
-        // Update vendor approval status
-        vendor.isApproved = true;
-        vendor.approvalStatus = 'approved';
-        vendor.approvedAt = new Date();
-        vendor.approvedBy = adminId;
-        await vendor.save();
-
-        // Send notification to other admins
-        try {
-            await createAdminNotification(
-                'vendor_approved',
-                'Vendor Approved',
-                `Vendor "${vendor.businessName}" has been approved and can now create shops.`,
-                {
-                    vendorId: vendor._id,
-                    businessName: vendor.businessName,
-                    ownerName: vendor.ownerName,
-                    approvedAt: vendor.approvedAt
-                },
-                'medium',
-                `/admin/vendors/${vendorId}`
-            );
-        } catch (notificationError) {
-            console.error('Error sending notification:', notificationError);
+    // Materials by subject
+    const materialsBySubject = await StudyMaterial.aggregate([
+      {
+        $group: {
+          _id: "$subject",
+          count: { $sum: 1 }
         }
+      },
+      { $sort: { count: -1 } }
+    ]);
 
-        res.status(200).json({
-            success: true,
-            message: "Vendor approved successfully",
-            data: vendor
-        });
+    // Forum statistics
+    const forumStats = await ForumPost.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalPosts: { $sum: 1 },
+          totalComments: { $sum: "$commentCount" },
+          totalLikes: { $sum: "$likes" },
+          totalDislikes: { $sum: "$dislikes" }
+        }
+      }
+    ]);
 
-    } catch (error) {
-        console.error("Approve vendor error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
-    }
+    // Top forum contributors
+    const topForumContributors = await ForumPost.aggregate([
+      {
+        $group: {
+          _id: "$author",
+          postsCount: { $sum: 1 },
+          totalLikes: { $sum: "$likes" },
+          totalComments: { $sum: "$commentCount" }
+        }
+      },
+      { $sort: { postsCount: -1 } },
+      { $limit: 10 }
+    ]);
+
+    // Complaint statistics
+    const complaintStats = await Complaint.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Recent activity
+    const recentMaterials = await StudyMaterial.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('title uploadedBy createdAt');
+
+    const recentPosts = await ForumPost.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('title author createdAt');
+
+    res.json({
+      topMaterials,
+      topContributors,
+      materialsByCampus,
+      materialsBySubject,
+      forumStats: forumStats[0] || {},
+      topForumContributors,
+      complaintStats,
+      recentActivity: {
+        materials: recentMaterials,
+        posts: recentPosts
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to generate analytics report", error: error.message });
+  }
 };
 
-// Reject Vendor
-export const rejectVendor = async (req, res) => {
-    try {
-        const { vendorId } = req.params;
-        const { rejectionReason } = req.body;
-        const adminId = req.adminId;
+// @desc Create complaint
+export const createComplaint = async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      type,
+      category,
+      againstUser,
+      againstMaterial,
+      againstPost
+    } = req.body;
 
-        const vendor = await VendorModel.findById(vendorId);
+    const newComplaint = new Complaint({
+      title,
+      description,
+      reportedBy: "student123", // TODO: Get from auth middleware
+      type,
+      category,
+      againstUser,
+      againstMaterial,
+      againstPost
+    });
 
-        if (!vendor) {
-            return res.status(404).json({
-                success: false,
-                message: "Vendor not found"
-            });
-        }
-
-        if (vendor.approvalStatus === 'rejected') {
-            return res.status(400).json({
-                success: false,
-                message: "Vendor is already rejected"
-            });
-        }
-
-        // Update vendor rejection status
-        vendor.isApproved = false;
-        vendor.approvalStatus = 'rejected';
-        vendor.rejectionReason = rejectionReason || 'No reason provided';
-        vendor.approvedBy = adminId;
-        await vendor.save();
-
-        // Send notification to other admins
-        try {
-            await createAdminNotification(
-                'vendor_rejected',
-                'Vendor Rejected',
-                `Vendor "${vendor.businessName}" has been rejected. Reason: ${vendor.rejectionReason}`,
-                {
-                    vendorId: vendor._id,
-                    businessName: vendor.businessName,
-                    ownerName: vendor.ownerName,
-                    rejectionReason: vendor.rejectionReason,
-                    rejectedAt: new Date()
-                },
-                'medium',
-                `/admin/vendors/${vendorId}`
-            );
-        } catch (notificationError) {
-            console.error('Error sending notification:', notificationError);
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Vendor rejected successfully",
-            data: vendor
-        });
-
-    } catch (error) {
-        console.error("Reject vendor error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
-    }
-};
-
-// Get Pending Vendors
-export const getPendingVendors = async (req, res) => {
-    try {
-        const { page = 1, limit = 10 } = req.query;
-
-        const vendors = await VendorModel.find({ approvalStatus: 'pending' })
-            .sort({ createdAt: -1 })
-            .limit(limit * 1)
-            .skip((page - 1) * limit);
-
-        const total = await VendorModel.countDocuments({ approvalStatus: 'pending' });
-
-        res.status(200).json({
-            success: true,
-            data: {
-                vendors,
-                totalPages: Math.ceil(total / limit),
-                currentPage: parseInt(page),
-                total
-            }
-        });
-
-    } catch (error) {
-        console.error("Get pending vendors error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        });
-    }
+    await newComplaint.save();
+    res.status(201).json(newComplaint);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to create complaint", error: error.message });
+  }
 };

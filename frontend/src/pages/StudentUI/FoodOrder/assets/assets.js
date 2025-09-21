@@ -97,6 +97,4 @@ export const dummy = [
     }
 ]
 
-    choose_food
-}
-
+ 

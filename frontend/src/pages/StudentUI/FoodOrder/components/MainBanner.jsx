@@ -113,7 +113,7 @@ const MainBanner = () => {
           </Link>
         </div>
       </div>
-
+    </div>
     </div>
   );
 };

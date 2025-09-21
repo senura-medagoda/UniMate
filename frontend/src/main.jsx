@@ -11,24 +11,24 @@ import { ToastContainer } from 'react-toastify';  // Change this
 import 'react-toastify/dist/ReactToastify.css';
 import ShopContextProvider from './pages/StudentUI/Marketplace/context/M_ShopContext.jsx';
 import { OwnerAuthProvider } from './context/ownerAuthContext.jsx';
+import { ToastProvider } from './context/ToastContext.jsx';
 
 
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
-
-
-      <AppContextProvider>
-        <ShopContextProvider>
-          <OwnerAuthProvider>
-            <App />
-            <ToastContainer />
-          </OwnerAuthProvider>
-        </ShopContextProvider>
-      </AppContextProvider>
-      <Toaster />
+      <ToastProvider>
+        <AppContextProvider>
+          <ShopContextProvider>
+            <OwnerAuthProvider>
+              <App />
+              <ToastContainer />
+            </OwnerAuthProvider>
+          </ShopContextProvider>
+        </AppContextProvider>
+        <Toaster />
+      </ToastProvider>
     </BrowserRouter>
-
   </StrictMode>
 );
