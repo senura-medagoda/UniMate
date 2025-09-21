@@ -1,76 +1,33 @@
 import express from "express";
 import {
-
-    registerAdmin,
-    loginAdmin,
-    getAdminProfile,
-    updateAdminProfile,
-    getDashboardStats,
-    getAllVendors,
-    getAllShops,
-    toggleVendorStatus,
-    toggleShopStatus,
-    getVendorDetails,
-    getShopDetails,
-    approveShop,
-    rejectShop,
-    getPendingShops,
-    approveVendor,
-    rejectVendor,
-    getPendingVendors,
-  
     getDashboardStats,
     getAllComplaints,
-     updateComplaintStatus,
-   getAllUsers,
-  getUserById,
-  banUser,
-  suspendUser,
-  reactivateUser,
-  deleteMaterial,
-  deleteForumPost,
-  getAnalyticsReport,
-  createComplaint
+    updateComplaintStatus,
+    getAllUsers,
+    getUserById,
+    banUser,
+    suspendUser,
+    reactivateUser,
+    deleteMaterial,
+    deleteForumPost,
+    getAnalyticsReport,
+    createComplaint
 } from "../controllers/adminController.js";
 import {
     getAdminNotifications,
     markNotificationAsRead,
     markAllNotificationsAsRead
 } from "../services/notificationService.js";
-import { adminAuth, canManageVendors, canManageShops, canViewAnalytics } from "../middleware/adminAuth.js";
+import { adminAuth } from "../middleware/adminAuth.js";
 
 const router = express.Router();
 
-// Public routes
-router.post("/register", registerAdmin);
-router.post("/login", loginAdmin);
-
-// Protected admin routes
-router.get("/profile", adminAuth, getAdminProfile);
-router.put("/profile", adminAuth, updateAdminProfile);
-router.get("/dashboard/stats", adminAuth, canViewAnalytics, getDashboardStats);
-
-// Vendor management
-router.get("/vendors", adminAuth, canManageVendors, getAllVendors);
-router.get("/vendors/pending", adminAuth, canManageVendors, getPendingVendors);
-router.get("/vendors/:vendorId", adminAuth, canManageVendors, getVendorDetails);
-router.put("/vendors/:vendorId/status", adminAuth, canManageVendors, toggleVendorStatus);
-router.put("/vendors/:vendorId/approve", adminAuth, canManageVendors, approveVendor);
-router.put("/vendors/:vendorId/reject", adminAuth, canManageVendors, rejectVendor);
-
-// Shop management
-router.get("/shops", adminAuth, canManageShops, getAllShops);
-router.get("/shops/pending", adminAuth, canManageShops, getPendingShops);
-router.get("/shops/:shopId", adminAuth, canManageShops, getShopDetails);
-router.put("/shops/:shopId/status", adminAuth, canManageShops, toggleShopStatus);
-router.put("/shops/:shopId/approve", adminAuth, canManageShops, approveShop);
-router.put("/shops/:shopId/reject", adminAuth, canManageShops, rejectShop);
+// Dashboard stats
+router.get("/dashboard/stats", getDashboardStats);
 
 
 
 //Tharuka
-// Dashboard stats
-router.get("/stats", getDashboardStats);
 
 // Analytics and reports
 router.get("/analytics", getAnalyticsReport);

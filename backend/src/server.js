@@ -1,7 +1,7 @@
-import express from "express";
 import dotenv from "dotenv";
+dotenv.config();
 
-
+import express from "express";
 import cors from 'cors'
 import path from "path";
 import { fileURLToPath } from "url";
@@ -26,13 +26,11 @@ import authSTD from './routes/authSTD.js'
 
 
 // Routes
-import studentRoutes from "./routes/studentRoutes.js";
+
 import studyMaterialRoutes from "./routes/StudyMaterialRouts.js";
 import forumRoutes from "./routes/forumRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
+//import adminRoutes from "./routes/adminRoutes.js";
 import materialRequestRoutes from "./routes/materialRequestRoutes.js";
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;

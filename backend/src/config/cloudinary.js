@@ -1,6 +1,7 @@
-import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
+dotenv.config();
 
+import { v2 as cloudinary } from 'cloudinary';
 
 const connectCloudinary = async () => {
     try {
@@ -22,9 +23,6 @@ const connectCloudinary = async () => {
             return false;
         }
 
-dotenv.config();
-
-
         if (process.env.CLOUDINARY_NAME === 'demo' || process.env.CLOUDINARY_API_KEY === 'demo_key') {
             console.error('⚠️  Demo Cloudinary credentials detected!');
             console.error('Please replace demo values with real Cloudinary credentials in your .env file');
@@ -40,8 +38,14 @@ dotenv.config();
         });
         
         // Test Cloudinary connection
-        const result = await cloudinary.api.ping();
-        return true;
+        try {
+            const result = await cloudinary.api.ping();
+            console.log('✅ Cloudinary connected successfully!');
+            return true;
+        } catch (pingError) {
+            console.error('❌ Cloudinary ping failed:', pingError.message);
+            return false;
+        }
         
     } catch (error) {
         console.error('❌ Cloudinary configuration error:', error.message);

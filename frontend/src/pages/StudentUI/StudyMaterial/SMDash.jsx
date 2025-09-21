@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaSearch, FaUpload, FaStar, FaComments, FaHandPaper, FaBook, FaUsers, FaChartLine, FaRegQuestionCircle } from "react-icons/fa";
+import Navbar from "./Components/Navbar.jsx";
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,6 +78,8 @@ const Home = () => {
   };
 
   return (
+    <>
+    <Navbar/>
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div
@@ -287,6 +290,8 @@ const Home = () => {
         </div>
       </div>
     </div>
+
+    </>
   );
 };
 
