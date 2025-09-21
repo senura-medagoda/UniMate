@@ -157,7 +157,7 @@ const App = () => {
         <Route path="/hmprofile" element={<HM_profile />} />
         <Route path="/addnewjob" element={<HM_newjob />} />
 
-        {/* Job Portal Admin Routes */}
+        {/* Job Portal Admin Routes o */}
         <Route path="/jpadmin-dash" element={<JPA_Dash />} />
         <Route path="/jpadmin-jobs" element={<JPA_Jobs />} />
         <Route path="/jpadmin-reports" element={<JPA_Reports />} />
