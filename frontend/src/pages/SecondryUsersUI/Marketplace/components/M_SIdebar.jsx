@@ -18,7 +18,7 @@ const M_SIdebar = () => {
       {/* Mobile Menu Button */}
       <button
         onClick={toggleSidebar}
-        className="lg:hidden fixed top-16 right-4 z-50 p-2 rounded-md bg-white shadow-md border border-gray-200"
+        className="lg:hidden fixed top-20 left-4 z-50 p-2 rounded-md bg-white shadow-md border border-gray-200"
         aria-label="Toggle Menu"
       >
         <div className="w-6 h-6 flex flex-col justify-center items-center">
@@ -38,11 +38,11 @@ const M_SIdebar = () => {
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:relative inset-y-0 left-0 z-40 
+        fixed lg:sticky top-0 left-0 z-40 
         w-64 bg-white shadow-lg lg:shadow-sm border-r border-gray-200
         transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
         lg:translate-x-0 transition-transform duration-300 ease-in-out
-        h-screen flex flex-col
+        h-screen lg:h-[100vh] flex flex-col
       `}>
         {/* Sidebar Header */}
         <div className='p-6 border-b border-gray-200 flex-shrink-0'>
@@ -112,6 +112,24 @@ const M_SIdebar = () => {
               <span className='font-medium'>Orders</span>
             </NavLink>
 
+            {/* Track Orders */}
+            <NavLink 
+              to="/Track_Orders"
+              onClick={closeSidebar}
+              className={({ isActive }) => 
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+                  isActive 
+                    ? 'bg-blue-50 text-blue-600 border border-blue-200' 
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                }`
+              }
+            >
+              <svg className='w-5 h-5 flex-shrink-0' fill='currentColor' viewBox='0 0 20 20'>
+                <path fillRule='evenodd' d='M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z' clipRule='evenodd' />
+              </svg>
+              <span className='font-medium'>Track Orders</span>
+            </NavLink>
+
             {/* Analytics */}
             <NavLink 
               to="/M_analytics"
@@ -129,6 +147,42 @@ const M_SIdebar = () => {
                 <path d='M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z'/>
               </svg>
               <span className='font-medium'>Analytics</span>
+            </NavLink>
+
+            {/* Resell Requests */}
+            <NavLink 
+              to="/M_resell_requests"
+              onClick={closeSidebar}
+              className={({ isActive }) => 
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+                  isActive 
+                    ? 'bg-blue-50 text-blue-600 border border-blue-200' 
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                }`
+              }
+            >
+              <svg className='w-5 h-5 flex-shrink-0' fill='currentColor' viewBox='0 0 20 20'>
+                <path fillRule='evenodd' d='M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z' clipRule='evenodd' />
+              </svg>
+              <span className='font-medium'>Resell Requests</span>
+            </NavLink>
+
+            {/* Resell Items */}
+            <NavLink 
+              to="/M_resell_items"
+              onClick={closeSidebar}
+              className={({ isActive }) => 
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+                  isActive 
+                    ? 'bg-blue-50 text-blue-600 border border-blue-200' 
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                }`
+              }
+            >
+              <svg className='w-5 h-5 flex-shrink-0' fill='currentColor' viewBox='0 0 20 20'>
+                <path d='M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z' />
+              </svg>
+              <span className='font-medium'>Resell Items</span>
             </NavLink>
 
             {/* Settings */}

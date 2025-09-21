@@ -7,29 +7,94 @@ import MarketPlace_Navbar from '../components/MarketPlace_Navbar'
 import M_Footer from '../components/M_Footer';
 
 const MarketPlace_Cart = () => {
-  const {products, currency, cartItems, updateQuantity, navigate} = useContext(ShopContext);
+  const {products, currency, cartItems, updateQuantity, navigate, token, addToCart} = useContext(ShopContext);
   const [cartData, setCartData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const tempData = [];
-    for(const items in cartItems) {
-      for(const item in cartItems[items]) {
-        if (cartItems[items][item] > 0) {
-          tempData.push({
-            _id: items,
-            size: item,
-            quantity: cartItems[items][item]
-          })
+    console.log('Cart Items:', cartItems);
+    console.log('Products:', products);
+    
+    if (products.length > 0 && cartItems) {
+      const tempData = [];
+      
+      // Handle cart items structure properly
+      for (const itemId in cartItems) {
+        if (cartItems[itemId] && typeof cartItems[itemId] === 'object') {
+          for (const size in cartItems[itemId]) {
+            if (cartItems[itemId][size] > 0) {
+              tempData.push({
+                _id: itemId,
+                size: size,
+                quantity: cartItems[itemId][size]
+              });
+            }
+          }
         }
       }
+      
+      console.log('Processed Cart Data:', tempData);
+      setCartData(tempData);
     }
-    setCartData(tempData);
-  }, [cartItems])
+    
+    setLoading(false);
+  }, [cartItems, products]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-amber-50/30 via-orange-50/30 to-yellow-50/30'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+          <MarketPlace_Navbar/>
+          <div className='py-8 flex items-center justify-center'>
+            <div className='text-center'>
+              <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4'></div>
+              <p className='text-gray-600'>Loading your cart...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login prompt if not authenticated
+  if (!token) {
+    return (
+      
+      <div className='min-h-screen bg-gradient-to-br from-amber-50/30 via-orange-50/30 to-yellow-50/30'>
+        
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+        <MarketPlace_Navbar/>
+          <div className='py-8'>
+            <div className='bg-white rounded-2xl p-12 text-center shadow-sm border border-orange-100 max-w-md mx-auto'>
+              <div className='w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-full flex items-center justify-center'>
+                <svg className='w-12 h-12 text-orange-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.5} d='M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z' />
+                </svg>
+              </div>
+              <h3 className='text-2xl font-semibold text-gray-900 mb-2'>Please Login</h3>
+              <p className='text-gray-500 mb-6'>You need to be logged in to view your cart</p>
+              <button 
+                onClick={() => navigate('/M_login')}
+                className='bg-gradient-to-r from-yellow-600 to-orange-600 text-white px-8 py-3 rounded-xl font-medium hover:shadow-lg transition-all duration-200'
+              >
+                Login to Marketplace
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-amber-50/30 via-orange-50/30 to-yellow-50/30'>
+    <div>
+    <div className='mr-10 ml-10'>
+      <MarketPlace_Navbar/>
+    <div className='min-h-screen bg-gradient-to-br from-amber-50/30 via-orange-50/30 to-yellow-50/30 mt-20'>
+       
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-        <MarketPlace_Navbar/>
+       
         
         <div className='py-8'>
            <div className='mb-12'>
@@ -58,13 +123,42 @@ const MarketPlace_Cart = () => {
           </div>
           {/* Header Section */}
           <div className='mb-8'>
-            <div className='flex items-center gap-3 mb-2'>
-              <div className='w-8 h-8 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-full flex items-center justify-center'>
-                <svg className='w-4 h-4 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2 8m2-8h8m0 0v8a2 2 0 01-2 2H9a2 2 0 01-2-2v-8z' />
-                </svg>
+            <div className='flex items-center justify-between mb-2'>
+              <div className='flex items-center gap-3'>
+                <div className='w-8 h-8 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-full flex items-center justify-center'>
+                  <svg className='w-4 h-4 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2 8m2-8h8m0 0v8a2 2 0 01-2 2H9a2 2 0 01-2-2v-8z' />
+                  </svg>
+                </div>
+                <M_Title text1={'Your '} text2={'CART'} />
               </div>
-              <M_Title text1={'Your '} text2={'CART'} />
+              {/* Debug Button */}
+              <button 
+                onClick={() => {
+                  console.log('=== CART DEBUG INFO ===');
+                  console.log('Token:', token);
+                  console.log('Cart Items:', cartItems);
+                  console.log('Cart Data:', cartData);
+                  console.log('Products:', products);
+                  console.log('=====================');
+                }}
+                className='px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 mr-2'
+              >
+                Debug
+              </button>
+              {/* Test Add to Cart Button */}
+              {products.length > 0 && (
+                <button 
+                  onClick={() => {
+                    const firstProduct = products[0];
+                    console.log('Testing add to cart with product:', firstProduct);
+                    addToCart(firstProduct._id, firstProduct.sizes?.[0] || 'default');
+                  }}
+                  className='px-3 py-1 text-xs bg-green-100 text-green-600 rounded-lg hover:bg-green-200'
+                >
+                  Test Add
+                </button>
+              )}
             </div>
             <p className='text-gray-600'>
               {cartData.length} {cartData.length === 1 ? 'item' : 'items'} in your cart
@@ -92,7 +186,10 @@ const MarketPlace_Cart = () => {
                   </button>
                 </div>
               ) : (
-                cartData.map((item, index) => {
+                cartData.filter(item => {
+                  const productData = products.find((product) => product._id === item._id);
+                  return productData; // Only keep items with valid product data
+                }).map((item, index) => {
                   const productData = products.find((product) => product._id === item._id);
                   
                   return (
@@ -230,7 +327,11 @@ const MarketPlace_Cart = () => {
         </div>
       </div>
       
-      <M_Footer/>
+      
+    </div>
+    
+    </div>
+    <M_Footer/>
     </div>
   )
 }
