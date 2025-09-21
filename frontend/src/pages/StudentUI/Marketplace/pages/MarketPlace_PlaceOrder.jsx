@@ -4,18 +4,98 @@ import M_CartTotal from '../components/M_CartTotal'
 import { assets } from '../assets/assets'
 import { ShopContext } from '../context/M_ShopContext'
 import MarketPlace_Navbar from '../components/MarketPlace_Navbar'
+import axios from 'axios'
+import { toast } from 'react-toastify'
 
 const MarketPlace_PlaceOrder = () => {
-  const [method, setMethod] = useState('cod');
-  const {navigate} = useContext(ShopContext);
+  const { navigate, token, cartItems, setCartItem, getCartAmount, delivery_fee, products } = useContext(ShopContext)
+
+  const [method, setMethod] = useState('cod')
+
+  // ✅ fix setter name typo
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    street: '',
+    city: '',
+    state: '',
+    zipcode: '',
+    district: '',
+    phone: '',
+  })
+
+  //  single handler used by ALL inputs
+  const onChangeHandler = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  //  submit theform
+  const onSubmit = async (e) => {
+    e.preventDefault()
+
+    try {
+
+      let orderItems = []
+
+      for (const items in cartItems) {
+        for (const item in cartItems[items]) {
+          if (cartItems[items][item] > 0) {
+            const itemInfo = structuredClone(products.find(product => product._id === items))
+            if (itemInfo) {
+              itemInfo.size = item
+              itemInfo.quantity = cartItems[items][item]
+              orderItems.push(itemInfo)
+
+            }
+
+          }
+        }
+      }
+      let orderData = {
+        address: formData,
+        items: orderItems,
+        amount: getCartAmount() + delivery_fee
+
+      }
+
+      switch (method) {
+        //api calls for COD orders
+
+        case 'cod':
+              const response= await axios.post('http://localhost:5001/api/order/M_place',orderData,{headers:{token}})
+              if (response.data.success) {
+                setCartItem({})
+                navigate('/M_orders')
+                
+              }else{
+                toast.error(`❌ Order failed: ${response.data.message}`)
+              }
+          break;
+
+        default:
+          break;
+      }
+
+
+
+    } catch (error) {
+      console.log(error)
+      toast.error(`❌ Network error: ${error.message}. Please try again.`)
+    }
+
+    navigate('/M_orders')
+  }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-amber-50/30 via-orange-50/30 to-yellow-50/30'>
+    <div className='mr-10 ml-10'><MarketPlace_Navbar />
+    <div className='min-h-screen bg-gradient-to-br from-amber-50/30 via-orange-50/30 to-yellow-50/30 mt-20'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-        <MarketPlace_Navbar/>
         
+
         <div className='py-8'>
-          {/* Progress Indicator */}
+          {/* Progress */}
           <div className='mb-12'>
             <div className='flex items-center justify-center max-w-md mx-auto'>
               <div className='flex items-center'>
@@ -41,8 +121,9 @@ const MarketPlace_PlaceOrder = () => {
             </div>
           </div>
 
-          <div className='grid lg:grid-cols-5 gap-8'>
-            {/* Left Side - Delivery Information */}
+          {/* ✅ ONE top-level form only */}
+          <form onSubmit={onSubmit} className='grid lg:grid-cols-5 gap-8'>
+            {/* Left: Delivery info */}
             <div className='lg:col-span-3'>
               <div className='bg-white rounded-2xl p-8 shadow-sm border border-orange-100'>
                 <div className='mb-8'>
@@ -58,22 +139,33 @@ const MarketPlace_PlaceOrder = () => {
                   <p className='text-gray-600 text-sm'>Please provide your delivery details</p>
                 </div>
 
-                <form className='space-y-6'>
-                  {/* Name Fields */}
+                {/* ✅ not a form; just a wrapper */}
+                <div className='space-y-6'>
+                  {/* Name */}
                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                     <div className='space-y-2'>
-                      <label className='text-sm font-medium text-gray-700'>First Name</label>
-                      <input 
-                        type="text" 
-                        placeholder='Enter first name' 
+                      <label className='text-sm font-medium text-gray-700' htmlFor='firstName'>First Name</label>
+                      <input
+                        id='firstName'
+                        name='firstName'
+                        value={formData.firstName}
+                        onChange={onChangeHandler}
+                        type='text'
+                        placeholder='Enter first name'
+                        required
                         className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
                       />
                     </div>
                     <div className='space-y-2'>
-                      <label className='text-sm font-medium text-gray-700'>Last Name</label>
-                      <input 
-                        type="text" 
-                        placeholder='Enter last name' 
+                      <label className='text-sm font-medium text-gray-700' htmlFor='lastName'>Last Name</label>
+                      <input
+                        id='lastName'
+                        name='lastName'
+                        value={formData.lastName}
+                        onChange={onChangeHandler}
+                        type='text'
+                        placeholder='Enter last name'
+                        required
                         className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
                       />
                     </div>
@@ -81,59 +173,89 @@ const MarketPlace_PlaceOrder = () => {
 
                   {/* Email */}
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium text-gray-700'>Email Address</label>
-                    <input 
-                      type="email" 
-                      placeholder='Enter email address' 
+                    <label className='text-sm font-medium text-gray-700' htmlFor='email'>Email Address</label>
+                    <input
+                      id='email'
+                      name='email'
+                      value={formData.email}
+                      onChange={onChangeHandler}
+                      type='email'
+                      placeholder='Enter email address'
+                      required
                       className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
                     />
                   </div>
 
                   {/* Street */}
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium text-gray-700'>Street Address</label>
-                    <input 
-                      type="text" 
-                      placeholder='Enter street address' 
+                    <label className='text-sm font-medium text-gray-700' htmlFor='street'>Street Address</label>
+                    <input
+                      id='street'
+                      name='street'
+                      value={formData.street}
+                      onChange={onChangeHandler}
+                      type='text'
+                      placeholder='Enter street address'
+                      required
                       className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
                     />
                   </div>
 
-                  {/* City and State */}
+                  {/* City / State */}
                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                     <div className='space-y-2'>
-                      <label className='text-sm font-medium text-gray-700'>City</label>
-                      <input 
-                        type="text" 
-                        placeholder='Enter city' 
+                      <label className='text-sm font-medium text-gray-700' htmlFor='city'>City</label>
+                      <input
+                        id='city'
+                        name='city'
+                        value={formData.city}
+                        onChange={onChangeHandler}
+                        type='text'
+                        placeholder='Enter city'
+                        required
                         className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
                       />
                     </div>
                     <div className='space-y-2'>
-                      <label className='text-sm font-medium text-gray-700'>State</label>
-                      <input 
-                        type="text" 
-                        placeholder='Enter state' 
+                      <label className='text-sm font-medium text-gray-700' htmlFor='state'>State</label>
+                      <input
+                        id='state'
+                        name='state'
+                        value={formData.state}
+                        onChange={onChangeHandler}
+                        type='text'
+                        placeholder='Enter state'
+                        required
                         className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
                       />
                     </div>
                   </div>
 
-                  {/* Zipcode and District */}
+                  {/* Zip / District */}
                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                     <div className='space-y-2'>
-                      <label className='text-sm font-medium text-gray-700'>Zipcode</label>
-                      <input 
-                        type="text" 
-                        placeholder='Enter zipcode' 
+                      <label className='text-sm font-medium text-gray-700' htmlFor='zipcode'>Zipcode</label>
+                      <input
+                        id='zipcode'
+                        name='zipcode'
+                        value={formData.zipcode}
+                        onChange={onChangeHandler}
+                        type='text'
+                        placeholder='Enter zipcode'
+                        required
                         className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
                       />
                     </div>
                     <div className='space-y-2'>
-                      <label className='text-sm font-medium text-gray-700'>District</label>
-                      <input 
-                        type="text" 
-                        placeholder='Enter district' 
+                      <label className='text-sm font-medium text-gray-700' htmlFor='district'>District</label>
+                      <input
+                        id='district'
+                        name='district'
+                        value={formData.district}
+                        onChange={onChangeHandler}
+                        type='text'
+                        placeholder='Enter district'
+                        required
                         className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
                       />
                     </div>
@@ -141,20 +263,24 @@ const MarketPlace_PlaceOrder = () => {
 
                   {/* Phone */}
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium text-gray-700'>Phone Number</label>
-                    <input 
-                      type="tel" 
-                      placeholder='Enter phone number' 
+                    <label className='text-sm font-medium text-gray-700' htmlFor='phone'>Phone Number</label>
+                    <input
+                      id='phone'
+                      name='phone'
+                      value={formData.phone}
+                      onChange={onChangeHandler}
+                      type='tel'
+                      placeholder='Enter phone number'
+                      required
                       className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
                     />
                   </div>
-                </form>
+                </div>
               </div>
             </div>
 
-            {/* Right Side - Order Summary & Payment */}
+            {/* Right: Summary + Payment */}
             <div className='lg:col-span-2 space-y-6'>
-              {/* Order Summary */}
               <div className='bg-white rounded-2xl p-6 shadow-sm border border-orange-100 sticky top-6'>
                 <div className='flex items-center gap-3 mb-6'>
                   <div className='w-8 h-8 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-full flex items-center justify-center'>
@@ -164,7 +290,7 @@ const MarketPlace_PlaceOrder = () => {
                   </div>
                   <h3 className='text-lg font-semibold text-gray-900'>Order Summary</h3>
                 </div>
-                
+
                 <M_CartTotal />
 
                 {/* Payment Method */}
@@ -178,50 +304,63 @@ const MarketPlace_PlaceOrder = () => {
                     <M_Title text1={'PAYMENT'} text2={'METHOD'} />
                   </div>
 
+                  {/* Use visually-hidden radios for accessibility */}
                   <div className='space-y-3'>
-                    {/* Stripe */}
-                    <div 
-                      onClick={() => setMethod('stripe')} 
-                      className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-sm ${
-                        method === 'stripe' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                    <label
+                      className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-sm ${method === 'stripe' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
+                        }`}
                     >
-                      <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center transition-colors ${
-                        method === 'stripe' ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
-                      }`}>
-                        {method === 'stripe' && <div className='w-2 h-2 bg-white rounded-full'></div>}
+                      <input
+                        type='radio'
+                        name='paymentMethod'
+                        value='stripe'
+                        checked={method === 'stripe'}
+                        onChange={() => setMethod('stripe')}
+                        className='sr-only'
+                      />
+                      <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center ${method === 'stripe' ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
+                        }`}>
+                        {method === 'stripe' && <div className='w-2 h-2 bg-white rounded-full' />}
                       </div>
-                      <img className='h-6' src={assets.stripe_logo} alt="Stripe" />
+                      <img className='h-6' src={assets.stripe_logo} alt='Stripe' />
                       <span className='text-sm font-medium text-gray-700 flex-grow'>Credit/Debit Card</span>
-                    </div>
+                    </label>
 
-                    {/* Razorpay */}
-                    <div 
-                      onClick={() => setMethod('razorpay')} 
-                      className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-sm ${
-                        method === 'razorpay' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                    <label
+                      className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-sm ${method === 'razorpay' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
+                        }`}
                     >
-                      <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center transition-colors ${
-                        method === 'razorpay' ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
-                      }`}>
-                        {method === 'razorpay' && <div className='w-2 h-2 bg-white rounded-full'></div>}
+                      <input
+                        type='radio'
+                        name='paymentMethod'
+                        value='razorpay'
+                        checked={method === 'razorpay'}
+                        onChange={() => setMethod('razorpay')}
+                        className='sr-only'
+                      />
+                      <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center ${method === 'razorpay' ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
+                        }`}>
+                        {method === 'razorpay' && <div className='w-2 h-2 bg-white rounded-full' />}
                       </div>
-                      <img className='h-6' src={assets.razorpay_logo} alt="Razorpay" />
+                      <img className='h-6' src={assets.razorpay_logo} alt='Razorpay' />
                       <span className='text-sm font-medium text-gray-700 flex-grow'>UPI/Wallet</span>
-                    </div>
+                    </label>
 
-                    {/* Cash on Delivery */}
-                    <div 
-                      onClick={() => setMethod('cod')} 
-                      className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-sm ${
-                        method === 'cod' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                    <label
+                      className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-sm ${method === 'cod' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
+                        }`}
                     >
-                      <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center transition-colors ${
-                        method === 'cod' ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
-                      }`}>
-                        {method === 'cod' && <div className='w-2 h-2 bg-white rounded-full'></div>}
+                      <input
+                        type='radio'
+                        name='paymentMethod'
+                        value='cod'
+                        checked={method === 'cod'}
+                        onChange={() => setMethod('cod')}
+                        className='sr-only'
+                      />
+                      <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center ${method === 'cod' ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
+                        }`}>
+                        {method === 'cod' && <div className='w-2 h-2 bg-white rounded-full' />}
                       </div>
                       <div className='flex items-center gap-2'>
                         <svg className='w-6 h-6 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -229,14 +368,14 @@ const MarketPlace_PlaceOrder = () => {
                         </svg>
                         <span className='text-sm font-medium text-gray-700'>Cash on Delivery</span>
                       </div>
-                    </div>
+                    </label>
                   </div>
                 </div>
 
-                {/* Place Order Button */}
+                {/* Submit */}
                 <div className='mt-8'>
-                  <button 
-                    onClick={() => navigate('/M_orders')} 
+                  <button
+                    type='submit'
                     className='w-full bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-semibold py-4 px-6 rounded-xl hover:shadow-lg hover:shadow-orange-200 transition-all duration-200 transform hover:-translate-y-0.5 flex items-center justify-center gap-2'
                   >
                     <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -244,8 +383,7 @@ const MarketPlace_PlaceOrder = () => {
                     </svg>
                     PLACE ORDER
                   </button>
-                  
-                  {/* Security Info */}
+
                   <div className='mt-4 flex items-center justify-center gap-4 text-xs text-gray-500'>
                     <div className='flex items-center gap-1'>
                       <svg className='w-4 h-4 text-green-500' fill='currentColor' viewBox='0 0 20 20'>
@@ -263,9 +401,11 @@ const MarketPlace_PlaceOrder = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </form>
+
         </div>
       </div>
+    </div>
     </div>
   )
 }

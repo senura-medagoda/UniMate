@@ -35,9 +35,10 @@ const MarketPlace_Product = () => {
   },[productId,products])
   
   return productData ? (
-    <div className='mr-10 ml-10'>
+    <div>
       <MarketPlace_Navbar/>
-    <div className='border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100 mb-20'>
+      <div className='mr-10 ml-10 pt-20'>
+        <div className='border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100 mb-20'>
 
       {/*product data */}
       <div className='flex gap-12 sm:gap-12 flex-col sm:flex-row mb-20'>
@@ -72,6 +73,9 @@ const MarketPlace_Product = () => {
 
           </div>
           <p className='mt-5 text-3xl font-medium'> {currency}{productData.price}</p>
+          <p className='mt-3 text-lg font-medium text-green-600'>
+            Stock Available: {productData.stock || 0} units
+          </p>
           <p className='mt-5 text-gray-500 md:w-4/5'>{productData.description}</p>
           <div className='flex flex-col gap-4 my-8'>
             <p>Select Size</p>
@@ -83,7 +87,17 @@ const MarketPlace_Product = () => {
             </div>
 
           </div>
-          <button onClick={()=>addToCart(productData._id,size)} className='bg-orange-400 text-white px-8 py-3 text-sm active:bg-gray-700 '>ADD TO CART</button>
+          <button 
+            onClick={()=>addToCart(productData._id,size)} 
+            disabled={!productData.stock || productData.stock <= 0}
+            className={`px-8 py-3 text-sm ${
+              !productData.stock || productData.stock <= 0 
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                : 'bg-orange-400 text-white active:bg-gray-700'
+            }`}
+          >
+            {!productData.stock || productData.stock <= 0 ? 'OUT OF STOCK' : 'ADD TO CART'}
+          </button>
          <hr className='mt-8 sm:w-4/5'/>
          <div className='text-sm text-gray-500 mt-5 flex flex-col gap-1'>
           <p>100% Original product. </p>
@@ -108,9 +122,10 @@ const MarketPlace_Product = () => {
       </div>
       {/*----display related product */}
 
-      <M_RelatedProducts category={productData.category} subCategory={productData.subCategory}/>
+          <M_RelatedProducts category={productData.category} subCategory={productData.subCategory}/>
 
-    </div>
+        </div>
+      </div>
     </div>
   ): <div className='opacity-0'></div>
 }

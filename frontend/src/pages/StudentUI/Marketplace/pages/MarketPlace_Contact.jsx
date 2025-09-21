@@ -8,7 +8,7 @@ const MarketPlace_Contact = () => {
   return (
     <div className='mr-10 ml-10'>
       <MarketPlace_Navbar/>
-      <div className='text-center text-2xl pt-10 border-t'>
+      <div className='text-center text-2xl pt-10 border-t mt-20'>
         <M_Title text1={'CONTACT'} text2={'US'}/>
       </div>
       <div className='my-10 flex flex-col justify-center md:flex-row gap-10 mb-28'>

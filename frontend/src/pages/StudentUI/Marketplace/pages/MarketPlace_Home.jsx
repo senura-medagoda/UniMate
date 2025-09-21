@@ -10,9 +10,10 @@ import M_Footer from '../components/M_Footer'
 const MarketPlace_Home = () => {
   return (
     <div>
+      <M_Hero/>
     <div className='mr-10 ml-10'>
       <MarketPlace_Navbar/>
-      <M_Hero/>
+      
       <M_LatestCollection/>
       <M_BestSeller/>
       <M_OurPolicy/>
