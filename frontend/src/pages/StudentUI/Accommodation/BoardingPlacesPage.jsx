@@ -199,7 +199,7 @@ const BoardingPlacesPage = () => {
                 {sortedPlaces.map((place) => (
                   <div
                     key={place._id}
-                    className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
+                    className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col"
                   >
                     <div className="relative">
                       <img
@@ -231,7 +231,7 @@ const BoardingPlacesPage = () => {
                       </div>
                     </div>
                     
-                    <div className="p-6">
+                    <div className="p-6 flex flex-col flex-grow">
                       <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">{place.title}</h3>
                       <p className="text-gray-600 mb-4 line-clamp-2">{place.description}</p>
                       
@@ -295,9 +295,10 @@ const BoardingPlacesPage = () => {
                         </div>
                       )}
                       
+                      {/* Book Now Button - Always at bottom */}
                       <button
                         onClick={() => handleBookNow(place)}
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg mt-auto"
                       >
                         Book Now
                       </button>

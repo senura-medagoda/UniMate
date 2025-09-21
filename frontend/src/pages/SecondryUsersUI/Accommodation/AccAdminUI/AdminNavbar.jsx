@@ -9,7 +9,7 @@ const AdminNavbar = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3">
-              <img src={uniLogo} alt="UniMate" className="h-14 w-auto" />
+              <img src={uniLogo} alt="UniMate" className="h-7 w-auto" />
             </Link>
           </div>
           

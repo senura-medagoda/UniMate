@@ -384,7 +384,7 @@ const AdminDash = () => {
         {/* Listings Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredListings.map((listing) => (
-            <div key={listing._id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+            <div key={listing._id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow flex flex-col">
               {/* Image */}
               <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-t-lg">
                 {listing.images && listing.images.length > 0 ? (
@@ -403,7 +403,7 @@ const AdminDash = () => {
               </div>
 
               {/* Content */}
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-grow">
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{listing.title}</h3>
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(listing.status)}`}>
@@ -455,8 +455,8 @@ const AdminDash = () => {
                   </div>
                 )}
 
-                {/* Action Buttons */}
-                <div className="space-y-3">
+                {/* Action Buttons - Always at bottom */}
+                <div className="mt-auto space-y-3">
                   {/* Primary Actions Row */}
                   <div className="flex gap-2">
                     {listing.status === 'pending' && (
