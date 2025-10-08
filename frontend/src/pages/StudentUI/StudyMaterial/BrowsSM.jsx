@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import { FaStar, FaThumbsUp, FaThumbsDown, FaDownload, FaEye, FaExclamationTriangle } from "react-icons/fa";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { FaStar, FaThumbsUp, FaThumbsDown, FaDownload, FaEye, FaExclamationTriangle, FaSearch, FaFilter, FaBook, FaCalendar, FaUser, FaGraduationCap, FaArrowLeft } from "react-icons/fa";
 import ComplaintForm from "./Components/ComplaintForm.jsx";
+import Navbar from "./Components/Navbar.jsx";
 
-const BrowseDocument = () => {
+const BrowseDocument = ({ user, setUser }) => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
@@ -174,166 +176,230 @@ const BrowseDocument = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto mt-10 p-6">
-      {/* Search Results Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-4">
-          {searchQuery ? `Search Results for "${searchQuery}"` : "All Study Materials"}
-        </h2>
-        
-        {/* Filters */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          <select
-            value={filters.campus}
-            onChange={(e) => setFilters(prev => ({ ...prev, campus: e.target.value }))}
-            className="border p-2 rounded"
-          >
-            <option value="">All Campuses</option>
-            <option value="Malabe">Malabe</option>
-            <option value="Kandy">Kandy</option>
-            <option value="Matara">Matara</option>
-            <option value="Jaffna">Jaffna</option>
-          </select>
-          
-          <input
-            type="text"
-            placeholder="Course"
-            value={filters.course}
-            onChange={(e) => setFilters(prev => ({ ...prev, course: e.target.value }))}
-            className="border p-2 rounded"
-          />
-          
-          <select
-            value={filters.year}
-            onChange={(e) => setFilters(prev => ({ ...prev, year: e.target.value }))}
-            className="border p-2 rounded"
-          >
-            <option value="">All Years</option>
-            <option value="1">Year 1</option>
-            <option value="2">Year 2</option>
-            <option value="3">Year 3</option>
-            <option value="4">Year 4</option>
-          </select>
-          
-          <select
-            value={filters.semester}
-            onChange={(e) => setFilters(prev => ({ ...prev, semester: e.target.value }))}
-            className="border p-2 rounded"
-          >
-            <option value="">All Semesters</option>
-            <option value="1">Semester 1</option>
-            <option value="2">Semester 2</option>
-          </select>
-          
-          <input
-            type="text"
-            placeholder="Subject"
-            value={filters.subject}
-            onChange={(e) => setFilters(prev => ({ ...prev, subject: e.target.value }))}
-            className="border p-2 rounded"
-          />
+    <>
+      <Navbar user={user} setUser={setUser} />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Hero Section */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                {searchQuery ? `Search Results for "${searchQuery}"` : "Browse Study Materials"}
+              </h1>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Discover and explore study materials shared by our community
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {loading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4">Loading materials...</p>
-        </div>
-      ) : materials.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-500 text-lg">No materials found.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {materials.map((material) => (
-            <div key={material._id} className="bg-white shadow-lg rounded-lg overflow-hidden">
-              {/* Material Preview */}
-              <div className="h-48 bg-gray-100 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-4xl mb-2">📄</div>
-                  <p className="text-gray-500 text-sm">{material.title}</p>
-                </div>
+        {/* Filters Section */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex items-center mb-6">
+              <FaFilter className="text-orange-600 mr-2" />
+              <h2 className="text-lg font-semibold text-gray-900">Filter Materials</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="relative">
+                <FaGraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <select
+                  value={filters.campus}
+                  onChange={(e) => setFilters(prev => ({ ...prev, campus: e.target.value }))}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
+                >
+                  <option value="">All Campuses</option>
+                  <option value="Malabe">Malabe</option>
+                  <option value="Kandy">Kandy</option>
+                  <option value="Matara">Matara</option>
+                  <option value="Jaffna">Jaffna</option>
+                </select>
               </div>
               
-              {/* Material Info */}
-              <div className="p-4">
-                <h3 className="font-bold text-lg mb-2">{material.title}</h3>
-                <p className="text-gray-600 text-sm mb-2">{material.description}</p>
+              <div className="relative">
+                <FaBook className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Course"
+                  value={filters.course}
+                  onChange={(e) => setFilters(prev => ({ ...prev, course: e.target.value }))}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div className="relative">
+                <FaCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <select
+                  value={filters.year}
+                  onChange={(e) => setFilters(prev => ({ ...prev, year: e.target.value }))}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
+                >
+                  <option value="">All Years</option>
+                  <option value="1">Year 1</option>
+                  <option value="2">Year 2</option>
+                  <option value="3">Year 3</option>
+                  <option value="4">Year 4</option>
+                </select>
+              </div>
+              
+              <div className="relative">
+                <FaCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <select
+                  value={filters.semester}
+                  onChange={(e) => setFilters(prev => ({ ...prev, semester: e.target.value }))}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
+                >
+                  <option value="">All Semesters</option>
+                  <option value="1">Semester 1</option>
+                  <option value="2">Semester 2</option>
+                </select>
+              </div>
+              
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Subject"
+                  value={filters.subject}
+                  onChange={(e) => setFilters(prev => ({ ...prev, subject: e.target.value }))}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Materials Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-500 border-t-transparent mx-auto mb-4"></div>
+              <p className="text-gray-600 text-lg">Loading materials...</p>
+            </div>
+          ) : materials.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FaBook className="text-4xl text-gray-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">No materials found</h3>
+              <p className="text-gray-600 text-lg">Try adjusting your filters or search terms</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {materials.map((material) => (
+                <div key={material._id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 group">
+                  {/* Material Preview */}
+                  <div className="h-48 bg-gradient-to-br from-orange-100 via-orange-50 to-orange-200 flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-orange-600/10"></div>
+                    <div className="text-center relative z-10">
+                      <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                        <FaBook className="text-2xl text-white" />
+                      </div>
+                      <p className="text-orange-800 font-semibold text-lg">{material.subject}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Material Info */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-orange-600 transition-colors duration-200 line-clamp-2">{material.title}</h3>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{material.description}</p>
+                    
+                    <div className="space-y-2 text-sm text-gray-500 mb-4">
+                      <div className="flex items-center">
+                        <FaGraduationCap className="w-4 h-4 mr-2 text-orange-500" />
+                        <span>{material.campus}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <FaBook className="w-4 h-4 mr-2 text-orange-500" />
+                        <span>{material.course} • Year {material.year} • Sem {material.semester}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <FaUser className="w-4 h-4 mr-2 text-orange-500" />
+                        <span>By {material.uploadedBy || "Anonymous"}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Stats */}
+                    <div className="flex justify-between items-center text-sm text-gray-600 mb-6">
+                      <div className="flex items-center space-x-4">
+                        <span className="flex items-center">
+                          👍 {material.likeCount || 0}
+                        </span>
+                        <span className="flex items-center">
+                          👎 {material.unlikeCount || 0}
+                        </span>
+                        <span className="flex items-center">
+                          ⭐ {material.rating?.toFixed(1) || 0}
+                        </span>
+                        <span className="flex items-center">
+                          📥 {material.downloadCount || 0}
+                        </span>
+                      </div>
+                    </div>
                 
-                <div className="text-xs text-gray-500 mb-3">
-                  <p>Campus: {material.campus}</p>
-                  <p>Course: {material.course} | Year: {material.year} | Semester: {material.semester}</p>
-                  <p>Subject: {material.subject}</p>
-                </div>
-                
-                {/* Stats */}
-                <div className="flex justify-between text-sm text-gray-600 mb-3">
-                  <span>👍 {material.likeCount || 0}</span>
-                  <span>👎 {material.unlikeCount || 0}</span>
-                  <span>⭐ {material.rating?.toFixed(1) || 0}</span>
-                  <span>📥 {material.downloadCount || 0}</span>
-                </div>
-                
-                {/* Action Buttons */}
-                <div className="flex gap-2 flex-wrap">
-                  <button
-                    onClick={() => handleLike(material._id)}
-                    disabled={isLiked(material)}
-                    className={`px-3 py-1 rounded text-xs ${
-                      isLiked(material) 
-                        ? 'bg-green-200 text-green-700 cursor-not-allowed' 
-                        : 'bg-green-500 text-white hover:bg-green-600'
-                    }`}
-                  >
-                    <FaThumbsUp className="inline mr-1" />
-                    Like
-                  </button>
-                  
-                  <button
-                    onClick={() => handleUnlike(material._id)}
-                    disabled={isUnliked(material)}
-                    className={`px-3 py-1 rounded text-xs ${
-                      isUnliked(material) 
-                        ? 'bg-red-200 text-red-700 cursor-not-allowed' 
-                        : 'bg-red-500 text-white hover:bg-red-600'
-                    }`}
-                  >
-                    <FaThumbsDown className="inline mr-1" />
-                    Unlike
-                  </button>
-                  
-                  <button
-                    onClick={() => setSelectedMaterial(material)}
-                    className="px-3 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600"
-                  >
-                    <FaStar className="inline mr-1" />
-                    Rate
-                  </button>
-                  
-                  {material.fileUrl && (
-                    <button
-                      onClick={() => handleDownload(material._id, material.fileUrl)}
-                      className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
-                    >
-                      <FaDownload className="inline mr-1" />
-                      Download
-                    </button>
-                  )}
-                  
-                  <button
-                    onClick={() => handleComplaint(material)}
-                    className="px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
-                  >
-                    <FaExclamationTriangle className="inline mr-1" />
-                    Report
-                  </button>
-                </div>
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        onClick={() => handleLike(material._id)}
+                        disabled={isLiked(material)}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                          isLiked(material) 
+                            ? 'bg-green-100 text-green-700 cursor-not-allowed border border-green-200' 
+                            : 'bg-green-500 text-white hover:bg-green-600 hover:shadow-lg'
+                        }`}
+                      >
+                        <FaThumbsUp className="inline mr-2" />
+                        Like
+                      </button>
+                      
+                      <button
+                        onClick={() => handleUnlike(material._id)}
+                        disabled={isUnliked(material)}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                          isUnliked(material) 
+                            ? 'bg-red-100 text-red-700 cursor-not-allowed border border-red-200' 
+                            : 'bg-red-500 text-white hover:bg-red-600 hover:shadow-lg'
+                        }`}
+                      >
+                        <FaThumbsDown className="inline mr-2" />
+                        Unlike
+                      </button>
+                      
+                      <button
+                        onClick={() => setSelectedMaterial(material)}
+                        className="px-4 py-2 bg-yellow-500 text-white rounded-xl text-sm font-medium hover:bg-yellow-600 hover:shadow-lg transition-all duration-200"
+                      >
+                        <FaStar className="inline mr-2" />
+                        Rate
+                      </button>
+                      
+                      {material.fileUrl && (
+                        <button
+                          onClick={() => handleDownload(material._id, material.fileUrl)}
+                          className="px-4 py-2 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 hover:shadow-lg transition-all duration-200"
+                        >
+                          <FaDownload className="inline mr-2" />
+                          Download
+                        </button>
+                      )}
+                      
+                      <button
+                        onClick={() => handleComplaint(material)}
+                        className="px-4 py-2 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 hover:shadow-lg transition-all duration-200"
+                      >
+                        <FaExclamationTriangle className="inline mr-2" />
+                        Report
+                      </button>
+                    </div>
               </div>
             </div>
           ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Rating Modal */}
       {selectedMaterial && (
@@ -417,7 +483,7 @@ const BrowseDocument = () => {
         targetId={complaintTarget?.id}
         targetName={complaintTarget?.name}
       />
-    </div>
+    </>
   );
 };
 

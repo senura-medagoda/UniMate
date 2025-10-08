@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useOwnerAuth } from "../../../../context/ownerAuthContext";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { getImageUrl, getFirstImage } from "../../../../utils/imageUtils";
 
 const OwnerDashboard = () => {
   const [boardingPlaces, setBoardingPlaces] = useState([]);
@@ -12,7 +13,7 @@ const OwnerDashboard = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState("places");
   const [bookingFilter, setBookingFilter] = useState("all");
-  const { token, owner } = useOwnerAuth();
+  const { token, owner, logout } = useOwnerAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -160,68 +161,103 @@ const OwnerDashboard = () => {
       case "canceled":
         return "bg-red-100 text-red-800";
       case "completed":
-        return "bg-blue-100 text-blue-800";
+        return "bg-orange-100 text-orange-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
   const hasListings = boardingPlaces.length > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-3xl font-bold text-gray-900">Owner Dashboard</h2>
-            <button
-              onClick={() => navigate("/create-boarding-place")}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              Create New Listing
-            </button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-orange-50 to-orange-100">
+      {/* Enhanced Header */}
+      <div className="bg-white/80 backdrop-blur-sm shadow-lg border-b border-gray-200/50">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+            {/* Left side - Welcome message and owner info */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                    Welcome back, <span className="text-orange-600">{owner?.fullName || 'Owner'}</span>! 👋
+                  </h1>
+                  <p className="text-gray-600 text-sm lg:text-base">Manage your boarding places and bookings</p>
+                </div>
+              </div>
+            </div>
 
-          {/* Tabs */}
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
-            <button
-              onClick={() => setActiveTab("places")}
-              className={`px-4 py-2 rounded-md font-medium transition-all duration-200 ${
-                activeTab === "places"
-                  ? "bg-white text-orange-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              My Places ({boardingPlaces.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("bookings")}
-              className={`px-4 py-2 rounded-md font-medium transition-all duration-200 ${
-                activeTab === "bookings"
-                  ? "bg-white text-orange-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Bookings ({bookings.filter(b => b.boardingPlaceId?.title && b.boardingPlaceId.title.trim().length > 0).length})
-            </button>
+            {/* Right side - Action buttons */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <button
+                onClick={() => navigate("/create-boarding-place")}
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
+              >
+                <svg
+                  className="w-5 h-5 group-hover:scale-110 transition-transform duration-200"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                Create New Listing
+              </button>
+              
+              <button
+                onClick={handleLogout}
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
+              >
+                <svg className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        {/* Tabs */}
+        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit mb-6">
+          <button
+            onClick={() => setActiveTab("places")}
+            className={`px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+              activeTab === "places"
+                ? "bg-white text-orange-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            My Places ({boardingPlaces.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("bookings")}
+            className={`px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+              activeTab === "bookings"
+                ? "bg-white text-orange-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Bookings ({bookings.filter(b => b.boardingPlaceId?.title && b.boardingPlaceId.title.trim().length > 0).length})
+          </button>
+        </div>
         {activeTab === "places" ? (
           <>
             {loading ? (
@@ -292,15 +328,11 @@ const OwnerDashboard = () => {
                   return (
                     <div
                       key={place._id}
-                      className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
+                      className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col"
                     >
                       <div className="relative">
                         <img
-                          src={
-                            place.images && place.images[0]
-                              ? place.images[0]
-                              : "https://via.placeholder.com/400x300?text=No+Image"
-                          }
+                          src={getImageUrl(getFirstImage(place.images))}
                           alt={place.title}
                           className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
@@ -372,7 +404,7 @@ const OwnerDashboard = () => {
                         </div>
                       </div>
 
-                      <div className="p-6">
+                      <div className="p-6 flex flex-col flex-grow">
                         <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">
                           {place.title}
                         </h3>
@@ -445,7 +477,7 @@ const OwnerDashboard = () => {
                         </div>
 
                         {place.amenities && place.amenities.length > 0 && (
-                          <div className="border-t pt-4">
+                          <div className="border-t pt-4 mb-4">
                             <p className="text-sm font-semibold text-gray-900 mb-2">
                               Amenities:
                             </p>
@@ -469,7 +501,7 @@ const OwnerDashboard = () => {
 
                         {/* Admin Review Information */}
                         {place.adminReview && (place.status === 'rejected' || place.status === 'removed') && (
-                          <div className="border-t pt-4 mt-4">
+                          <div className="border-t pt-4 mb-4">
                             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                               <div className="flex items-center gap-2 mb-2">
                                 <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -490,6 +522,7 @@ const OwnerDashboard = () => {
                             </div>
                           </div>
                         )}
+
                       </div>
                     </div>
                   );
@@ -626,10 +659,7 @@ const OwnerDashboard = () => {
                               {/* Property Image */}
                               <div className="lg:w-1/3">
                                 <img
-                                  src={
-                                    booking.boardingPlaceId?.images?.[0] ||
-                                    "https://via.placeholder.com/300x200?text=No+Image"
-                                  }
+                                  src={getImageUrl(getFirstImage(booking.boardingPlaceId?.images))}
                                   alt={booking.boardingPlaceId?.title || "Boarding Place"}
                                   className="w-full h-48 object-cover rounded-lg"
                                   onError={(e) => {
@@ -818,7 +848,7 @@ const OwnerDashboard = () => {
                                           "completed"
                                         )
                                       }
-                                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
+                                      className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
                                     >
                                       <svg
                                         className="w-4 h-4"

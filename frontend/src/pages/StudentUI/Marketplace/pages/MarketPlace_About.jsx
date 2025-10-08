@@ -5,13 +5,13 @@ import M_NewsletterBox from'../components/M_NewsletterBox'
 import MarketPlace_Navbar from '../components/MarketPlace_Navbar'
 import M_Footer from '../components/M_Footer'
 
-const MarketPlace_About = () => {
+const MarketPlace_About = ({ user, setUser }) => {
   return (
     <div>
     <div className='mr-10 ml-10'>
-      <MarketPlace_Navbar/>
+      <MarketPlace_Navbar user={user} setUser={setUser}/>
       
-      <div className='text-2xl text-center pt-8 border-t'>
+      <div className='text-2xl text-center pt-8 border-t mt-20'>
         <M_Title text1={'ABOUT'} text2={'US'}/>
 
       </div>

@@ -103,22 +103,9 @@ const AdminLogin = () => {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300" />
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Test Credentials</span>
-              </div>
             </div>
 
-            <div className="mt-6 bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-2">
-                <strong>For testing purposes:</strong>
-              </p>
-              <p className="text-sm text-gray-600">
-                Email: <code className="bg-gray-200 px-1 rounded">admin@unimate.com</code>
-              </p>
-              <p className="text-sm text-gray-600">
-                Password: <code className="bg-gray-200 px-1 rounded">admin123</code>
-              </p>
-            </div>
+            
           </div>
 
           <div className="mt-6 text-center">

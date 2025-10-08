@@ -1,7 +1,7 @@
 import React from 'react';
 import AccommodationNavbar from './components/AccommodationNavbar';
 
-const ServicesPage = () => {
+const ServicesPage = ({ user, setUser }) => {
   const services = [
     { title: 'Verified Listings', desc: 'Every listing is reviewed for authenticity and safety.' },
     { title: 'Easy Booking', desc: 'Simple flow to request bookings and manage your stays.' },
@@ -10,7 +10,7 @@ const ServicesPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AccommodationNavbar />
+      <AccommodationNavbar user={user} setUser={setUser} />
 
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-6 py-10 text-center">

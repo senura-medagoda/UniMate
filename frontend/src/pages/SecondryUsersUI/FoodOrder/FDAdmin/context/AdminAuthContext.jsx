@@ -41,7 +41,7 @@ export const AdminAuthProvider = ({ children }) => {
     try {
       setLoading(true);
       
-      const response = await fetch(`${API_BASE_URL}/admin/login`, {
+      const response = await fetch(`${API_BASE_URL}/food-admin/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,6 +53,7 @@ export const AdminAuthProvider = ({ children }) => {
 
       if (data.success) {
         const { admin: adminData, token: authToken } = data.data;
+        
         
         // Save to localStorage
         localStorage.setItem('adminToken', authToken);

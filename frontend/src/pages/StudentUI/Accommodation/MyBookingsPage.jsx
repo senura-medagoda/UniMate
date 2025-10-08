@@ -1,25 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { getImageUrl, getFirstImage } from '../../../utils/imageUtils';
 import AccommodationNavbar from './components/AccommodationNavbar';
 
-const MyBookingsPage = () => {
+const MyBookingsPage = ({ user, setUser }) => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [selectedBooking, setSelectedBooking] = useState(null);
 
-  const MOCK_STUDENT_ID = '64b0f0c0c0c0c0c0c0c0c0c0'; // 24-char hex mock ObjectId
+  // Debug: Check user data
+  console.log('MyBookingsPage - User data:', user);
+  console.log('MyBookingsPage - User name:', user?.name);
+  console.log('MyBookingsPage - User fname:', user?.fname);
+
+  // Use actual user ID instead of mock
+  const studentId = user?.id || user?._id || '64b0f0c0c0c0c0c0c0c0c0c0';
+  
+  // Debug: Check student ID
+  console.log('MyBookingsPage - Student ID:', studentId);
+  console.log('MyBookingsPage - User ID field:', user?.id);
+  console.log('MyBookingsPage - User _ID field:', user?._id);
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    if (user && (user.id || user._id)) {
+      fetchBookings();
+    }
+  }, [user]);
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      // For now, we'll use a mock ObjectId for student ID
-      const res = await axios.get(`http://localhost:5001/api/boarding-bookings/student/${MOCK_STUDENT_ID}`);
+      // Use actual student ID from user session
+      const res = await axios.get(`http://localhost:5001/api/boarding-bookings/student/${studentId}`);
       setBookings(res.data);
     } catch (error) {
       toast.error('Failed to load bookings');
@@ -99,7 +113,7 @@ const MyBookingsPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AccommodationNavbar />
+        <AccommodationNavbar user={user} setUser={setUser} />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-500 border-t-transparent mx-auto mb-6"></div>
@@ -238,7 +252,7 @@ const MyBookingsPage = () => {
                     {/* Property Image */}
                     <div className="lg:w-1/3">
                       <img
-                        src={booking.boardingPlaceId?.images?.[0] || "https://via.placeholder.com/300x200?text=No+Image"}
+                        src={getImageUrl(getFirstImage(booking.boardingPlaceId?.images))}
                         alt={booking.boardingPlaceId?.title}
                         className="w-full h-48 object-cover rounded-lg"
                         onError={(e) => {
@@ -351,14 +365,14 @@ const MyBookingsPage = () => {
                           </button>
                         )}
 
-                        {booking.status === 'confirmed' && (
+                        {/*{booking.status === 'confirmed' && (
                           <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                             </svg>
                             Contact Owner
                           </button>
-                        )}
+                        )} */}
 
                         {booking.status === 'completed' && (
                           <button
@@ -398,7 +412,7 @@ const MyBookingsPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
                   <img
-                    src={selectedBooking.boardingPlaceId?.images?.[0] || "https://via.placeholder.com/400x300?text=No+Image"}
+                    src={getImageUrl(getFirstImage(selectedBooking.boardingPlaceId?.images))}
                     alt={selectedBooking.boardingPlaceId?.title}
                     className="w-full h-56 object-cover rounded-lg"
                     onError={(e) => { e.target.src = "https://via.placeholder.com/400x300?text=No+Image"; }}

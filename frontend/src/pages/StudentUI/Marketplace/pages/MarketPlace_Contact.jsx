@@ -4,11 +4,11 @@ import { assets } from '../assets/assets'
 import M_NewsletterBox from '../components/M_NewsletterBox'
 import MarketPlace_Navbar from '../components/MarketPlace_Navbar'
 
-const MarketPlace_Contact = () => {
+const MarketPlace_Contact = ({ user, setUser }) => {
   return (
     <div className='mr-10 ml-10'>
-      <MarketPlace_Navbar/>
-      <div className='text-center text-2xl pt-10 border-t'>
+      <MarketPlace_Navbar user={user} setUser={setUser}/>
+      <div className='text-center text-2xl pt-10 border-t mt-20'>
         <M_Title text1={'CONTACT'} text2={'US'}/>
       </div>
       <div className='my-10 flex flex-col justify-center md:flex-row gap-10 mb-28'>

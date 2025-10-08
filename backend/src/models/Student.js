@@ -40,14 +40,38 @@ const studentSchema = new mongoose.Schema(
         s_status:{
             type:String,
             default:"Unverified",
-        },     
-    },  {timestapms:true}
+        },  
+        s_homeaddress:{
+            type:String,
+            required:false,
+        }, 
+        s_gender:{
+            type:String,
+            required:false,
+        }, 
+        s_faculty:{
+            type:String,
+            required:false,
+        },   
+        s_studyprogram:{
+            type:String,
+            required:false,
+        },  
+        s_dob:{
+            type:Date,
+            required:false,
+        }, 
+        s_id_document:{
+            type:String,
+            required:false,
+        },  
+    },  {timestamps:true}
 );
 
 // Hash password before saving
 studentSchema.pre('save', async function(next) {
   if (!this.isModified('s_password')) return next();
-  this.password = await bcrypt.hash(this.s_password, 12);
+  this.s_password = await bcrypt.hash(this.s_password, 12);
   next();
 })
 

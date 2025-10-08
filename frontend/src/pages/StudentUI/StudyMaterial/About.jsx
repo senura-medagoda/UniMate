@@ -1,8 +1,11 @@
 import React from "react";
 import { FaGraduationCap, FaUsers, FaFileUpload, FaComments, FaChartLine } from "react-icons/fa";
+import Navbar from "./Components/Navbar.jsx";
 
-const AboutPage = () => {
+const AboutPage = ({ user, setUser }) => {
     return (
+        <>
+        <Navbar user={user} setUser={setUser}/>
         <div className="min-h-screen bg-gray-50">
             {/* Hero Section */}
             <div className="bg-gradient-to-r from-orange-900 to-orange-700 text-white py-20">
@@ -171,6 +174,8 @@ const AboutPage = () => {
                 </div>
             </div>
         </div>
+
+        </>
     );
 };
 

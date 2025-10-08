@@ -21,9 +21,9 @@ const ProtectedVendorRoute = ({ children }) => {
   }
 
   if (!vendor) {
-    console.log('ProtectedVendorRoute - no vendor, redirecting to login');
+    console.log('ProtectedVendorRoute - no vendor, redirecting to main login');
    
-    return <Navigate to="/vendor/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   console.log('ProtectedVendorRoute - vendor authenticated, rendering children');

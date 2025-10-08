@@ -13,3 +13,27 @@ export async function createJob(req,res){
         res.status(500).json({message:"Internal server error"})
     }
 }
+
+export async function getAllJobs(req, res) {
+    try {
+        console.log("Getting all jobs...");
+        
+        // Get all jobs regardless of status for now
+        const jobs = await Job.find({})
+            .sort({ createdAt: -1 }); // Sort by newest first
+        
+        console.log(`Found ${jobs.length} jobs`);
+        
+        res.status(200).json({
+            success: true,
+            data: jobs,
+            count: jobs.length
+        });
+    } catch (error) {
+        console.error("Error in getAllJobs controller", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+}

@@ -23,15 +23,20 @@ export const OwnerAuthProvider = ({ children }) => {
 
   const loginOwner = async (email, password) => {
     try {
+      console.log("ownerAuthContext: Attempting login with email:", email);
+      console.log("ownerAuthContext: API URL:", "http://localhost:5001/api/owner/login");
+      
       const res = await axios.post("http://localhost:5001/api/owner/login", {
         email,
         password,
       });
 
+      console.log("ownerAuthContext: API response:", res.data);
+
       const { token, ownerId, fullName } = res.data;
       const ownerData = { ownerId, fullName };
 
-      console.log("Login successful, token received:", token ? token.substring(0, 20) + "..." : "No token");
+      console.log("ownerAuthContext: Login successful, token received:", token ? token.substring(0, 20) + "..." : "No token");
 
       setOwner(ownerData);
       setToken(token);
@@ -41,7 +46,8 @@ export const OwnerAuthProvider = ({ children }) => {
       toast.success("Login successful");
       return true;
     } catch (err) {
-      console.error("Login error:", err.response?.data || err.message);
+      console.error("ownerAuthContext: Login error:", err.response?.data || err.message);
+      console.error("ownerAuthContext: Full error:", err);
       toast.error("Login failed. Please check your credentials.");
       return false;
     }

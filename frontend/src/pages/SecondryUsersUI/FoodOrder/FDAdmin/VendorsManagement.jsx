@@ -29,7 +29,7 @@ const VendorsManagement = () => {
         ...(statusFilter !== 'all' && { status: statusFilter })
       });
 
-      const response = await fetch(`http://localhost:5001/api/admin/vendors?${params}`, {
+      const response = await fetch(`http://localhost:5001/api/food-admin/vendors?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
           'Content-Type': 'application/json'
@@ -53,7 +53,7 @@ const VendorsManagement = () => {
 
   const toggleVendorStatus = async (vendorId, currentStatus) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/admin/vendors/${vendorId}/status`, {
+      const response = await fetch(`http://localhost:5001/api/food-admin/vendors/${vendorId}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
@@ -76,7 +76,7 @@ const VendorsManagement = () => {
 
   const viewVendorDetails = async (vendorId) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/admin/vendors/${vendorId}`, {
+      const response = await fetch(`http://localhost:5001/api/food-admin/vendors/${vendorId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
           'Content-Type': 'application/json'
@@ -98,7 +98,7 @@ const VendorsManagement = () => {
 
   const approveVendor = async (vendorId) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/admin/vendors/${vendorId}/approve`, {
+      const response = await fetch(`http://localhost:5001/api/food-admin/vendors/${vendorId}/approve`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
@@ -124,7 +124,7 @@ const VendorsManagement = () => {
     if (!rejectionReason) return;
 
     try {
-      const response = await fetch(`http://localhost:5001/api/admin/vendors/${vendorId}/reject`, {
+      const response = await fetch(`http://localhost:5001/api/food-admin/vendors/${vendorId}/reject`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
@@ -186,7 +186,7 @@ const VendorsManagement = () => {
                 placeholder="Search vendors..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
             <div>
@@ -194,7 +194,7 @@ const VendorsManagement = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
                 <option value="all">All Vendors</option>
                 <option value="active">Active</option>
@@ -209,7 +209,7 @@ const VendorsManagement = () => {
          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
            {loading ? (
              <div className="flex items-center justify-center py-12">
-               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
              </div>
            ) : (
              <>
@@ -297,7 +297,7 @@ const VendorsManagement = () => {
                              </span>
                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
                                vendor.isVerified 
-                                 ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+                                 ? 'bg-orange-100 text-orange-800 border border-orange-200' 
                                  : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
                              }`}>
                                {vendor.isVerified ? 'Verified' : 'Unverified'}
@@ -339,7 +339,7 @@ const VendorsManagement = () => {
                          <div className="flex items-center space-x-3 flex-shrink-0">
                            <button
                              onClick={() => viewVendorDetails(vendor._id)}
-                             className="bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-2 px-3 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                             className="bg-orange-50 hover:bg-orange-100 text-orange-700 font-medium py-2 px-3 rounded-lg transition-colors duration-200 flex items-center space-x-2"
                            >
                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -516,7 +516,7 @@ const VendorsManagement = () => {
                         <label className="text-sm font-medium text-gray-500">Verification</label>
                         <p className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           selectedVendor.vendor.isVerified 
-                            ? 'bg-blue-100 text-blue-800' 
+                            ? 'bg-orange-100 text-orange-800' 
                             : 'bg-yellow-100 text-yellow-800'
                         }`}>
                           {selectedVendor.vendor.isVerified ? 'Verified' : 'Pending'}
@@ -546,7 +546,7 @@ const VendorsManagement = () => {
                               <p className="text-sm text-gray-500">{shop.description}</p>
                               <p className="text-sm text-gray-500">{shop.address?.street}, {shop.address?.city}</p>
                               {shop.shopLicense && (
-                                <div className="flex items-center space-x-1 text-sm text-blue-600 font-mono mt-1">
+                                <div className="flex items-center space-x-1 text-sm text-orange-600 font-mono mt-1">
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                   </svg>

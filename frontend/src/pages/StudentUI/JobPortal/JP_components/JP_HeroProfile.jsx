@@ -1,8 +1,11 @@
 import React from 'react'
 
-function JP_HeroProfile() {
+function JP_HeroProfile({ user }) {
   return (
-    <div>JP_HeroProfile</div>
+    <div>
+      <h1>Job Portal Profile</h1>
+      <p>Welcome, {user?.name || user?.fname || user?.email || 'Student'}!</p>
+    </div>
   )
 }
 

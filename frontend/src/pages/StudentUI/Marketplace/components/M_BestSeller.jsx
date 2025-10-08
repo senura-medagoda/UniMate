@@ -15,7 +15,7 @@ const M_BestSeller = () => {
   }, [products]) // ✅ add products so it updates when data changes
 
   return (
-    <div className='relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 overflow-hidden'>
+    <div id="best-sellers" className='relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 overflow-hidden'>
        {/* Animated background elements */}
        <div className='absolute inset-0'>
          <div className='absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-yellow-400/20 to-orange-600/20 rounded-full mix-blend-multiply filter blur-xl animate-pulse'></div>
@@ -41,7 +41,7 @@ const M_BestSeller = () => {
          </div>
 
          {/*Rendering Products*/ }
-         <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 gap-y-12 relative'>
+         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 gap-y-8 relative'>
           {/* Dynamic grid background */}
           <div className='absolute inset-0 opacity-5'>
             <div className='absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-transparent to-orange-500/10 animate-pulse'></div>

@@ -68,6 +68,7 @@ import p_img2_4 from './p_img2_4.png'
 import p_img4 from './p_img4.png'
 import p_img5 from './p_img5.png'
 import p_img43 from './p_img43.png'
+import logoMain from './mainlogo.png'
 
 // ================= Assets Export =================
 export const assets = {
@@ -93,6 +94,7 @@ export const assets = {
   aboutUS,
   AB,
   contactussv,
+  logoMain
 }
 
 // ================= Products Export =================

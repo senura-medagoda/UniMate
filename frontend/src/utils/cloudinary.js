@@ -1,13 +1,22 @@
-export const uploadImageToCloudinary = async (file) => {
+// Upload image through backend API instead of direct Cloudinary upload
+export const uploadImageToCloudinary = async (file, uploadEndpoint = '/api/upload/image') => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "unimate_uploads");
 
-  const res = await fetch("https://api.cloudinary.com/v1_1/dt7mrvgzu/image/upload", {
-    method: "POST",
-    body: formData,
-  });
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}${uploadEndpoint}`, {
+      method: "POST",
+      body: formData,
+    });
 
-  const data = await res.json();
-  return data.secure_url;
+    if (!res.ok) {
+      throw new Error(`Upload failed: ${res.statusText}`);
+    }
+
+    const data = await res.json();
+    return data.secure_url || data.url;
+  } catch (error) {
+    console.error('Image upload error:', error);
+    throw error;
+  }
 };

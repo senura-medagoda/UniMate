@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useVendorAuth } from '../context/VendorAuthContext';
+import logo from '../../../../StudentUI/FoodOrder/assets/logo.png';
+import profileImage from '../../../../StudentUI/FoodOrder/assets/profile.png';
 
 const VendorNavbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -10,7 +12,8 @@ const VendorNavbar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/vendor/login');
+    // Navigate to the main login page with role selection
+    navigate('/login', { replace: true });
   };
 
   const isActive = (path) => {
@@ -24,10 +27,7 @@ const VendorNavbar = () => {
         
           <div className="flex items-center">
             <Link to="/vendor/dashboard" className="flex items-center">
-              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">V</span>
-              </div>
-              <span className="ml-2 text-xl font-bold text-gray-900">Vendor Portal</span>
+              <img className="h-8 sm:h-9 md:h-10 lg:h-11 transition-all duration-300" src={logo} alt="logo" />
             </Link>
           </div>
 
@@ -72,11 +72,19 @@ const VendorNavbar = () => {
                 <div className="text-sm text-gray-700">
                   <span className="font-medium">{vendor?.businessName}</span>
                 </div>
-                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                  <span className="text-orange-600 font-medium text-sm">
-                    {vendor?.businessName?.charAt(0)?.toUpperCase()}
-                  </span>
-                </div>
+                {vendor?.profileImage ? (
+                  <img 
+                    src={vendor.profileImage} 
+                    alt="Profile" 
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <img 
+                    src={profileImage} 
+                    alt="Default Profile" 
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                )}
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors"
@@ -147,11 +155,19 @@ const VendorNavbar = () => {
 
             <div className="border-t border-gray-200 pt-4 pb-3">
               <div className="flex items-center px-3">
-                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                  <span className="text-orange-600 font-medium text-sm">
-                    {vendor?.businessName?.charAt(0)?.toUpperCase()}
-                  </span>
-                </div>
+                {vendor?.profileImage ? (
+                  <img 
+                    src={vendor.profileImage} 
+                    alt="Profile" 
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <img 
+                    src={profileImage} 
+                    alt="Default Profile" 
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                )}
                 <div className="ml-3">
                   <div className="text-base font-medium text-gray-800">{vendor?.businessName}</div>
                   <div className="text-sm font-medium text-gray-500">{vendor?.email}</div>

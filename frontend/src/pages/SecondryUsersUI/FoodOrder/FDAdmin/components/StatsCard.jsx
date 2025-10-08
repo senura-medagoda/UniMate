@@ -1,6 +1,6 @@
 import React from 'react';
 
-const StatsCard = ({ title, value, change, icon, color = 'blue' }) => {
+const StatsCard = ({ title, value, change, icon, color = 'orange' }) => {
   const colorClasses = {
     blue: 'bg-blue-500',
     green: 'bg-green-500',

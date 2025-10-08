@@ -496,3 +496,166 @@ export const toggleVendorStatus = async (req, res) => {
     }
 };
 
+/// Approve Vendor (Admin only)
+export const approveVendor = async (req, res) => {
+    try {
+        const { vendorId } = req.params;
+        const adminId = req.adminId; // From adminAuth middleware
+
+        const vendor = await VendorModel.findByIdAndUpdate(
+            vendorId,
+            {
+                isApproved: true,
+                approvalStatus: 'approved',
+                approvedAt: new Date(),
+                approvedBy: adminId,
+                rejectionReason: '' // Clear any previous rejection reason
+            },
+            { new: true }
+        );
+
+        if (!vendor) {
+            return res.status(404).json({
+                success: false,
+                message: "Vendor not found"
+            });
+        }
+
+        // Send notification to vendor about approval
+        try {
+            await createAdminNotification(
+                'vendor_approved',
+                'Vendor Account Approved',
+                `Your vendor account "${vendor.businessName || vendor.ownerName}" has been approved and you can now start using the platform.`,
+                {
+                    vendorId: vendor._id,
+                    businessName: vendor.businessName,
+                    ownerName: vendor.ownerName,
+                    email: vendor.email,
+                    approvedAt: vendor.approvedAt
+                },
+                'high',
+                `/vendor/dashboard`
+            );
+            console.log('Vendor approval notification sent successfully');
+        } catch (notificationError) {
+            console.error('Error sending vendor approval notification:', notificationError);
+            // Don't fail the approval if notification fails
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Vendor approved successfully",
+            data: vendor.getPublicProfile()
+        });
+
+    } catch (error) {
+        console.error("Approve vendor error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+
+/// Reject Vendor (Admin only)
+export const rejectVendor = async (req, res) => {
+    try {
+        const { vendorId } = req.params;
+        const { rejectionReason } = req.body;
+        const adminId = req.adminId; // From adminAuth middleware
+
+        if (!rejectionReason || rejectionReason.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: "Rejection reason is required"
+            });
+        }
+
+        const vendor = await VendorModel.findByIdAndUpdate(
+            vendorId,
+            {
+                isApproved: false,
+                approvalStatus: 'rejected',
+                rejectionReason: rejectionReason.trim(),
+                approvedBy: adminId
+            },
+            { new: true }
+        );
+
+        if (!vendor) {
+            return res.status(404).json({
+                success: false,
+                message: "Vendor not found"
+            });
+        }
+
+        // Send notification to vendor about rejection
+        try {
+            await createAdminNotification(
+                'vendor_rejected',
+                'Vendor Account Rejected',
+                `Your vendor account "${vendor.businessName || vendor.ownerName}" has been rejected. Reason: ${rejectionReason}`,
+                {
+                    vendorId: vendor._id,
+                    businessName: vendor.businessName,
+                    ownerName: vendor.ownerName,
+                    email: vendor.email,
+                    rejectionReason: rejectionReason,
+                    rejectedAt: new Date()
+                },
+                'high',
+                `/vendor/registration`
+            );
+            console.log('Vendor rejection notification sent successfully');
+        } catch (notificationError) {
+            console.error('Error sending vendor rejection notification:', notificationError);
+            // Don't fail the rejection if notification fails
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Vendor rejected successfully",
+            data: vendor.getPublicProfile()
+        });
+
+    } catch (error) {
+        console.error("Reject vendor error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+
+/// Get Vendor by ID (Admin only)
+export const getVendorById = async (req, res) => {
+    try {
+        const { vendorId } = req.params;
+
+        const vendor = await VendorModel.findById(vendorId).select('-password');
+
+        if (!vendor) {
+            return res.status(404).json({
+                success: false,
+                message: "Vendor not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: vendor
+        });
+
+    } catch (error) {
+        console.error("Get vendor by ID error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+

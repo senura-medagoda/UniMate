@@ -1,7 +1,8 @@
 // components/JP_HeroJobs.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../../../../lib/axios';
 
-const JP_HeroJobs = () => {
+const JP_HeroJobs = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     jobType: '',
@@ -9,82 +10,124 @@ const JP_HeroJobs = () => {
     category: '',
     experience: ''
   });
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Sample job data
-  const [jobs] = useState([
-    {
-      id: 1,
-      title: 'Campus Tour Guide',
-      company: 'Admissions Office',
-      type: 'On-Campus',
-      location: 'Main Campus',
-      posted: '2 days ago',
-      description: 'Lead campus tours for prospective students and families. Excellent communication skills required.',
-      pay: '$12/hr',
-      deadline: '2023-10-25',
-      isSaved: false
-    },
-    {
-      id: 2,
-      title: 'Social Media Assistant',
-      company: 'Marketing Department',
-      type: 'Work-Study',
-      location: 'Remote',
-      posted: '1 day ago',
-      description: 'Create content for university social media channels. Graphic design skills a plus.',
-      pay: '$15/hr',
-      deadline: '2023-10-24',
-      isSaved: true
-    },
-    {
-      id: 3,
-      title: 'Math Tutor',
-      company: 'Student Success Center',
-      type: 'Part-Time',
-      location: 'Learning Commons',
-      posted: '3 days ago',
-      description: 'Tutor students in introductory math courses. Must have completed Calculus II.',
-      pay: '$13/hr',
-      deadline: '2023-10-23',
-      isSaved: false
-    },
-    {
-      id: 4,
-      title: 'Resident Advisor',
-      company: 'Housing Services',
-      type: 'On-Campus',
-      location: 'Dormitories',
-      posted: '4 days ago',
-      description: 'Support students in residence halls and organize community activities.',
-      pay: 'Room + Stipend',
-      deadline: '2023-10-22',
-      isSaved: false
-    },
-    {
-      id: 5,
-      title: 'Research Assistant - Computer Science',
-      company: 'CS Department',
-      type: 'Research',
-      location: 'Tech Building',
-      posted: '5 days ago',
-      description: 'Assist professors with ongoing research projects. Python experience required.',
-      pay: '$16/hr',
-      deadline: '2023-10-28',
-      isSaved: false
-    },
-    {
-      id: 6,
-      title: 'Cafeteria Staff',
-      company: 'Food Services',
-      type: 'Part-Time',
-      location: 'Student Union',
-      posted: '6 hours ago',
-      description: 'Serve food and maintain cleanliness in campus dining facilities.',
-      pay: '$11/hr',
-      deadline: '2023-10-20',
-      isSaved: false
+  // Fetch jobs from API
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        console.log('Fetching jobs from API...');
+        console.log('User session:', user);
+        
+        // Get token from localStorage
+        const token = localStorage.getItem('studentToken');
+        
+        const response = await api.get('/job/', {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('API Response:', response.data);
+        
+        if (response.data.success) {
+          // Transform the data to match the expected format
+          const transformedJobs = response.data.data.map(job => {
+            try {
+              return {
+                id: job._id || 'unknown',
+                title: job.title || 'Untitled Job',
+                company: job.department || 'Unknown Department',
+                type: job.jobtype || 'Not specified',
+                location: job.location || 'Not specified',
+                posted: formatPostedDate(job.createdAt),
+                description: job.description || 'No description available',
+                pay: job.compensation || 'Not specified',
+                deadline: formatDeadline(job.deadline),
+                isSaved: false,
+                // Additional fields from database
+                responsibilities: job.responsibilities || '',
+                requirements: job.requirements || '',
+                benefits: job.benefits || '',
+                status: job.status || 'unknown',
+                postedby: job.postedby || 'unknown'
+              };
+            } catch (error) {
+              console.error('Error transforming job:', job, error);
+              return null;
+            }
+          }).filter(job => job !== null); // Remove any null entries
+          
+          console.log('Transformed jobs:', transformedJobs);
+          setJobs(transformedJobs);
+          setError(null);
+        } else {
+          console.error('API returned success: false');
+          setError('Failed to fetch jobs');
+        }
+      } catch (err) {
+        console.error('Error fetching jobs:', err);
+        console.error('Error response:', err.response?.data);
+        console.error('Error status:', err.response?.status);
+        console.error('Error config:', err.config);
+        
+        if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK') {
+          setError('Cannot connect to server. Please make sure the backend is running on port 5001.');
+        } else if (err.response?.status === 404) {
+          setError('API endpoint not found. Please check the server configuration.');
+        } else {
+          setError(`Failed to load jobs: ${err.response?.data?.message || err.message}`);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+  // Helper function to format posted date
+  const formatPostedDate = (dateString) => {
+    try {
+      if (!dateString) return 'Unknown';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Unknown';
+      
+      const now = new Date();
+      const diffTime = Math.abs(now - date);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) return '1 day ago';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+      return `${Math.ceil(diffDays / 30)} months ago`;
+    } catch (error) {
+      console.error('Error formatting posted date:', error);
+      return 'Unknown';
     }
-  ]);
+  };
+
+  // Helper function to format deadline
+  const formatDeadline = (dateString) => {
+    try {
+      if (!dateString) return 'Not specified';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid date';
+      
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch (error) {
+      console.error('Error formatting deadline:', error);
+      return 'Invalid date';
+    }
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -93,14 +136,57 @@ const JP_HeroJobs = () => {
   };
 
   const handleApply = (jobId) => {
+    // Check if user is logged in
+    if (!user) {
+      alert('Please log in to apply for jobs');
+      return;
+    }
+    
     // In a real app, this would open an application modal or page
-    alert(`Applying for job #${jobId}`);
+    console.log(`User ${user.name || user.email} applying for job #${jobId}`);
+    alert(`Applying for job #${jobId} as ${user.name || user.email}`);
   };
 
   const toggleSaveJob = (jobId) => {
+    // Check if user is logged in
+    if (!user) {
+      alert('Please log in to save jobs');
+      return;
+    }
+    
     // In a real app, this would update the backend
-    console.log(`Toggling save for job #${jobId}`);
+    console.log(`User ${user.name || user.email} toggling save for job #${jobId}`);
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Loading jobs...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <p className="text-red-600 text-lg mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -244,8 +330,15 @@ const JP_HeroJobs = () => {
         </div>
 
         {/* Jobs Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {jobs.map(job => (
+        {jobs.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-400 text-6xl mb-4">📋</div>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Jobs Available</h3>
+            <p className="text-gray-500">There are currently no job postings available. Check back later for new opportunities!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {jobs.map(job => (
             <div key={job.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden">
               <div className="p-4 sm:p-6">
                 <div className="flex justify-between items-start mb-4">
@@ -316,7 +409,8 @@ const JP_HeroJobs = () => {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Pagination */}
         <div className="flex justify-center mt-10">

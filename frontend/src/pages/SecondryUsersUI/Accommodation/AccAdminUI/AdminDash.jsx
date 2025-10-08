@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { getImageUrl, getFirstImage } from '../../../../utils/imageUtils';
 import AdminNavbar from './AdminNavbar';
 
 const AdminDash = () => {
@@ -384,14 +385,17 @@ const AdminDash = () => {
         {/* Listings Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredListings.map((listing) => (
-            <div key={listing._id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+            <div key={listing._id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow flex flex-col">
               {/* Image */}
               <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-t-lg">
                 {listing.images && listing.images.length > 0 ? (
                   <img
-                    src={listing.images[0]}
+                    src={getImageUrl(getFirstImage(listing.images))}
                     alt={listing.title}
                     className="w-full h-48 object-cover rounded-t-lg"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://via.placeholder.com/400x300?text=No+Image";
+                    }}
                   />
                 ) : (
                   <div className="w-full h-48 bg-gray-200 rounded-t-lg flex items-center justify-center">
@@ -403,7 +407,7 @@ const AdminDash = () => {
               </div>
 
               {/* Content */}
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-grow">
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{listing.title}</h3>
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(listing.status)}`}>
@@ -455,8 +459,8 @@ const AdminDash = () => {
                   </div>
                 )}
 
-                {/* Action Buttons */}
-                <div className="space-y-3">
+                {/* Action Buttons - Always at bottom */}
+                <div className="mt-auto space-y-3">
                   {/* Primary Actions Row */}
                   <div className="flex gap-2">
                     {listing.status === 'pending' && (
@@ -648,9 +652,12 @@ const AdminDash = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <img
-                    src={detailsListing.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}
+                    src={getImageUrl(getFirstImage(detailsListing.images))}
                     alt={detailsListing.title}
                     className="w-full h-48 object-cover rounded-md"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://via.placeholder.com/400x300?text=No+Image";
+                    }}
                   />
                   <p className="mt-2 text-sm text-gray-500">Owner: {detailsListing.ownerId?.fullName || 'Unknown'}</p>
                 </div>

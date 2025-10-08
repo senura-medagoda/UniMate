@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaThumbsUp, FaThumbsDown, FaStar, FaDownload, FaCalendar } from "react-icons/fa";
+import Navbar from "./Components/Navbar.jsx";
 
-const MaterialsPage = () => {
+const MaterialsPage = ({ user, setUser }) => {
   const [view, setView] = useState("top"); // default: top rated
   const [topMaterials, setTopMaterials] = useState([]);
   const [recentMaterials, setRecentMaterials] = useState([]);
@@ -206,7 +207,10 @@ const MaterialsPage = () => {
   const currentMaterials = view === "top" ? topMaterials : recentMaterials;
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <>
+      <Navbar user={user} setUser={setUser} />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="max-w-6xl mx-auto p-6">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-4">Study Materials</h1>
@@ -379,7 +383,9 @@ const MaterialsPage = () => {
           ))}
         </div>
       )}
-    </div>
+        </div>
+      </div>
+    </>
   );
 };
 

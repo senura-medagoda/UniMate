@@ -222,7 +222,7 @@ const SMAdminDashboard = () => {
         <nav className="space-y-2">
           <button
             className={`w-full text-left p-3 rounded-lg transition-colors flex items-center ${
-              activeTab === "overview" ? "bg-blue-600" : "hover:bg-gray-700"
+              activeTab === "overview" ? "bg-orange-600" : "hover:bg-gray-700"
             }`}
             onClick={() => setActiveTab("overview")}
           >
@@ -232,7 +232,7 @@ const SMAdminDashboard = () => {
           
           <button
             className={`w-full text-left p-3 rounded-lg transition-colors flex items-center ${
-              activeTab === "materials" ? "bg-blue-600" : "hover:bg-gray-700"
+              activeTab === "materials" ? "bg-orange-600" : "hover:bg-gray-700"
             }`}
             onClick={() => setActiveTab("materials")}
           >
@@ -242,7 +242,7 @@ const SMAdminDashboard = () => {
           
           <button
             className={`w-full text-left p-3 rounded-lg transition-colors flex items-center ${
-              activeTab === "forum" ? "bg-blue-600" : "hover:bg-gray-700"
+              activeTab === "forum" ? "bg-orange-600" : "hover:bg-gray-700"
             }`}
             onClick={() => setActiveTab("forum")}
           >
@@ -252,7 +252,7 @@ const SMAdminDashboard = () => {
           
           <button
             className={`w-full text-left p-3 rounded-lg transition-colors flex items-center ${
-              activeTab === "complaints" ? "bg-blue-600" : "hover:bg-gray-700"
+              activeTab === "complaints" ? "bg-orange-600" : "hover:bg-gray-700"
             }`}
             onClick={() => setActiveTab("complaints")}
           >
@@ -262,7 +262,7 @@ const SMAdminDashboard = () => {
           
           <button
             className={`w-full text-left p-3 rounded-lg transition-colors flex items-center ${
-              activeTab === "users" ? "bg-blue-600" : "hover:bg-gray-700"
+              activeTab === "users" ? "bg-orange-600" : "hover:bg-gray-700"
             }`}
             onClick={() => setActiveTab("users")}
           >
@@ -272,7 +272,7 @@ const SMAdminDashboard = () => {
           
           <button
             className={`w-full text-left p-3 rounded-lg transition-colors flex items-center ${
-              activeTab === "reports" ? "bg-blue-600" : "hover:bg-gray-700"
+              activeTab === "reports" ? "bg-orange-600" : "hover:bg-gray-700"
             }`}
             onClick={() => setActiveTab("reports")}
           >
@@ -293,7 +293,7 @@ const SMAdminDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
               <div className="bg-white p-6 rounded-lg shadow-sm border">
                 <div className="flex items-center">
-                  <FaUsers className="text-3xl text-blue-500 mr-4" />
+                  <FaUsers className="text-3xl text-orange-500 mr-4" />
                   <div>
                     <p className="text-sm text-gray-600">Total Users</p>
                     <p className="text-2xl font-bold">{stats.totalUsers}</p>
@@ -348,7 +348,7 @@ const SMAdminDashboard = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <button
                   onClick={() => setActiveTab("materials")}
-                  className="p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="p-4 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
                 >
                   <FaFileUpload className="text-2xl mx-auto mb-2" />
                   <p className="text-sm">Moderate Materials</p>
@@ -389,7 +389,7 @@ const SMAdminDashboard = () => {
             
             {loading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
                 <p className="mt-4">Loading materials...</p>
               </div>
             ) : (
@@ -418,7 +418,7 @@ const SMAdminDashboard = () => {
                       </div>
                       
                       <div className="flex space-x-2 ml-4">
-                        <button className="text-blue-500 hover:text-blue-700">
+                        <button className="text-orange-500 hover:text-orange-700">
                           <FaEye />
                         </button>
                         <button 
@@ -443,7 +443,7 @@ const SMAdminDashboard = () => {
             
             {loading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
                 <p className="mt-4">Loading forum posts...</p>
               </div>
             ) : (
@@ -472,7 +472,7 @@ const SMAdminDashboard = () => {
                         {post.tags && post.tags.length > 0 && (
                           <div className="flex flex-wrap gap-2 mb-3">
                             {post.tags.map((tag, index) => (
-                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                              <span key={index} className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">
                                 #{tag}
                               </span>
                             ))}
@@ -481,7 +481,7 @@ const SMAdminDashboard = () => {
                       </div>
                       
                       <div className="flex space-x-2 ml-4">
-                        <button className="text-blue-500 hover:text-blue-700">
+                        <button className="text-orange-500 hover:text-orange-700">
                           <FaEye />
                         </button>
                         <button 
@@ -506,7 +506,7 @@ const SMAdminDashboard = () => {
             
             {loading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
                 <p className="mt-4">Loading complaints...</p>
               </div>
             ) : (
@@ -543,7 +543,7 @@ const SMAdminDashboard = () => {
                       <div className="flex space-x-2 ml-4">
                         <button 
                           onClick={() => fetchComplaintDetails(complaint)}
-                          className="text-blue-500 hover:text-blue-700"
+                          className="text-orange-500 hover:text-orange-700"
                           title="View Details"
                         >
                           <FaEye />
@@ -578,7 +578,7 @@ const SMAdminDashboard = () => {
             
             {loading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
                 <p className="mt-4">Loading users...</p>
               </div>
             ) : (
@@ -604,7 +604,7 @@ const SMAdminDashboard = () => {
                       </div>
                       
                       <div className="flex space-x-2 ml-4">
-                        <button className="text-blue-500 hover:text-blue-700">
+                        <button className="text-orange-500 hover:text-orange-700">
                           <FaEye />
                         </button>
                         <button 
@@ -697,7 +697,7 @@ const SMAdminDashboard = () => {
 
                   {detailLoading ? (
                     <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
                       <p className="mt-4">Loading details...</p>
                     </div>
                   ) : complaintDetails ? (
@@ -802,7 +802,7 @@ const SMAdminDashboard = () => {
                               <p className="text-sm font-medium mb-2">Tags:</p>
                               <div className="flex flex-wrap gap-2">
                                 {complaintDetails.tags.map((tag, index) => (
-                                  <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                                  <span key={index} className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">
                                     #{tag}
                                   </span>
                                 ))}
@@ -839,7 +839,7 @@ const SMAdminDashboard = () => {
                     return (
                       <div key={campus} className="flex justify-between items-center">
                         <span className="font-medium">{campus}</span>
-                        <span className="text-blue-600 font-bold">{count} materials</span>
+                        <span className="text-orange-600 font-bold">{count} materials</span>
                       </div>
                     );
                   })}

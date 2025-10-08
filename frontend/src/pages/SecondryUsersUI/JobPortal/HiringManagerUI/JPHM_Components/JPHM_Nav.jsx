@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, X, User, LogOut, Settings } from 'lucide-react';
 
 function JPHM_Nav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear localStorage
+    localStorage.removeItem('hmToken');
+    localStorage.removeItem('hmData');
+    
+    // Navigate to main login page
+    navigate('/login', { replace: true });
+  };
 
   const navItems = [
     { name: 'Dashboard', path: '/hmdash' },
@@ -97,10 +107,13 @@ function JPHM_Nav() {
                     </a>
                   </li>
                   <li>
-                    <a className="flex items-center gap-2 text-red-600">
+                    <button 
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 text-red-600 hover:bg-red-50 w-full text-left px-2 py-1 rounded"
+                    >
                       <LogOut className="w-4 h-4" />
                       Logout
-                    </a>
+                    </button>
                   </li>
                 </ul>
               </div>
@@ -196,10 +209,13 @@ function JPHM_Nav() {
               }}
               transition={{ duration: 0.3, delay: 0.6 }}
             >
-              <a className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors duration-200">
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors duration-200 w-full text-left"
+              >
                 <LogOut className="w-4 h-4" />
                 Logout
-              </a>
+              </button>
             </motion.div>
           </div>
         </motion.div>

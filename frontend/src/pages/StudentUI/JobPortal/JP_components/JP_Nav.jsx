@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, X, User, LogOut, Settings } from 'lucide-react';
 
-const JP_Nav = () => {
+const JP_Nav = ({ user, setUser }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('studentToken');
+    localStorage.removeItem('studentUser');
+    setUser(null);
+    navigate('/');
+  };
 
   const navItems = [
     { name: 'Dashboard', path: '/jobdash' },
@@ -33,7 +41,7 @@ const JP_Nav = () => {
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}
           >
-            <Link to="/jobdash" className="flex items-center">
+            <Link to="/std-dash" className="flex items-center">
               <img 
                 src="/Logo.png" 
                 alt="UniMate Logo" 
@@ -85,7 +93,12 @@ const JP_Nav = () => {
                 </label>
                 <ul tabIndex={0} className="mt-3 p-2 shadow menu menu-compact dropdown-content bg-white rounded-box w-52 border border-gray-200">
                   <li>
-                    <Link to="/jobprofile" className="flex items-center gap-2">
+                    <div className="px-3 py-2 text-sm text-gray-600 border-b border-gray-200">
+                      {user?.name || user?.fname || user?.email || 'Student'}
+                    </div>
+                  </li>
+                  <li>
+                    <Link to="/std-profile" className="flex items-center gap-2">
                       <User className="w-4 h-4" />
                       Profile
                     </Link>
@@ -97,10 +110,10 @@ const JP_Nav = () => {
                     </a>
                   </li>
                   <li>
-                    <a className="flex items-center gap-2 text-red-600">
+                    <button onClick={handleLogout} className="flex items-center gap-2 text-red-600 w-full text-left">
                       <LogOut className="w-4 h-4" />
                       Logout
-                    </a>
+                    </button>
                   </li>
                 </ul>
               </div>
@@ -196,10 +209,13 @@ const JP_Nav = () => {
               }}
               transition={{ duration: 0.3, delay: 0.6 }}
             >
-              <a className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors duration-200">
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors duration-200 w-full text-left"
+              >
                 <LogOut className="w-4 h-4" />
                 Logout
-              </a>
+              </button>
             </motion.div>
           </div>
         </motion.div>

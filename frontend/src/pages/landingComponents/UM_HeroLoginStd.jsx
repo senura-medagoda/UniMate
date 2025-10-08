@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, User, GraduationCap, BookOpen, Home, Utensils, Briefcase, Shield, CheckCircle, ArrowRight } from 'lucide-react';
 import api from '../../lib/axios';
@@ -15,6 +15,21 @@ const UM_HeroLoginStd = ({setUser}) => {
   const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get the intended destination from location state or default to std-dash
+  const from = location.state?.from?.pathname || '/std-dash';
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('studentToken');
+    const userData = localStorage.getItem('studentUser');
+    
+    if (token && userData) {
+      // User is already logged in, redirect to intended destination
+      navigate(from, { replace: true });
+    }
+  }, [navigate, from]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -31,22 +46,22 @@ const UM_HeroLoginStd = ({setUser}) => {
     // inside handleSubmit after successful API call
 try {
   const res = await api.post("/stdlogin/login", formData);
-  // backend must return token and user object; adjust if different
-  const token = res.data.token;
-  const userObj = res.data.user ?? res.data; // try both shapes
+  // Extract user data from response (excluding message field)
+  const { message, ...userData } = res.data;
+  const token = userData.token;
 
   if (token) localStorage.setItem("studentToken", token);
-  if (userObj) {
-    localStorage.setItem("studentUser", JSON.stringify(userObj));
-    setUser(userObj);              // update App state (you passed setUser)
+  if (userData) {
+    localStorage.setItem("studentUser", JSON.stringify(userData));
+    setUser(userData);              // update App state (you passed setUser)
   }
 
   // optional: rememberMe logic
   if (rememberMe) localStorage.setItem('student_rememberMe', 'true');
 
   toast.success("Login Success!");
-  // navigate to dashboard (or back to intended page — see step 4)
-  navigate('/std-dash', { replace: true });
+  // navigate to intended page or dashboard
+  navigate(from, { replace: true });
 } catch (err) {
   console.error('Login error:', err);
   toast.error('Login failed. Check credentials.');

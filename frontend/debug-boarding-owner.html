@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Boarding Owner Flow</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Debug Boarding Owner Flow</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Test Backend API</h2>
+        <button onclick="testBackendAPI()">Test Backend API</button>
+        <div id="backend-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Test Frontend Routes</h2>
+        <button onclick="testFrontendRoutes()">Test Frontend Routes</button>
+        <div id="frontend-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Test Complete Flow</h2>
+        <button onclick="testCompleteFlow()">Test Complete Flow</button>
+        <div id="flow-result"></div>
+    </div>
+
+    <script>
+        async function testBackendAPI() {
+            const resultDiv = document.getElementById('backend-result');
+            resultDiv.innerHTML = 'Testing backend API...';
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/owner/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'testpassword'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Backend API is working! Response: ${JSON.stringify(data)}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Backend API error: ${data.message || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Backend API not accessible: ${error.message}</div>`;
+            }
+        }
+        
+        function testFrontendRoutes() {
+            const resultDiv = document.getElementById('frontend-result');
+            resultDiv.innerHTML = 'Testing frontend routes...';
+            
+            const routes = [
+                'http://localhost:5173/login',
+                'http://localhost:5173/owner/login',
+                'http://localhost:5173/owner/signup',
+                'http://localhost:5173/owner/dashboard'
+            ];
+            
+            let results = '<ul>';
+            routes.forEach(route => {
+                results += `<li><a href="${route}" target="_blank">${route}</a></li>`;
+            });
+            results += '</ul>';
+            
+            resultDiv.innerHTML = `<div class="success">✅ Frontend routes available: ${results}</div>`;
+        }
+        
+        function testCompleteFlow() {
+            const resultDiv = document.getElementById('flow-result');
+            resultDiv.innerHTML = `
+                <div class="success">
+                    <h3>Complete Flow Test:</h3>
+                    <ol>
+                        <li>Go to <a href="http://localhost:5173/login" target="_blank">http://localhost:5173/login</a></li>
+                        <li>Click on "Boarding Owner" card</li>
+                        <li>Click "Continue to Boarding Owner Login"</li>
+                        <li>You should be redirected to <a href="http://localhost:5173/owner/login" target="_blank">http://localhost:5173/owner/login</a></li>
+                        <li>Enter valid credentials and login</li>
+                        <li>You should be redirected to <a href="http://localhost:5173/owner/dashboard" target="_blank">http://localhost:5173/owner/dashboard</a></li>
+                    </ol>
+                    <p><strong>Note:</strong> Check browser console for debug logs</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

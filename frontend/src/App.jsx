@@ -23,12 +23,20 @@ import MarketPlace_About from "./pages/StudentUI/Marketplace/pages/MarketPlace_A
 import MarketPlace_Contact from "./pages/StudentUI/Marketplace/pages/MarketPlace_Contact.jsx"
 import MarketPlace_Product from "./pages/StudentUI/Marketplace/pages/MarketPlace_Product.jsx"
 import MarketPlace_Cart from "./pages/StudentUI/Marketplace/pages/MarketPlace_Cart.jsx"
-import MarketPlace_Login from "./pages/StudentUI/Marketplace/pages/MarketPlace_Login.jsx"
 import MarketPlace_PlaceOrder from "./pages/StudentUI/Marketplace/pages/MarketPlace_PlaceOrder.jsx"
 import MarketPlace_Orders from "./pages/StudentUI/Marketplace/pages/MarketPlace_Orders.jsx"
+import ShopContextProvider from "./pages/StudentUI/Marketplace/context/M_ShopContext.jsx"
+
+/* ----------------- Marketplace (Admin/Secondary Users) ----------------- */
 import M_Add from './pages/SecondryUsersUI/Marketplace/pages/M_Add.jsx'
 import Admin_Orders from './pages/SecondryUsersUI/Marketplace/pages/Admin_Orders.jsx'
+import TrackOrders from './pages/SecondryUsersUI/Marketplace/pages/TrackOrders.jsx'
 import M_List from './pages/SecondryUsersUI/Marketplace/pages/M_List.jsx'
+import M_Analytics from './pages/SecondryUsersUI/Marketplace/pages/M_Analytics.jsx'
+import M_ResellRequests from './pages/SecondryUsersUI/Marketplace/pages/M_ResellRequests.jsx'
+import M_ResellItems from './pages/SecondryUsersUI/Marketplace/pages/M_ResellItems.jsx'
+
+
 import UM_stdLogin from './pages/UM_stdLogin.jsx'
 
 import CreateBoardingPlace from './pages/SecondryUsersUI/Accommodation/BordingOwner/createBoardingPlace.jsx';
@@ -59,12 +67,15 @@ import About from "./pages/StudentUI/StudyMaterial/About.jsx"
 import MyUploads from "./pages/StudentUI/StudyMaterial/MyUploads.jsx"
 import MyRequests from "./pages/StudentUI/StudyMaterial/MyRequests.jsx"
 import Profile from "./pages/StudentUI/StudyMaterial/Profile.jsx"
+import VerifyProfilePage from './pages/StudentUI/VerifyProfilePage.jsx'
 
 import HM_dash from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_dash.jsx'
 import HM_myjobs from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_myjobs.jsx'
 import HM_applicants from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_applicants.jsx'
 import HM_profile from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_profile.jsx'
 import HM_newjob from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_newjob.jsx'
+import HM_Login from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_Login.jsx'
+import HM_Signup from './pages/SecondryUsersUI/JobPortal/HiringManagerUI/HM_Signup.jsx'
 import AboutPage from './pages/AboutPage.jsx'
 import ContactPage from './pages/ContactPage.jsx'
 import UM_stdRegister from './pages/UM_stdRegister.jsx'
@@ -100,6 +111,13 @@ import {
   ProtectedAdminRoute
 } from './pages/SecondryUsersUI/FoodOrder/FDAdmin'
 import AdminLoginPage from './pages/AdminLogins/AdminLoginPage.jsx'
+import StdProfile from './pages/StudentUI/StdProfile.jsx'
+import SA_Dash from './pages/SystemAdmin/SA_Dash.jsx'
+import SA_StudentsPage from './pages/SystemAdmin/SA_StudentsPage.jsx'
+import SA_AdminsPage from './pages/SystemAdmin/SA_AdminsPage.jsx'
+import SA_ReportsPage from './pages/SystemAdmin/SA_ReportsPage.jsx'
+import SA_Profile from './pages/SystemAdmin/SA_Profile.jsx'
+import SA_LoginPage from './pages/AdminLogins/SA_LoginPage.jsx'
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -108,7 +126,8 @@ const App = () => {
   useEffect(() => {
     const savedUser = localStorage.getItem('studentUser');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const userData = JSON.parse(savedUser);
+      setUser(userData);
     }
   }, []);
 
@@ -133,9 +152,9 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
 
         <Route path="/admin-login" element={<AdminLoginPage />} />
+        <Route path="/sa-login" element={<SA_LoginPage />} />
 
 
-        <Route path="/food" element={<Home />} />
         <Route path="/login-std" element={user ? <Navigate to="/std-dash" /> : <UM_stdLogin setUser={updateUser} />} />
         <Route path="/stdregister" element={user ? <Navigate to="/std-dash" /> : <UM_stdRegister />} />
 
@@ -147,14 +166,68 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/std-profile"
+          element={
+            <ProtectedRoute user={user}>
+              <StdProfile user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/verifystd"
+          element={
+            <ProtectedRoute user={user}>
+              <VerifyProfilePage user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Job Portal Routes */}
-        <Route path="/jobdash" element={<JP_index />} />
-        <Route path="/jobs" element={<JP_jobs />} />
-        <Route path="/applications" element={<JP_application />} />
-        <Route path="/jobprofile" element={<JP_profile />} />
+        <Route
+          path="/jobdash"
+          element={
+            <ProtectedRoute user={user}>
+              <JP_index user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs"
+          element={
+            <ProtectedRoute user={user}>
+              <JP_jobs user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applications"
+          element={
+            <ProtectedRoute user={user}>
+              <JP_application user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobprofile"
+          element={
+            <ProtectedRoute user={user}>
+              <JP_profile user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Sys Admin routes */}
+        <Route path="/systemadmin-dash" element={<SA_Dash />} />
+        <Route path="/systemadmin-students" element={<SA_StudentsPage />} />
+        <Route path="/systemadmin-admins" element={<SA_AdminsPage />} />
+        <Route path="/systemadmin-reports" element={<SA_ReportsPage />} />
+        <Route path="/systemadmin-profile" element={<SA_Profile />} />
 
         {/* Hiring Manager Routes */}
+        <Route path="/hm/login" element={<HM_Login />} />
+        <Route path="/hm/signup" element={<HM_Signup />} />
         <Route path="/hmdash" element={<HM_dash />} />
         <Route path="/myjobs" element={<HM_myjobs />} />
         <Route path="/applicants" element={<HM_applicants />} />
@@ -168,34 +241,171 @@ const App = () => {
         <Route path="/jpadmin-managers" element={<JPA_Managers />} />
         <Route path="/jpadmin-profile" element={<JPA_Profile />} />
 
-        {/* Marketplace Routes */}
-        <Route path='/mphome' element={<MarketPlace_Home />} />
-        <Route path='/M_home' element={<MarketPlace_Home />} />
-        <Route path='/M_collection' element={<MarketPlace_Collection />} />
-        <Route path='/M_about' element={<MarketPlace_About />} />
-        <Route path='/M_contact' element={<MarketPlace_Contact />} />
-        <Route path="/M_product/:productId" element={<MarketPlace_Product />} />
-        <Route path="/M_cart" element={<MarketPlace_Cart />} />
-        <Route path="/M_login" element={<MarketPlace_Login />} />
-        <Route path="/M_placeorder" element={<MarketPlace_PlaceOrder />} />
-        <Route path="/M_orders" element={<MarketPlace_Orders />} />
+        {/* ----------------- Marketplace (Student) ----------------- */}
+        <Route path='/mphome' element={
+          <ProtectedRoute user={user}>
+            <ShopContextProvider>
+              <MarketPlace_Home user={user} setUser={updateUser} />
+            </ShopContextProvider>
+          </ProtectedRoute>
+        } />
+        <Route path='/M_home' element={
+          <ProtectedRoute user={user}>
+            <ShopContextProvider>
+              <MarketPlace_Home user={user} setUser={updateUser} />
+            </ShopContextProvider>
+          </ProtectedRoute>
+        } />
+        <Route path='/M_collection' element={
+          <ProtectedRoute user={user}>
+            <ShopContextProvider>
+              <MarketPlace_Collection user={user} setUser={updateUser} />
+            </ShopContextProvider>
+          </ProtectedRoute>
+        } />
+        <Route path='/M_about' element={
+          <ProtectedRoute user={user}>
+            <ShopContextProvider>
+              <MarketPlace_About user={user} setUser={updateUser} />
+            </ShopContextProvider>
+          </ProtectedRoute>
+        } />
+        <Route path='/M_contact' element={
+          <ProtectedRoute user={user}>
+            <ShopContextProvider>
+              <MarketPlace_Contact user={user} setUser={updateUser} />
+            </ShopContextProvider>
+          </ProtectedRoute>
+        } />
+        <Route path="/M_product/:productId" element={
+          <ProtectedRoute user={user}>
+            <ShopContextProvider>
+              <MarketPlace_Product user={user} setUser={updateUser} />
+            </ShopContextProvider>
+          </ProtectedRoute>
+        } />
+        <Route path="/M_cart" element={
+          <ProtectedRoute user={user}>
+            <ShopContextProvider>
+              <MarketPlace_Cart user={user} setUser={updateUser} />
+            </ShopContextProvider>
+          </ProtectedRoute>
+        } />
+        <Route path="/M_placeorder" element={
+          <ProtectedRoute user={user}>
+            <ShopContextProvider>
+              <MarketPlace_PlaceOrder user={user} setUser={updateUser} />
+            </ShopContextProvider>
+          </ProtectedRoute>
+        } />
+        <Route path="/M_orders" element={
+          <ProtectedRoute user={user}>
+            <ShopContextProvider>
+              <MarketPlace_Orders user={user} setUser={updateUser} />
+            </ShopContextProvider>
+          </ProtectedRoute>
+        } />
+
+        {/* Marketplace Secondary/Admin */}
+        <Route path="/M_List" element={<M_List />} />
+        <Route path="/A_login" element={<M_List />} /> {/* ✅ Added missing route */}
         <Route path="/A_add" element={<M_Add />} />
-        <Route path='/Admin_Orders' element={<Admin_Orders />} />
-        <Route path='/M_List' element={<M_List />} />
+        <Route path="/Admin_Orders" element={<Admin_Orders />} />
+        <Route path="/Track_Orders" element={<TrackOrders />} />
+        <Route path='/M_Analytics' element={<M_Analytics />} />
+        <Route path='/M_resell_requests' element={<M_ResellRequests />} />
+        <Route path='/M_resell_items' element={<M_ResellItems />} />
 
         {/* Study Material Routes */}
         <Route path="/SMAdminDashboard" element={<Admin />} />
-        <Route path="/StudyMaterialDash" element={<SMDash />} />
-        <Route path="/uploadSM" element={<Upload />} />
-        <Route path="/BrowseSM" element={<Brows />} />
-        <Route path="/RequestSM" element={<Req />} />
-        <Route path="/RequestedSM" element={<RequestedSM />} />
-        <Route path="/Top_RecentSM" element={<TopandRecent />} />
-        <Route path="/ForumSM" element={<ForumSMM />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/my-uploads" element={<MyUploads />} />
-        <Route path="/my-requests" element={<MyRequests />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/StudyMaterialDash"
+          element={
+            <ProtectedRoute user={user}>
+              <SMDash user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/uploadSM"
+          element={
+            <ProtectedRoute user={user}>
+              <Upload user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/BrowseSM"
+          element={
+            <ProtectedRoute user={user}>
+              <Brows user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/RequestSM"
+          element={
+            <ProtectedRoute user={user}>
+              <Req user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/RequestedSM"
+          element={
+            <ProtectedRoute user={user}>
+              <RequestedSM user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Top_RecentSM"
+          element={
+            <ProtectedRoute user={user}>
+              <TopandRecent user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ForumSM"
+          element={
+            <ProtectedRoute user={user}>
+              <ForumSMM user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/SMabout"
+          element={
+            <ProtectedRoute user={user}>
+              <About user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-uploads"
+          element={
+            <ProtectedRoute user={user}>
+              <MyUploads user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-requests"
+          element={
+            <ProtectedRoute user={user}>
+              <MyRequests user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute user={user}>
+              <Profile user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Accommodation Routes */}
         <Route path="/create-boarding-place" element={<CreateBoardingPlace />} />
@@ -205,16 +415,60 @@ const App = () => {
         <Route path="/owner/login" element={<OwnerLogin />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/accommodation" element={<AdminDash />} />
-        <Route path="/student/accommodation" element={<StudentAccommodationDashboard />} />
-        <Route path="/student/accommodation/boarding-places" element={<BoardingPlacesPage />} />
-        <Route path="/student/accommodation/my-bookings" element={<MyBookingsPage />} />
-        <Route path="/student/accommodation/services" element={<ServicePage />} />
+        <Route
+          path="/student/accommodation"
+          element={
+            <ProtectedRoute user={user}>
+              <StudentAccommodationDashboard user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/accommodation/boarding-places"
+          element={
+            <ProtectedRoute user={user}>
+              <BoardingPlacesPage user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/accommodation/my-bookings"
+          element={
+            <ProtectedRoute user={user}>
+              <MyBookingsPage user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/accommodation/services"
+          element={
+            <ProtectedRoute user={user}>
+              <ServicePage user={user} setUser={updateUser} />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Food Order Student Routes */}
-        <Route path="/food" element={<FD_Home />} />
-        <Route path="/menu" element={<MenuPage />} />
-        <Route path="/shops" element={<ShopsPage />} />
-        <Route path="/cart" element={<CartPage />} />
+        <Route path="/food" element={
+          <ProtectedRoute user={user}>
+            <FD_Home user={user} setUser={updateUser} />
+          </ProtectedRoute>
+        } />
+        <Route path="/menu" element={
+          <ProtectedRoute user={user}>
+            <MenuPage user={user} setUser={updateUser} />
+          </ProtectedRoute>
+        } />
+        <Route path="/shops" element={
+          <ProtectedRoute user={user}>
+            <ShopsPage user={user} setUser={updateUser} />
+          </ProtectedRoute>
+        } />
+        <Route path="/cart" element={
+          <ProtectedRoute user={user}>
+            <CartPage user={user} setUser={updateUser} />
+          </ProtectedRoute>
+        } />
 
         {/* Food Order Vendor Routes (wrapped in VendorAuthProvider) */}
         <Route path="/vendor/login" element={
@@ -266,45 +520,31 @@ const App = () => {
           </VendorAuthProvider>
         } />
 
-        {/* Food Order Admin Routes (wrapped in AdminAuthProvider) */}
-        <Route path="/admin/food/login" element={
+        {/* Food Admin */}
+        <Route path="/food/admin/login" element={<AdminAuthProvider><FDAdminLogin /></AdminAuthProvider>} />
+        <Route path="/food/admin/dashboard" element={
           <AdminAuthProvider>
-            <FDAdminLogin />
+            <ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>
           </AdminAuthProvider>
         } />
-        <Route path="/admin/food/dashboard" element={
+        <Route path="/food/admin/vendors" element={
           <AdminAuthProvider>
-            <ProtectedAdminRoute>
-              <AdminDashboard />
-            </ProtectedAdminRoute>
+            <ProtectedAdminRoute requiredPermission="manage_vendors"><VendorsManagement /></ProtectedAdminRoute>
           </AdminAuthProvider>
         } />
-        <Route path="/admin/food/vendors" element={
+        <Route path="/food/admin/shops" element={
           <AdminAuthProvider>
-            <ProtectedAdminRoute requiredPermission="manage_vendors">
-              <VendorsManagement />
-            </ProtectedAdminRoute>
+            <ProtectedAdminRoute requiredPermission="manage_shops"><ShopsManagement /></ProtectedAdminRoute>
           </AdminAuthProvider>
         } />
-        <Route path="/admin/food/shops" element={
+        <Route path="/food/admin/analytics" element={
           <AdminAuthProvider>
-            <ProtectedAdminRoute requiredPermission="manage_shops">
-              <ShopsManagement />
-            </ProtectedAdminRoute>
+            <ProtectedAdminRoute requiredPermission="view_analytics"><Analytics /></ProtectedAdminRoute>
           </AdminAuthProvider>
         } />
-        <Route path="/admin/food/analytics" element={
+        <Route path="/food/admin/profile" element={
           <AdminAuthProvider>
-            <ProtectedAdminRoute requiredPermission="view_analytics">
-              <Analytics />
-            </ProtectedAdminRoute>
-          </AdminAuthProvider>
-        } />
-        <Route path="/admin/food/profile" element={
-          <AdminAuthProvider>
-            <ProtectedAdminRoute>
-              <ProfileSettings />
-            </ProtectedAdminRoute>
+            <ProtectedAdminRoute><ProfileSettings /></ProtectedAdminRoute>
           </AdminAuthProvider>
         } />
       </Routes>

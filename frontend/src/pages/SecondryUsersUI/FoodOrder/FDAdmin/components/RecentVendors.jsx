@@ -52,8 +52,8 @@ const RecentVendors = ({ vendors }) => {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium text-gray-900">Recent Vendors</h3>
           <Link
-            to="/admin/vendors"
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            to="/food/admin/vendors"
+            className="text-sm text-orange-600 hover:text-orange-700 font-medium"
           >
             View all
           </Link>
@@ -70,8 +70,8 @@ const RecentVendors = ({ vendors }) => {
               <div key={index} className="px-6 py-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-medium text-sm">
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                      <span className="text-orange-600 font-medium text-sm">
                         {vendor.ownerName?.charAt(0) || 'V'}
                       </span>
                     </div>

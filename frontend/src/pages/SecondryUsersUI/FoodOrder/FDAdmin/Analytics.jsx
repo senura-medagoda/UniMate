@@ -6,7 +6,15 @@ import AdminNavbar from './components/AdminNavbar';
 const Analytics = () => {
   const { hasPermission } = useAdminAuth();
   const { error: toastError } = useToast();
-  const [analytics, setAnalytics] = useState(null);
+  const [analytics, setAnalytics] = useState({
+    totalVendors: 0,
+    activeVendors: 0,
+    pendingVendors: 0,
+    totalShops: 0,
+    activeShops: 0,
+    recentVendors: [],
+    recentShops: []
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,7 +24,7 @@ const Analytics = () => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5001/api/admin/dashboard/stats', {
+      const response = await fetch('http://localhost:5001/api/food-admin/dashboard/stats', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
           'Content-Type': 'application/json'
@@ -24,9 +32,16 @@ const Analytics = () => {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setAnalytics(data.data);
+        const result = await response.json();
+        console.log('Analytics data received:', result);
+        if (result.success) {
+          console.log('Setting analytics with data:', result.data);
+          setAnalytics(result.data);
+        } else {
+          toastError(result.message || 'Failed to load analytics data');
+        }
       } else {
+        console.error('Failed to fetch analytics:', response.status, response.statusText);
         toastError('Failed to load analytics data');
       }
     } catch (error) {
@@ -57,7 +72,7 @@ const Analytics = () => {
       <div className="min-h-screen bg-gray-50">
         <AdminNavbar />
         <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
         </div>
       </div>
     );
@@ -79,15 +94,15 @@ const Analytics = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Total Vendors</p>
-                  <p className="text-2xl font-semibold text-gray-900">{analytics.vendors.total}</p>
-                  <p className="text-sm text-blue-600">{analytics.vendors.active} active</p>
+                  <p className="text-2xl font-semibold text-gray-900">{analytics.totalVendors || 0}</p>
+                  <p className="text-sm text-orange-600">{analytics.activeVendors || 0} active</p>
                 </div>
               </div>
             </div>
@@ -101,9 +116,9 @@ const Analytics = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Active Vendors</p>
-                  <p className="text-2xl font-semibold text-gray-900">{analytics.vendors.active}</p>
+                  <p className="text-2xl font-semibold text-gray-900">{analytics.activeVendors || 0}</p>
                   <p className="text-sm text-green-600">
-                    {Math.round((analytics.vendors.active / analytics.vendors.total) * 100)}% of total
+                    {analytics.totalVendors > 0 ? Math.round(((analytics.activeVendors || 0) / (analytics.totalVendors || 1)) * 100) : 0}% of total
                   </p>
                 </div>
               </div>
@@ -118,8 +133,8 @@ const Analytics = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Total Shops</p>
-                  <p className="text-2xl font-semibold text-gray-900">{analytics.shops.total}</p>
-                  <p className="text-sm text-purple-600">{analytics.shops.active} active</p>
+                  <p className="text-2xl font-semibold text-gray-900">{analytics.totalShops || 0}</p>
+                  <p className="text-sm text-purple-600">{analytics.activeShops || 0} active</p>
                 </div>
               </div>
             </div>
@@ -133,7 +148,7 @@ const Analytics = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Pending Approvals</p>
-                  <p className="text-2xl font-semibold text-gray-900">{analytics.vendors.pending}</p>
+                  <p className="text-2xl font-semibold text-gray-900">{analytics.pendingVendors || 0}</p>
                   <p className="text-sm text-orange-600">Needs review</p>
                 </div>
               </div>
@@ -154,10 +169,10 @@ const Analytics = () => {
                     <div className="w-32 bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-green-500 h-2 rounded-full" 
-                        style={{ width: `${(analytics.vendors.active / analytics.vendors.total) * 100}%` }}
+                        style={{ width: `${analytics.totalVendors > 0 ? ((analytics.activeVendors || 0) / (analytics.totalVendors || 1)) * 100 : 0}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm font-medium text-gray-900">{analytics.vendors.active}</span>
+                    <span className="text-sm font-medium text-gray-900">{analytics.activeVendors || 0}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
@@ -166,10 +181,10 @@ const Analytics = () => {
                     <div className="w-32 bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-red-500 h-2 rounded-full" 
-                        style={{ width: `${(analytics.vendors.inactive / analytics.vendors.total) * 100}%` }}
+                        style={{ width: `${analytics.totalVendors > 0 ? ((analytics.totalVendors - analytics.activeVendors) / (analytics.totalVendors || 1)) * 100 : 0}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm font-medium text-gray-900">{analytics.vendors.inactive}</span>
+                    <span className="text-sm font-medium text-gray-900">{Math.max(0, (analytics.totalVendors || 0) - (analytics.activeVendors || 0))}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
@@ -178,10 +193,10 @@ const Analytics = () => {
                     <div className="w-32 bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-yellow-500 h-2 rounded-full" 
-                        style={{ width: `${(analytics.vendors.pending / analytics.vendors.total) * 100}%` }}
+                        style={{ width: `${analytics.totalVendors > 0 ? ((analytics.pendingVendors || 0) / (analytics.totalVendors || 1)) * 100 : 0}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm font-medium text-gray-900">{analytics.vendors.pending}</span>
+                    <span className="text-sm font-medium text-gray-900">{analytics.pendingVendors || 0}</span>
                   </div>
                 </div>
               </div>
@@ -199,10 +214,10 @@ const Analytics = () => {
                     <div className="w-32 bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-green-500 h-2 rounded-full" 
-                        style={{ width: `${(analytics.shops.active / analytics.shops.total) * 100}%` }}
+                        style={{ width: `${analytics.totalShops > 0 ? ((analytics.activeShops || 0) / (analytics.totalShops || 1)) * 100 : 0}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm font-medium text-gray-900">{analytics.shops.active}</span>
+                    <span className="text-sm font-medium text-gray-900">{analytics.activeShops || 0}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
@@ -211,10 +226,10 @@ const Analytics = () => {
                     <div className="w-32 bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-red-500 h-2 rounded-full" 
-                        style={{ width: `${(analytics.shops.inactive / analytics.shops.total) * 100}%` }}
+                        style={{ width: `${analytics.totalShops > 0 ? ((analytics.totalShops - analytics.activeShops) / (analytics.totalShops || 1)) * 100 : 0}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm font-medium text-gray-900">{analytics.shops.inactive}</span>
+                    <span className="text-sm font-medium text-gray-900">{Math.max(0, (analytics.totalShops || 0) - (analytics.activeShops || 0))}</span>
                   </div>
                 </div>
               </div>
@@ -233,8 +248,8 @@ const Analytics = () => {
                 <div key={index} className="px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-medium text-sm">
+                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                        <span className="text-orange-600 font-medium text-sm">
                           {vendor.ownerName?.charAt(0) || 'V'}
                         </span>
                       </div>

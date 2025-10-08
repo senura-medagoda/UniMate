@@ -454,9 +454,9 @@ const ShopsContent = () => {
   );
 };
 
-const ShopsPage = () => {
+const ShopsPage = ({ user, setUser }) => {
   return (
-    <AppContextProvider>
+    <AppContextProvider user={user} setUser={setUser}>
       <ShopsContent />
     </AppContextProvider>
   );

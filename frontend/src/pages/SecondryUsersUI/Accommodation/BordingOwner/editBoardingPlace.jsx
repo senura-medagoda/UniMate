@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { uploadImageToCloudinary } from "../../../../utils/cloudinary";
+import { getImageUrl } from "../../../../utils/imageUtils";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useOwnerAuth } from "../../../../context/ownerAuthContext";
@@ -264,7 +265,7 @@ const EditBoardingPlace = () => {
               {(existingImage || previewUrl) && (
                 <div className="mt-4">
                   <img 
-                    src={previewUrl || existingImage} 
+                    src={previewUrl || getImageUrl(existingImage)} 
                     alt="Preview" 
                     className="w-full h-64 object-cover rounded-lg shadow-md" 
                   />

@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { getImageUrl, getFirstImage } from '../../../utils/imageUtils';
 import AccommodationNavbar from './components/AccommodationNavbar';
 import BookingModal from './components/BookingModal';
 
-const BoardingPlacesPage = () => {
+const BoardingPlacesPage = ({ user, setUser }) => {
   const [boardingPlaces, setBoardingPlaces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,10 +17,20 @@ const BoardingPlacesPage = () => {
   const [bookmarkedPlaces, setBookmarkedPlaces] = useState(new Set());
   const [sortBy, setSortBy] = useState('newest');
 
+  // Debug: Check user data
+  console.log('BoardingPlacesPage - User data:', user);
+  console.log('BoardingPlacesPage - User name:', user?.name);
+  console.log('BoardingPlacesPage - User fname:', user?.fname);
+
   useEffect(() => {
     fetchBoardingPlaces();
     loadBookmarks();
   }, []);
+
+  // Debug: Log user data when it changes
+  useEffect(() => {
+    console.log('BoardingPlacesPage - User data changed:', user);
+  }, [user]);
 
   const fetchBoardingPlaces = async () => {
     try {
@@ -94,7 +105,7 @@ const BoardingPlacesPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AccommodationNavbar />
+        <AccommodationNavbar user={user} setUser={setUser} />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-500 border-t-transparent mx-auto mb-6"></div>
@@ -199,11 +210,11 @@ const BoardingPlacesPage = () => {
                 {sortedPlaces.map((place) => (
                   <div
                     key={place._id}
-                    className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
+                    className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col"
                   >
                     <div className="relative">
                       <img
-                        src={place.images && place.images[0] ? place.images[0] : "https://via.placeholder.com/400x300?text=No+Image"}
+                        src={getImageUrl(getFirstImage(place.images))}
                         alt={place.title}
                         className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
@@ -231,7 +242,7 @@ const BoardingPlacesPage = () => {
                       </div>
                     </div>
                     
-                    <div className="p-6">
+                    <div className="p-6 flex flex-col flex-grow">
                       <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">{place.title}</h3>
                       <p className="text-gray-600 mb-4 line-clamp-2">{place.description}</p>
                       
@@ -295,9 +306,10 @@ const BoardingPlacesPage = () => {
                         </div>
                       )}
                       
+                      {/* Book Now Button - Always at bottom */}
                       <button
                         onClick={() => handleBookNow(place)}
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg mt-auto"
                       >
                         Book Now
                       </button>
@@ -314,6 +326,7 @@ const BoardingPlacesPage = () => {
       {showBookingModal && selectedPlace && (
         <BookingModal
           place={selectedPlace}
+          user={user}
           onClose={() => setShowBookingModal(false)}
           onSuccess={handleBookingSuccess}
         />

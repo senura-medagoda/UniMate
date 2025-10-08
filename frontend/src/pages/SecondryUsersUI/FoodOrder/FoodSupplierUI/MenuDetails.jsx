@@ -419,7 +419,7 @@ const MenuDetails = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Price ($) *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price (Rs.) *</label>
                 <input
                   type="number"
                   name="price"
@@ -606,7 +606,7 @@ const MenuDetails = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Price ($) *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price (Rs.) *</label>
                 <input
                   type="number"
                   name="price"
@@ -819,7 +819,7 @@ const MenuDetails = () => {
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-                    <span className="text-lg font-bold text-orange-600">${item.price}</span>
+                    <span className="text-lg font-bold text-orange-600">Rs.{item.price}</span>
                   </div>
                   
                   <p className="text-gray-600 text-sm mb-3 line-clamp-2">{item.description}</p>

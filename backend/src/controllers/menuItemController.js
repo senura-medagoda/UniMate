@@ -2,27 +2,19 @@ import MenuItemModel from "../models/MenuItemModel.js";
 import ShopModel from "../models/ShopModel.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
+import path from "path";
 
 // Create Menu Item
 export const createMenuItem = async (req, res) => {
     try {
-        if (!process.env.CLOUDINARY_NAME || process.env.CLOUDINARY_NAME === 'demo' || 
-            !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_SECRET_KEY) {
-            console.error('❌ Cloudinary validation failed in createMenuItem:');
-            console.error('CLOUDINARY_NAME:', process.env.CLOUDINARY_NAME);
-            console.error('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY ? 'Set' : 'Not set');
-            console.error('CLOUDINARY_SECRET_KEY:', process.env.CLOUDINARY_SECRET_KEY ? 'Set' : 'Not set');
-            
-            return res.status(500).json({
-                success: false,
-                message: "Cloudinary is not properly configured. Please check your environment variables.",
-                error: "Missing Cloudinary configuration",
-                details: {
-                    cloudName: process.env.CLOUDINARY_NAME || 'Not set',
-                    apiKey: process.env.CLOUDINARY_API_KEY ? 'Set' : 'Not set',
-                    apiSecret: process.env.CLOUDINARY_SECRET_KEY ? 'Set' : 'Not set'
-                }
-            });
+        // Check if Cloudinary is configured, but don't fail if it's not
+        const cloudinaryConfigured = process.env.CLOUDINARY_NAME && 
+            process.env.CLOUDINARY_API_KEY && 
+            process.env.CLOUDINARY_SECRET_KEY &&
+            process.env.CLOUDINARY_NAME !== 'demo';
+        
+        if (!cloudinaryConfigured) {
+            console.log('⚠️ Cloudinary not configured, will use local storage for images');
         }
 
         const vendorId = req.vendorId;
@@ -82,61 +74,126 @@ export const createMenuItem = async (req, res) => {
             menuData.preparationTime = parseInt(menuData.preparationTime);
         }
 
+        // Handle single image upload
         if (req.files && req.files.image && req.files.image[0]) {
             try {
-            
-                const result = await cloudinary.uploader.upload(req.files.image[0].path, {
-                    folder: 'menu-items',
-                    width: 800,
-                    height: 600,
-                    crop: "fill",
-                    quality: 'auto'
-                });
-                menuData.image = result.secure_url;
-                console.log('Image uploaded successfully to Cloudinary:', result.secure_url);
-
-                fs.unlinkSync(req.files.image[0].path);
-            } catch (imageError) {
-                console.error('Image upload error:', imageError);
-                return res.status(500).json({
-                    success: false,
-                    message: "Failed to upload image to Cloudinary",
-                    error: imageError.message
-                });
-            }
-        }
-
-        if (req.files && req.files.images && req.files.images.length > 0) {
-            try {
-   
-                const imagePromises = req.files.images.map(file => 
-                    cloudinary.uploader.upload(file.path, {
+                if (cloudinaryConfigured) {
+                    // Upload to Cloudinary
+                    const result = await cloudinary.uploader.upload(req.files.image[0].path, {
                         folder: 'menu-items',
                         width: 800,
                         height: 600,
                         crop: "fill",
                         quality: 'auto'
-                    })
-                );
-                const imageResults = await Promise.all(imagePromises);
-                menuData.images = imageResults.map(result => result.secure_url);
-                console.log('Multiple images uploaded successfully to Cloudinary');
-                
-           
-                req.files.images.forEach(file => {
-                    try {
-                        fs.unlinkSync(file.path);
-                    } catch (unlinkError) {
-                        console.log('Failed to delete local file:', file.path);
+                    });
+                    menuData.image = result.secure_url;
+                    console.log('Image uploaded successfully to Cloudinary:', result.secure_url);
+                    fs.unlinkSync(req.files.image[0].path);
+                } else {
+                    // Save locally
+                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                    const fileExtension = path.extname(req.files.image[0].originalname);
+                    const filename = `menu-${uniqueSuffix}${fileExtension}`;
+                    const uploadsDir = './uploads';
+                    
+                    if (!fs.existsSync(uploadsDir)) {
+                        fs.mkdirSync(uploadsDir, { recursive: true });
                     }
-                });
+                    
+                    const finalPath = path.join(uploadsDir, filename);
+                    fs.renameSync(req.files.image[0].path, finalPath);
+                    menuData.image = `http://localhost:5001/uploads/${filename}`;
+                    console.log('Image saved locally:', menuData.image);
+                }
+            } catch (imageError) {
+                console.error('Image upload error:', imageError);
+                // Fallback to local storage if Cloudinary fails
+                try {
+                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                    const fileExtension = path.extname(req.files.image[0].originalname);
+                    const filename = `menu-${uniqueSuffix}${fileExtension}`;
+                    const uploadsDir = './uploads';
+                    
+                    if (!fs.existsSync(uploadsDir)) {
+                        fs.mkdirSync(uploadsDir, { recursive: true });
+                    }
+                    
+                    const finalPath = path.join(uploadsDir, filename);
+                    fs.renameSync(req.files.image[0].path, finalPath);
+                    menuData.image = `http://localhost:5001/uploads/${filename}`;
+                    console.log('Image saved locally as fallback:', menuData.image);
+                } catch (fallbackError) {
+                    console.error('Fallback image save failed:', fallbackError);
+                    menuData.image = 'https://via.placeholder.com/800x600/f3f4f6/9ca3af?text=🍽️+No+Image';
+                }
+            }
+        }
+
+        // Handle multiple images upload
+        if (req.files && req.files.images && req.files.images.length > 0) {
+            try {
+                if (cloudinaryConfigured) {
+                    // Upload to Cloudinary
+                    const imagePromises = req.files.images.map(file => 
+                        cloudinary.uploader.upload(file.path, {
+                            folder: 'menu-items',
+                            width: 800,
+                            height: 600,
+                            crop: "fill",
+                            quality: 'auto'
+                        })
+                    );
+                    const imageResults = await Promise.all(imagePromises);
+                    menuData.images = imageResults.map(result => result.secure_url);
+                    console.log('Multiple images uploaded successfully to Cloudinary');
+                    
+                    // Clean up local files
+                    req.files.images.forEach(file => {
+                        try {
+                            fs.unlinkSync(file.path);
+                        } catch (unlinkError) {
+                            console.log('Failed to delete local file:', file.path);
+                        }
+                    });
+                } else {
+                    // Save locally
+                    const uploadsDir = './uploads';
+                    if (!fs.existsSync(uploadsDir)) {
+                        fs.mkdirSync(uploadsDir, { recursive: true });
+                    }
+                    
+                    menuData.images = req.files.images.map((file, index) => {
+                        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9) + '-' + index;
+                        const fileExtension = path.extname(file.originalname);
+                        const filename = `menu-${uniqueSuffix}${fileExtension}`;
+                        const finalPath = path.join(uploadsDir, filename);
+                        fs.renameSync(file.path, finalPath);
+                        return `http://localhost:5001/uploads/${filename}`;
+                    });
+                    console.log('Multiple images saved locally:', menuData.images);
+                }
             } catch (imageError) {
                 console.error('Multiple images upload error:', imageError);
-                return res.status(500).json({
-                    success: false,
-                    message: "Failed to upload images to Cloudinary",
-                    error: imageError.message
-                });
+                // Fallback to local storage
+                try {
+                    const uploadsDir = './uploads';
+                    if (!fs.existsSync(uploadsDir)) {
+                        fs.mkdirSync(uploadsDir, { recursive: true });
+                    }
+                    
+                    menuData.images = req.files.images.map((file, index) => {
+                        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9) + '-' + index;
+                        const fileExtension = path.extname(file.originalname);
+                        const filename = `menu-${uniqueSuffix}${fileExtension}`;
+                        const finalPath = path.join(uploadsDir, filename);
+                        fs.renameSync(file.path, finalPath);
+                        return `http://localhost:5001/uploads/${filename}`;
+                    });
+                    console.log('Multiple images saved locally as fallback:', menuData.images);
+                } catch (fallbackError) {
+                    console.error('Fallback multiple images save failed:', fallbackError);
+                    menuData.images = [];
+                }
             }
         }
 
@@ -152,12 +209,12 @@ export const createMenuItem = async (req, res) => {
             description: menuData.description,
             price: menuData.price,
             category: menuData.category,
-            isAvailable: menuData.isAvailable === 'true' || menuData.isAvailable === true,
-            isPopular: menuData.isPopular === 'true' || menuData.isPopular === false,
-            isVegetarian: menuData.isVegetarian === 'true' || menuData.isVegetarian === false,
-            isVegan: menuData.isVegan === 'true' || menuData.isVegan === false,
-            isGlutenFree: menuData.isGlutenFree === 'true' || menuData.isGlutenFree === false,
-            isSpicy: menuData.isSpicy === 'true' || menuData.isSpicy === false,
+            isAvailable: menuData.available === 'true' || menuData.available === true || menuData.isAvailable === 'true' || menuData.isAvailable === true,
+            isPopular: menuData.popular === 'true' || menuData.popular === true || menuData.isPopular === 'true' || menuData.isPopular === true,
+            isVegetarian: menuData.isVegetarian === 'true' || menuData.isVegetarian === true,
+            isVegan: menuData.isVegan === 'true' || menuData.isVegan === true,
+            isGlutenFree: menuData.isGlutenFree === 'true' || menuData.isGlutenFree === true,
+            isSpicy: menuData.isSpicy === 'true' || menuData.isSpicy === true,
             preparationTime: menuData.preparationTime,
             calories: menuData.calories,
             allergens: menuData.allergens || [],
@@ -289,23 +346,14 @@ export const getMenuItemById = async (req, res) => {
 export const updateMenuItem = async (req, res) => {
     try {
    
-        if (!process.env.CLOUDINARY_NAME || process.env.CLOUDINARY_NAME === 'demo' || 
-            !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_SECRET_KEY) {
-            console.error('❌ Cloudinary validation failed in updateMenuItem:');
-            console.error('CLOUDINARY_NAME:', process.env.CLOUDINARY_NAME);
-            console.error('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY ? 'Set' : 'Not set');
-            console.error('CLOUDINARY_SECRET_KEY:', process.env.CLOUDINARY_SECRET_KEY ? 'Set' : 'Not set');
-            
-            return res.status(500).json({
-                success: false,
-                message: "Cloudinary is not properly configured. Please check your environment variables.",
-                error: "Missing Cloudinary configuration",
-                details: {
-                    cloudName: process.env.CLOUDINARY_NAME || 'Not set',
-                    apiKey: process.env.CLOUDINARY_API_KEY ? 'Set' : 'Not set',
-                    apiSecret: process.env.CLOUDINARY_SECRET_KEY ? 'Set' : 'Not set'
-                }
-            });
+        // Check if Cloudinary is configured, but don't fail if it's not
+        const cloudinaryConfigured = process.env.CLOUDINARY_NAME && 
+            process.env.CLOUDINARY_API_KEY && 
+            process.env.CLOUDINARY_SECRET_KEY &&
+            process.env.CLOUDINARY_NAME !== 'demo';
+        
+        if (!cloudinaryConfigured) {
+            console.log('⚠️ Cloudinary not configured, will use local storage for images');
         }
 
         const { itemId } = req.params;
@@ -335,62 +383,126 @@ export const updateMenuItem = async (req, res) => {
         updates.shopId = shop._id;
 
      
+        // Handle single image upload
         if (req.files && req.files.image && req.files.image[0]) {
             try {
-              
-                const result = await cloudinary.uploader.upload(req.files.image[0].path, {
-                    folder: 'menu-items',
-                    width: 800,
-                    height: 600,
-                    crop: "fill",
-                    quality: 'auto'
-                });
-                updates.image = result.secure_url;
-                console.log('Image uploaded successfully to Cloudinary:', result.secure_url);
-           
-                fs.unlinkSync(req.files.image[0].path);
-            } catch (imageError) {
-                console.error('Image upload error:', imageError);
-                return res.status(500).json({
-                    success: false,
-                    message: "Failed to upload image to Cloudinary",
-                    error: imageError.message
-                });
-            }
-        }
-
-            
-        if (req.files && req.files.images && req.files.images.length > 0) {
-            try {
-         
-                const imagePromises = req.files.images.map(file => 
-                    cloudinary.uploader.upload(file.path, {
+                if (cloudinaryConfigured) {
+                    // Upload to Cloudinary
+                    const result = await cloudinary.uploader.upload(req.files.image[0].path, {
                         folder: 'menu-items',
                         width: 800,
                         height: 600,
                         crop: "fill",
                         quality: 'auto'
-                    })
-                );
-                const imageResults = await Promise.all(imagePromises);
-                updates.images = imageResults.map(result => result.secure_url);
-                console.log('Multiple images uploaded successfully to Cloudinary');
-                
-          
-                req.files.images.forEach(file => {
-                    try {
-                        fs.unlinkSync(file.path);
-                    } catch (unlinkError) {
-                        console.log('Failed to delete local file:', file.path);
+                    });
+                    updates.image = result.secure_url;
+                    console.log('Image uploaded successfully to Cloudinary:', result.secure_url);
+                    fs.unlinkSync(req.files.image[0].path);
+                } else {
+                    // Save locally
+                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                    const fileExtension = path.extname(req.files.image[0].originalname);
+                    const filename = `menu-${uniqueSuffix}${fileExtension}`;
+                    const uploadsDir = './uploads';
+                    
+                    if (!fs.existsSync(uploadsDir)) {
+                        fs.mkdirSync(uploadsDir, { recursive: true });
                     }
-                });
+                    
+                    const finalPath = path.join(uploadsDir, filename);
+                    fs.renameSync(req.files.image[0].path, finalPath);
+                    updates.image = `http://localhost:5001/uploads/${filename}`;
+                    console.log('Image saved locally:', updates.image);
+                }
+            } catch (imageError) {
+                console.error('Image upload error:', imageError);
+                // Fallback to local storage if Cloudinary fails
+                try {
+                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                    const fileExtension = path.extname(req.files.image[0].originalname);
+                    const filename = `menu-${uniqueSuffix}${fileExtension}`;
+                    const uploadsDir = './uploads';
+                    
+                    if (!fs.existsSync(uploadsDir)) {
+                        fs.mkdirSync(uploadsDir, { recursive: true });
+                    }
+                    
+                    const finalPath = path.join(uploadsDir, filename);
+                    fs.renameSync(req.files.image[0].path, finalPath);
+                    updates.image = `http://localhost:5001/uploads/${filename}`;
+                    console.log('Image saved locally as fallback:', updates.image);
+                } catch (fallbackError) {
+                    console.error('Fallback image save failed:', fallbackError);
+                    updates.image = 'https://via.placeholder.com/800x600/f3f4f6/9ca3af?text=🍽️+No+Image';
+                }
+            }
+        }
+
+        // Handle multiple images upload
+        if (req.files && req.files.images && req.files.images.length > 0) {
+            try {
+                if (cloudinaryConfigured) {
+                    // Upload to Cloudinary
+                    const imagePromises = req.files.images.map(file => 
+                        cloudinary.uploader.upload(file.path, {
+                            folder: 'menu-items',
+                            width: 800,
+                            height: 600,
+                            crop: "fill",
+                            quality: 'auto'
+                        })
+                    );
+                    const imageResults = await Promise.all(imagePromises);
+                    updates.images = imageResults.map(result => result.secure_url);
+                    console.log('Multiple images uploaded successfully to Cloudinary');
+                    
+                    // Clean up local files
+                    req.files.images.forEach(file => {
+                        try {
+                            fs.unlinkSync(file.path);
+                        } catch (unlinkError) {
+                            console.log('Failed to delete local file:', file.path);
+                        }
+                    });
+                } else {
+                    // Save locally
+                    const uploadsDir = './uploads';
+                    if (!fs.existsSync(uploadsDir)) {
+                        fs.mkdirSync(uploadsDir, { recursive: true });
+                    }
+                    
+                    updates.images = req.files.images.map((file, index) => {
+                        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9) + '-' + index;
+                        const fileExtension = path.extname(file.originalname);
+                        const filename = `menu-${uniqueSuffix}${fileExtension}`;
+                        const finalPath = path.join(uploadsDir, filename);
+                        fs.renameSync(file.path, finalPath);
+                        return `http://localhost:5001/uploads/${filename}`;
+                    });
+                    console.log('Multiple images saved locally:', updates.images);
+                }
             } catch (imageError) {
                 console.error('Multiple images upload error:', imageError);
-                return res.status(500).json({
-                    success: false,
-                    message: "Failed to upload images to Cloudinary",
-                    error: imageError.message
-                });
+                // Fallback to local storage
+                try {
+                    const uploadsDir = './uploads';
+                    if (!fs.existsSync(uploadsDir)) {
+                        fs.mkdirSync(uploadsDir, { recursive: true });
+                    }
+                    
+                    updates.images = req.files.images.map((file, index) => {
+                        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9) + '-' + index;
+                        const fileExtension = path.extname(file.originalname);
+                        const filename = `menu-${uniqueSuffix}${fileExtension}`;
+                        const finalPath = path.join(uploadsDir, filename);
+                        fs.renameSync(file.path, finalPath);
+                        return `http://localhost:5001/uploads/${filename}`;
+                    });
+                    console.log('Multiple images saved locally as fallback:', updates.images);
+                } catch (fallbackError) {
+                    console.error('Fallback multiple images save failed:', fallbackError);
+                    updates.images = [];
+                }
             }
         }
 

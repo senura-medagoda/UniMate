@@ -171,26 +171,63 @@ const MenuContent = () => {
       <FoodNavbar />
       
    
-      <div className="pt-20 pb-8 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Explore Our Delicious Menu
+      {/* Hero Section */}
+      <div className="pt-20 pb-12 bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 text-white relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
+          
+          
+          <h1 className="text-5xl  md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+            Explore Our
+            <span className="block text-orange-200">Delicious Menu</span>
           </h1>
-          <p className="text-xl text-orange-100 max-w-2xl mx-auto">
-            Discover amazing dishes from the best restaurants and cafes in your area
+          
+          <p className="text-xl md:text-2xl text-orange-100 max-w-3xl mx-auto mb-8 leading-relaxed">
+            Discover amazing dishes from the best restaurants and cafes in your area. 
+            Order your favorites with just a few clicks!
           </p>
           
-       
-          <div className="mt-8 max-w-2xl mx-auto">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search for your favorite food..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-xl text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
-              />
+          {/* Enhanced Search Bar */}
+          <div className="mt-10 max-w-2xl mx-auto">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-white/20 rounded-2xl blur-xl group-hover:bg-white/30 transition-all duration-300"></div>
+              <div className="relative bg-white rounded-2xl p-2 shadow-2xl">
+                <div className="flex items-center">
+                  <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
+                  <input
+                    type="text"
+                    placeholder="Search for your favorite food, cuisine, or restaurant..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-14 pr-6 py-4 rounded-xl text-gray-800 placeholder-gray-500 focus:outline-none text-lg"
+                  />
+                  <button className="px-6 py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition-colors">
+                    Search
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-orange-200 mb-2">{menuItems.length}+</div>
+              <div className="text-orange-100">Menu Items</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-orange-200 mb-2">{shops.length}+</div>
+              <div className="text-orange-100">Restaurants</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-orange-200 mb-2">24/7</div>
+              <div className="text-orange-100">Available</div>
             </div>
           </div>
         </div>
@@ -412,9 +449,9 @@ const MenuContent = () => {
   );
 };
 
-const MenuPage = () => {
+const MenuPage = ({ user, setUser }) => {
   return (
-    <AppContextProvider>
+    <AppContextProvider user={user} setUser={setUser}>
       <MenuContent />
     </AppContextProvider>
   );

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useVendorAuth } from '../context/VendorAuthContext';
 import VendorNavbar from '../components/VendorNavbar';
 import { useToast } from '@/context/ToastContext';
+import profileImage from '../../../../StudentUI/FoodOrder/assets/profile.png';
 
 const VendorDashboard = () => {
   const { vendor, refreshVendorData } = useVendorAuth();
@@ -185,7 +186,7 @@ const VendorDashboard = () => {
 
   const viewItemDetails = (item) => {
     
-    toastSuccess(`${item.name} - ₹${item.price} | ${item.category} | ${item.isAvailable ? 'Available' : 'Unavailable'}`);
+    toastSuccess(`${item.name} - Rs.${item.price} | ${item.category} | ${item.isAvailable ? 'Available' : 'Unavailable'}`);
   };
 
 
@@ -300,7 +301,7 @@ const VendorDashboard = () => {
     },
     {
       title: "Total Revenue",
-      value: `$${(shopData?.totalRevenue || 0).toLocaleString()}`,
+      value: `Rs.${(shopData?.totalRevenue || 0).toLocaleString()}`,
       change: "+8%",
       changeType: "positive",
       icon: "💰"
@@ -356,13 +357,33 @@ const VendorDashboard = () => {
          
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Welcome back, {vendor?.businessName || vendor?.ownerName || 'Vendor'}! 👋
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  Here's what's happening with your restaurant today
-                </p>
+              <div className="flex items-center space-x-4">
+                {/* Profile Image */}
+                <div className="flex-shrink-0">
+                  {vendor?.profileImage ? (
+                    <img 
+                      src={vendor.profileImage} 
+                      alt="Profile" 
+                      className="w-16 h-16 rounded-full object-cover border-2 border-orange-200"
+                    />
+                  ) : (
+                    <img 
+                      src={profileImage} 
+                      alt="Default Profile" 
+                      className="w-16 h-16 rounded-full object-cover border-2 border-orange-200"
+                    />
+                  )}
+                </div>
+                
+                {/* Welcome Text */}
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Welcome back, {vendor?.businessName || vendor?.ownerName || 'Vendor'}! 👋
+                  </h1>
+                  <p className="text-gray-600 mt-1">
+                    Here's what's happening with your restaurant today
+                  </p>
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 {/* Vendor Approval Status */}
@@ -371,8 +392,8 @@ const VendorDashboard = () => {
                   vendor?.approvalStatus === 'rejected' ? 'bg-red-100 text-red-800' :
                   'bg-yellow-100 text-yellow-800'
                 }`}>
-                  {vendor?.approvalStatus === 'approved' ? '✅ Account Approved' :
-                   vendor?.approvalStatus === 'rejected' ? '❌ Account Rejected' :
+                  {vendor?.approvalStatus === 'approved' ? 'Account Approved' :
+                   vendor?.approvalStatus === 'rejected' ? 'Account Rejected' :
                    '⏳ Account Pending'}
                 </span>
                 
@@ -388,8 +409,8 @@ const VendorDashboard = () => {
                       shopData?.approvalStatus === 'rejected' ? 'bg-red-100 text-red-800' :
                       'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {shopData?.approvalStatus === 'approved' ? '✅ Shop Approved' :
-                       shopData?.approvalStatus === 'rejected' ? '❌ Shop Rejected' :
+                      {shopData?.approvalStatus === 'approved' ? 'Shop Approved' :
+                       shopData?.approvalStatus === 'rejected' ? 'Shop Rejected' :
                        '⏳ Shop Pending'}
                     </span>
                   </>
@@ -646,7 +667,7 @@ const VendorDashboard = () => {
                         }}>{item.description}</p>
                         
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-lg font-bold text-orange-600">₹{item.price}</span>
+                          <span className="text-lg font-bold text-orange-600">Rs.{item.price}</span>
                           <span className="text-xs text-gray-500">{item.preparationTime || 15} min</span>
                         </div>
                         
@@ -694,7 +715,7 @@ const VendorDashboard = () => {
                   <div className="text-sm text-gray-600">Delivery Radius</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">${shopData?.minimumOrderAmount || 0}</div>
+                  <div className="text-2xl font-bold text-gray-900">Rs.{shopData?.minimumOrderAmount || 0}</div>
                   <div className="text-sm text-gray-600">Minimum Order</div>
                 </div>
                 <div className="text-center">

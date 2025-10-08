@@ -1,17 +1,21 @@
 
 import React, { useState, useEffect } from "react";
 
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { assets } from "../../assets/assets";
 import { useAppContext } from "../context/context.jsx"; // ✅ Import fixed
 
 const Navbar = () => {
 
-  const { user, setUser, setshowUserLogin, navigate, cartItems } = useAppContext();
+  const { user, setUser, setshowUserLogin, navigate, cartItems, getUserToken } = useAppContext();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Determine if we're on the food home page (for transparent navbar)
+  const isFoodHomePage = location.pathname === '/food';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,26 +48,49 @@ const Navbar = () => {
   };
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 py-2 sm:py-3 md:py-4 lg:py-5 border-b border-white/20 bg-white/10 backdrop-blur-lg transition-all duration-300 ${
+    <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 py-2 sm:py-3 md:py-4 lg:py-5 transition-all duration-300 ${
+      isFoodHomePage 
+        ? 'border-b border-white/20 bg-white/10 backdrop-blur-lg' 
+        : 'border-b border-gray-200 bg-white shadow-sm'
+    } ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
     }`}>
       {/* Logo */}
-      <NavLink to="/food" className="flex-shrink-0">
+      <NavLink to="/std-dash" className="flex-shrink-0">
         <img className="h-8 sm:h-9 md:h-10 lg:h-11 transition-all duration-300" src={assets.logo} alt="logo" />
       </NavLink>
 
-      {/* Desktop Menu */}
-      <div className="hidden md:flex items-center gap-2 lg:gap-4 xl:gap-6">
-        <NavLink to="/food" className="text-xs sm:text-sm lg:text-base font-medium text-white hover:text-orange-300 transition-colors">Home</NavLink>
-        <NavLink to="/menu" className="text-xs sm:text-sm lg:text-base font-medium text-white hover:text-orange-300 transition-colors">Menu</NavLink>
-        <NavLink to="/shops" className="text-xs sm:text-sm lg:text-base font-medium text-white hover:text-orange-300 transition-colors">Shops</NavLink>
+      {/* Desktop Menu - Centered */}
+      <div className="hidden md:flex items-center gap-2 lg:gap-4 xl:gap-6 absolute left-1/2 transform -translate-x-1/2">
+        <NavLink to="/food" className={`text-xs sm:text-sm lg:text-base font-medium transition-colors ${
+          isFoodHomePage 
+            ? 'text-white hover:text-orange-300' 
+            : 'text-gray-700 hover:text-orange-600'
+        }`}>Home</NavLink>
+        <NavLink to="/menu" className={`text-xs sm:text-sm lg:text-base font-medium transition-colors ${
+          isFoodHomePage 
+            ? 'text-white hover:text-orange-300' 
+            : 'text-gray-700 hover:text-orange-600'
+        }`}>Menu</NavLink>
+        <NavLink to="/shops" className={`text-xs sm:text-sm lg:text-base font-medium transition-colors ${
+          isFoodHomePage 
+            ? 'text-white hover:text-orange-300' 
+            : 'text-gray-700 hover:text-orange-600'
+        }`}>Shops</NavLink>
+      </div>
 
+      {/* Right Side - Search, Cart, User */}
+      <div className="hidden md:flex items-center gap-2 lg:gap-4 xl:gap-6">
         {/* Search */}
         <div className="hidden lg:flex items-center">
           {!searchExpanded ? (
             <button
               onClick={() => setSearchExpanded(true)}
-              className="p-1.5 lg:p-2 text-white hover:text-orange-300 transition-colors"
+              className={`p-1.5 lg:p-2 transition-colors ${
+                isFoodHomePage 
+                  ? 'text-white hover:text-orange-300' 
+                  : 'text-gray-600 hover:text-orange-600'
+              }`}
             >
               <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8" />
@@ -101,7 +128,11 @@ const Navbar = () => {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
 
-            className="text-white hover:text-orange-300 transition-colors w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
+            className={`transition-colors w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 ${
+              isFoodHomePage 
+                ? 'text-white hover:text-orange-300' 
+                : 'text-gray-600 hover:text-orange-600'
+            }`}
           >
             <path
               d="M.583.583h2.333l1.564 7.81a1.17 1.17 0 0 0 1.166.94h5.67a1.17 1.17 0 0 0 1.167-.94l.933-4.893H3.5m2.333 8.75a.583.583 0 1 1-1.167 0 .583.583 0 0 1 1.167 0m6.417 0a.583.583 0 1 1-1.167 0 .583.583 0 0 1 1.167 0"
@@ -126,13 +157,21 @@ const Navbar = () => {
           <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
             <button
               onClick={() => setshowUserLogin(true)}
-              className="cursor-pointer px-2 sm:px-3 lg:px-4 xl:px-6 py-1 sm:py-1.5 lg:py-2 border border-[#fc944c] text-[#fc944c] hover:bg-[#fc944c] hover:text-white transition rounded-full text-xs lg:text-sm font-medium"
+              className={`cursor-pointer px-2 sm:px-3 lg:px-4 xl:px-6 py-1 sm:py-1.5 lg:py-2 border transition rounded-full text-xs lg:text-sm font-medium ${
+                isFoodHomePage 
+                  ? 'border-white text-white hover:bg-white hover:text-orange-600' 
+                  : 'border-[#fc944c] text-[#fc944c] hover:bg-[#fc944c] hover:text-white'
+              }`}
             >
               Login
             </button>
             <NavLink
               to="/vendor/login"
-              className="cursor-pointer px-2 sm:px-3 lg:px-4 xl:px-6 py-1 sm:py-1.5 lg:py-2 border border-[#fc944c] text-[#fc944c] hover:bg-[#fc944c] hover:text-white transition rounded-full text-xs lg:text-sm font-medium"
+              className={`cursor-pointer px-2 sm:px-3 lg:px-4 xl:px-6 py-1 sm:py-1.5 lg:py-2 border transition rounded-full text-xs lg:text-sm font-medium ${
+                isFoodHomePage 
+                  ? 'border-white text-white hover:bg-white hover:text-orange-600' 
+                  : 'border-[#fc944c] text-[#fc944c] hover:bg-[#fc944c] hover:text-white'
+              }`}
             >
               <span className="hidden lg:inline">Vendor Login</span>
               <span className="lg:hidden">Vendor</span>
@@ -140,11 +179,19 @@ const Navbar = () => {
           </div>
         ) : (
           <div className="relative group flex-shrink-0">
-            <button className="flex items-center gap-1 lg:gap-2 text-white hover:text-orange-300 transition-colors">
+            <button className={`flex items-center gap-1 lg:gap-2 transition-colors ${
+              isFoodHomePage 
+                ? 'text-white hover:text-orange-300' 
+                : 'text-gray-700 hover:text-orange-600'
+            }`}>
               <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 bg-[#fc944c] rounded-full flex items-center justify-center text-white font-semibold text-xs lg:text-sm">
                 {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </div>
               <span className="hidden xl:block text-sm lg:text-base">{user.name || 'User'}</span>
+              {/* Token status indicator */}
+              {getUserToken() && (
+                <div className="w-2 h-2 bg-green-400 rounded-full" title="Authenticated"></div>
+              )}
               <svg className="w-3 h-3 lg:w-4 lg:h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -153,7 +200,7 @@ const Navbar = () => {
             {/* Dropdown Menu */}
             <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
               <div className="py-2">
-                <NavLink to="/profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                <NavLink to="/std-profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
                   Profile
                 </NavLink>
                 <NavLink to="/orders" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
@@ -177,10 +224,18 @@ const Navbar = () => {
       <button
         onClick={() => setOpen(!open)}
 
-        className="md:hidden p-1.5 sm:p-2 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0"
+        className={`md:hidden p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0 ${
+          isFoodHomePage 
+            ? 'hover:bg-white/20' 
+            : 'hover:bg-gray-100'
+        }`}
       >
         <svg
-          className="w-4 h-4 sm:w-5 sm:h-5 text-white"
+          className={`w-4 h-4 sm:w-5 sm:h-5 ${
+            isFoodHomePage 
+              ? 'text-white' 
+              : 'text-gray-600'
+          }`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

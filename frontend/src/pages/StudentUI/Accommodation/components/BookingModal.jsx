@@ -2,15 +2,20 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const BookingModal = ({ place, onClose, onSuccess }) => {
-  const MOCK_STUDENT_ID = '64b0f0c0c0c0c0c0c0c0c0c0'; // 24-char hex mock ObjectId
+const BookingModal = ({ place, onClose, onSuccess, user }) => {
+  // Use actual user ID instead of mock
+  const studentId = user?.id || user?._id || '64b0f0c0c0c0c0c0c0c0c0c0';
+  
+  // Debug: Check user data
+  console.log('BookingModal - User data:', user);
+  console.log('BookingModal - Student ID:', studentId);
 
   const [formData, setFormData] = useState({
-    studentName: '',
-    studentEmail: '',
-    studentPhone: '',
-    studentUniversity: '',
-    studentCourse: '',
+    studentName: user?.name || user?.fname || '',
+    studentEmail: user?.email || '',
+    studentPhone: user?.s_phone || '',
+    studentUniversity: user?.s_uni || '',
+    studentCourse: '', // This field is not in the Student model, so leave empty
     checkInDate: '',
     duration: 1,
     specialRequests: '',
@@ -73,7 +78,7 @@ const BookingModal = ({ place, onClose, onSuccess }) => {
         checkInDate: checkInDate,
         duration: parseInt(formData.duration),
         selectedServices: [],
-        studentId: MOCK_STUDENT_ID // For now, using mock student ID compatible with backend
+        studentId: studentId // Use actual logged-in user's ID
       };
 
       console.log('Submitting booking data:', bookingData);

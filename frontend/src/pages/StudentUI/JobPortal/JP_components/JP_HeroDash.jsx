@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import emp1 from '../../../landingComponents/Images/emp1.jpg'
 
-const JP_HeroDash = () => {
+const JP_HeroDash = ({ user }) => {
   return (
     <div 
       className="relative min-h-screen flex items-center justify-center overflow-hidden"

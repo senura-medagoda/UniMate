@@ -41,7 +41,7 @@ const UM_HeroLogin = () => {
     },
     {
       id: 'property-owner',
-      title: 'Property Owner',
+      title: 'Boarding Owner',
       description: 'List and manage your properties, handle bookings and tenant communications',
       icon: Home,
       color: 'blue',

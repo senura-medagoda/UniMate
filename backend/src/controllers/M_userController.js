@@ -89,4 +89,28 @@ const adminLogin = async (req, res) => {
     }
 }
 
-export { loginUser, registerUser, adminLogin }
+// get user by token
+const getUser = async (req, res) => {
+    try {
+        const { token } = req.headers;
+        
+        if (!token) {
+            return res.json({ success: false, message: "Token not provided" });
+        }
+
+        // Verify token and get user ID
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await userModel.findById(decoded.id).select('-password');
+        
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        res.json({ success: true, user });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: "Invalid token" });
+    }
+}
+
+export { loginUser, registerUser, adminLogin, getUser }

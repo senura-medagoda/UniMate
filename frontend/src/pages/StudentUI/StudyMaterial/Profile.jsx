@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { FaUser, FaEnvelope, FaGraduationCap, FaMapMarkerAlt, FaEdit, FaSave, FaTimes } from "react-icons/fa";
+import Navbar from "./Components/Navbar.jsx";
 
-const ProfilePage = () => {
+const ProfilePage = ({ user, setUser }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [profile, setProfile] = useState({
         name: "Student User",
@@ -35,7 +36,9 @@ const ProfilePage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <>
+            <Navbar user={user} setUser={setUser} />
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
             <div className="max-w-4xl mx-auto px-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-8">
@@ -113,7 +116,7 @@ const ProfilePage = () => {
                                     </div>
                                     
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center gap-1">
+                                        <label className="flex items-center gap-1 text-sm font-medium text-gray-600 mb-1">
                                             <FaEnvelope />
                                             Email
                                         </label>
@@ -156,7 +159,7 @@ const ProfilePage = () => {
                                 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center gap-1">
+                                        <label className="flex items-center gap-1 text-sm font-medium text-gray-600 mb-1">
                                             <FaMapMarkerAlt />
                                             Campus
                                         </label>
@@ -250,7 +253,8 @@ const ProfilePage = () => {
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+        </>
     );
 };
 

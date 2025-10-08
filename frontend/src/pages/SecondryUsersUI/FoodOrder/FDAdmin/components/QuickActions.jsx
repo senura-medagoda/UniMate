@@ -7,28 +7,28 @@ const QuickActions = () => {
       title: 'Review Pending Vendors',
       description: 'Check and approve new vendor applications',
       icon: '⏳',
-      link: '/admin/vendors?status=pending',
+      link: '/food/admin/vendors?status=pending',
       color: 'orange'
     },
     {
       title: 'Manage Shops',
       description: 'View and manage all shop listings',
       icon: '🏪',
-      link: '/admin/shops',
-      color: 'blue'
+      link: '/food/admin/shops',
+      color: 'orange'
     },
     {
       title: 'View Analytics',
       description: 'Check platform performance metrics',
       icon: '📊',
-      link: '/admin/analytics',
+      link: '/food/admin/analytics',
       color: 'green'
     },
     {
       title: 'System Settings',
       description: 'Configure platform settings',
       icon: '⚙️',
-      link: '/admin/settings',
+      link: '/food/admin/settings',
       color: 'gray'
     }
   ];

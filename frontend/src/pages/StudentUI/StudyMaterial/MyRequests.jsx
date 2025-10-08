@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaBook, FaClock, FaCheck, FaTimes, FaDownload, FaEye, FaTrash, FaEdit, FaExclamationTriangle } from "react-icons/fa";
+import Navbar from "./Components/Navbar.jsx";
 
-const MyRequests = () => {
+const MyRequests = ({ user, setUser }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingRequest, setEditingRequest] = useState(null);
@@ -105,7 +106,9 @@ const MyRequests = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <>
+      <Navbar user={user} setUser={setUser} />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-8">
@@ -255,7 +258,8 @@ const MyRequests = () => {
           onUpdate={handleUpdateRequest}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 };
 

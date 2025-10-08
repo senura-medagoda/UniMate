@@ -22,7 +22,16 @@ export async function loginAuth(req, res) {
             return res.status(401).json({ message: "Invalid email or password" })
         }
         const token = generateToken(std._id);
-        res.status(200).json({id: std._id , email: std.s_email ,uid: std.s_uniID, token , message:"Login Success"});
+        res.status(200).json({
+            id: std._id, 
+            email: std.s_email,
+            name: `${std.s_fname} ${std.s_lname}`,
+            fname: std.s_fname,
+            lname: std.s_lname,
+            uid: std.s_uniID, 
+            token, 
+            message: "Login Success"
+        });
 
     } catch (error) {
         console.error("Error in Login : ", error);

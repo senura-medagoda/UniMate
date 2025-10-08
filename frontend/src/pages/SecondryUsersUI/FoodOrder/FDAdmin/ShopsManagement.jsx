@@ -32,7 +32,7 @@ const ShopsManagement = () => {
         ...(statusFilter !== 'all' && { status: statusFilter })
       });
 
-      const response = await fetch(`http://localhost:5001/api/admin/shops?${params}`, {
+      const response = await fetch(`http://localhost:5001/api/food-admin/shops?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
           'Content-Type': 'application/json'
@@ -56,7 +56,7 @@ const ShopsManagement = () => {
 
   const toggleShopStatus = async (shopId, currentStatus) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/admin/shops/${shopId}/status`, {
+      const response = await fetch(`http://localhost:5001/api/food-admin/shops/${shopId}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
@@ -79,7 +79,7 @@ const ShopsManagement = () => {
 
   const viewShopDetails = async (shopId) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/admin/shops/${shopId}`, {
+      const response = await fetch(`http://localhost:5001/api/food-admin/shops/${shopId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
           'Content-Type': 'application/json'
@@ -101,7 +101,7 @@ const ShopsManagement = () => {
 
   const approveShop = async (shopId) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/admin/shops/${shopId}/approve`, {
+      const response = await fetch(`http://localhost:5001/api/food-admin/shops/${shopId}/approve`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
@@ -124,7 +124,7 @@ const ShopsManagement = () => {
 
   const rejectShop = async (shopId, reason) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/admin/shops/${shopId}/reject`, {
+      const response = await fetch(`http://localhost:5001/api/food-admin/shops/${shopId}/reject`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
@@ -199,7 +199,7 @@ const ShopsManagement = () => {
                 placeholder="Search shops..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
             <div>
@@ -207,7 +207,7 @@ const ShopsManagement = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
                 <option value="all">All Shops</option>
                 <option value="pending">Pending Approval</option>
@@ -224,7 +224,7 @@ const ShopsManagement = () => {
         <div className="space-y-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
             </div>
           ) : (
             <>
@@ -271,7 +271,7 @@ const ShopsManagement = () => {
                             <div className="flex items-center mt-1">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                 shop.isOpen 
-                                  ? 'bg-blue-100 text-blue-800' 
+                                  ? 'bg-orange-100 text-orange-800' 
                                   : 'bg-gray-100 text-gray-800'
                               }`}>
                                 {shop.isOpen ? '🟢 Open' : '🔴 Closed'}
@@ -371,7 +371,7 @@ const ShopsManagement = () => {
                             {/* Open/Closed Status */}
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                               shop.isOpen 
-                                ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+                                ? 'bg-orange-100 text-orange-800 border border-orange-200' 
                                 : 'bg-gray-100 text-gray-800 border border-gray-200'
                             }`}>
                               {shop.isOpen ? 'Open' : 'Closed'}
@@ -409,7 +409,7 @@ const ShopsManagement = () => {
                           <div className="flex space-x-2">
                             <button
                               onClick={() => viewShopDetails(shop._id)}
-                              className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                              className="flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -561,7 +561,7 @@ const ShopsManagement = () => {
                         </span>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           selectedShop.isOpen 
-                            ? 'bg-blue-100 text-blue-800' 
+                            ? 'bg-orange-100 text-orange-800' 
                             : 'bg-gray-100 text-gray-800'
                         }`}>
                           {selectedShop.isOpen ? 'Open' : 'Closed'}

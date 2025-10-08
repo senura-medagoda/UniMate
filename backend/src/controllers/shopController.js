@@ -743,6 +743,82 @@ export const getAllShops = async (req, res) => {
     }
 };
 
+//// Get All Shops for Admin (Admin Dashboard)
+export const getAllShopsForAdmin = async (req, res) => {
+    try {
+        const { 
+            page = 1, 
+            limit = 10, 
+            search, 
+            status,
+            approvalStatus,
+            sortBy = 'createdAt',
+            sortOrder = 'desc'
+        } = req.query;
+
+        // Admin can see ALL shops (including inactive and pending)
+        const query = {};
+
+        if (search) {
+            query.$or = [
+                { businessName: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } },
+                { 'address.city': { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Filter by active status
+        if (status) {
+            query.isActive = status === 'active';
+        }
+
+        // Filter by approval status
+        if (approvalStatus) {
+            query.approvalStatus = approvalStatus;
+        }
+
+        const sortOptions = {};
+        sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+        const shops = await ShopModel.find(query)
+            .populate('vendorId', 'businessName ownerName email phone')
+            .sort(sortOptions)
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+
+        const total = await ShopModel.countDocuments(query);
+
+        // Get summary counts for admin dashboard
+        const summary = {
+            total: await ShopModel.countDocuments({}),
+            active: await ShopModel.countDocuments({ isActive: true }),
+            inactive: await ShopModel.countDocuments({ isActive: false }),
+            approved: await ShopModel.countDocuments({ approvalStatus: 'approved' }),
+            pending: await ShopModel.countDocuments({ approvalStatus: 'pending' }),
+            rejected: await ShopModel.countDocuments({ approvalStatus: 'rejected' })
+        };
+
+        res.status(200).json({
+            success: true,
+            data: {
+                shops,
+                summary,
+                totalPages: Math.ceil(total / limit),
+                currentPage: parseInt(page),
+                total
+            }
+        });
+
+    } catch (error) {
+        console.error("Get all shops for admin error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+
 //// Get Shop by ID (Public)
 export const getShopById = async (req, res) => {
     try {
@@ -765,6 +841,211 @@ export const getShopById = async (req, res) => {
 
     } catch (error) {
         console.error("Get shop by ID error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+
+/// Approve Shop (Admin only)
+export const approveShop = async (req, res) => {
+    try {
+        const { shopId } = req.params;
+        const adminId = req.adminId; // From adminAuth middleware
+
+        const shop = await ShopModel.findByIdAndUpdate(
+            shopId,
+            {
+                isApproved: true,
+                approvalStatus: 'approved',
+                approvedAt: new Date(),
+                approvedBy: adminId,
+                rejectionReason: '' // Clear any previous rejection reason
+            },
+            { new: true }
+        ).populate('vendorId', 'businessName ownerName email');
+
+        if (!shop) {
+            return res.status(404).json({
+                success: false,
+                message: "Shop not found"
+            });
+        }
+
+        // Send notification to vendor about shop approval
+        try {
+            await createAdminNotification(
+                'shop_approved',
+                'Shop Approved',
+                `Your shop "${shop.businessName}" has been approved and is now visible to customers.`,
+                {
+                    shopId: shop._id,
+                    shopName: shop.businessName,
+                    vendorId: shop.vendorId._id,
+                    vendorName: shop.vendorId.businessName || shop.vendorId.ownerName,
+                    approvedAt: shop.approvedAt
+                },
+                'high',
+                `/vendor/shop/dashboard`
+            );
+            console.log('Shop approval notification sent successfully');
+        } catch (notificationError) {
+            console.error('Error sending shop approval notification:', notificationError);
+            // Don't fail the approval if notification fails
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Shop approved successfully",
+            data: shop
+        });
+
+    } catch (error) {
+        console.error("Approve shop error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+
+/// Reject Shop (Admin only)
+export const rejectShop = async (req, res) => {
+    try {
+        const { shopId } = req.params;
+        const { rejectionReason } = req.body;
+        const adminId = req.adminId; // From adminAuth middleware
+
+        if (!rejectionReason || rejectionReason.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: "Rejection reason is required"
+            });
+        }
+
+        const shop = await ShopModel.findByIdAndUpdate(
+            shopId,
+            {
+                isApproved: false,
+                approvalStatus: 'rejected',
+                rejectionReason: rejectionReason.trim(),
+                approvedBy: adminId
+            },
+            { new: true }
+        ).populate('vendorId', 'businessName ownerName email');
+
+        if (!shop) {
+            return res.status(404).json({
+                success: false,
+                message: "Shop not found"
+            });
+        }
+
+        // Send notification to vendor about shop rejection
+        try {
+            await createAdminNotification(
+                'shop_rejected',
+                'Shop Rejected',
+                `Your shop "${shop.businessName}" has been rejected. Reason: ${rejectionReason}`,
+                {
+                    shopId: shop._id,
+                    shopName: shop.businessName,
+                    vendorId: shop.vendorId._id,
+                    vendorName: shop.vendorId.businessName || shop.vendorId.ownerName,
+                    rejectionReason: rejectionReason,
+                    rejectedAt: new Date()
+                },
+                'high',
+                `/vendor/shop/edit`
+            );
+            console.log('Shop rejection notification sent successfully');
+        } catch (notificationError) {
+            console.error('Error sending shop rejection notification:', notificationError);
+            // Don't fail the rejection if notification fails
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Shop rejected successfully",
+            data: shop
+        });
+
+    } catch (error) {
+        console.error("Reject shop error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+
+/// Toggle Shop Active Status (Admin only)
+export const toggleShopActiveStatus = async (req, res) => {
+    try {
+        const { shopId } = req.params;
+        const { isActive } = req.body;
+        const adminId = req.adminId; // From adminAuth middleware
+
+        if (typeof isActive !== 'boolean') {
+            return res.status(400).json({
+                success: false,
+                message: "isActive field is required and must be a boolean"
+            });
+        }
+
+        const shop = await ShopModel.findByIdAndUpdate(
+            shopId,
+            { isActive },
+            { new: true }
+        ).populate('vendorId', 'businessName ownerName email');
+
+        if (!shop) {
+            return res.status(404).json({
+                success: false,
+                message: "Shop not found"
+            });
+        }
+
+        // Send notification to vendor about status change
+        try {
+            await createAdminNotification(
+                isActive ? 'shop_activated' : 'shop_deactivated',
+                isActive ? 'Shop Activated' : 'Shop Deactivated',
+                `Your shop "${shop.businessName}" has been ${isActive ? 'activated' : 'deactivated'} by admin.`,
+                {
+                    shopId: shop._id,
+                    shopName: shop.businessName,
+                    vendorId: shop.vendorId._id,
+                    vendorName: shop.vendorId.businessName || shop.vendorId.ownerName,
+                    isActive: isActive,
+                    changedAt: new Date()
+                },
+                'medium',
+                `/vendor/shop/dashboard`
+            );
+            console.log(`Shop ${isActive ? 'activation' : 'deactivation'} notification sent successfully`);
+        } catch (notificationError) {
+            console.error('Error sending shop status notification:', notificationError);
+            // Don't fail the status change if notification fails
+        }
+
+        res.status(200).json({
+            success: true,
+            message: `Shop ${isActive ? 'activated' : 'deactivated'} successfully`,
+            data: {
+                shopId: shop._id,
+                businessName: shop.businessName,
+                isActive: shop.isActive,
+                vendor: shop.vendorId
+            }
+        });
+
+    } catch (error) {
+        console.error("Toggle shop active status error:", error);
         res.status(500).json({
             success: false,
             message: "Internal server error",

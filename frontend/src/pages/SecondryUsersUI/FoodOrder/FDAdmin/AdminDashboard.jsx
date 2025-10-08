@@ -11,7 +11,18 @@ const AdminDashboard = () => {
   const { admin, hasPermission } = useAdminAuth();
   const { error: toastError } = useToast();
   const navigate = useNavigate();
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState({
+    totalVendors: 0,
+    activeVendors: 0,
+    approvedVendors: 0,
+    pendingVendors: 0,
+    totalShops: 0,
+    activeShops: 0,
+    approvedShops: 0,
+    pendingShops: 0,
+    recentVendors: [],
+    recentShops: []
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,7 +32,7 @@ const AdminDashboard = () => {
   const fetchDashboardStats = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5001/api/admin/dashboard/stats', {
+      const response = await fetch('http://localhost:5001/api/food-admin/dashboard/stats', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
           'Content-Type': 'application/json'
@@ -29,9 +40,16 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setStats(data.data);
+        const result = await response.json();
+        console.log('Dashboard stats received:', result);
+        if (result.success) {
+          console.log('Setting stats with data:', result.data);
+          setStats(result.data);
+        } else {
+          toastError(result.message || 'Failed to load dashboard statistics');
+        }
       } else {
+        console.error('Failed to fetch dashboard stats:', response.status, response.statusText);
         toastError('Failed to load dashboard statistics');
       }
     } catch (error) {
@@ -47,7 +65,7 @@ const AdminDashboard = () => {
       <div className="min-h-screen bg-gray-50">
         <AdminNavbar />
         <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
         </div>
       </div>
     );
@@ -69,38 +87,36 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatsCard
               title="Total Vendors"
-              value={stats.vendors.total}
-              change={`+${stats.vendors.active} active`}
+              value={stats.totalVendors || 0}
+              change={`+${stats.activeVendors || 0} active`}
               icon="👥"
-              color="blue"
+              color="orange"
             />
             <StatsCard
               title="Active Vendors"
-              value={stats.vendors.active}
-              change={`${Math.round((stats.vendors.active / stats.vendors.total) * 100)}% of total`}
+              value={stats.activeVendors || 0}
+              change={`${(stats.totalVendors || 0) > 0 ? Math.round(((stats.activeVendors || 0) / (stats.totalVendors || 1)) * 100) : 0}% of total`}
               icon="✅"
               color="green"
             />
             <StatsCard
               title="Total Shops"
-              value={stats.shops.total}
-              change={`+${stats.shops.active} active`}
+              value={stats.totalShops || 0}
+              change={`+${stats.activeShops || 0} active`}
               icon="🏪"
               color="purple"
             />
             <StatsCard
               title="Pending Approvals"
-              value={stats.vendors.pending}
+              value={stats.pendingVendors || 0}
               change="Needs review"
               icon="⏳"
               color="orange"
             />
-          </div>
-        )}
+        </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -116,8 +132,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Additional Stats */}
-        {stats && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-red-100 rounded-lg">
@@ -127,7 +142,7 @@ const AdminDashboard = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Inactive Vendors</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.vendors.inactive}</p>
+                  <p className="text-2xl font-semibold text-gray-900">{Math.max(0, (stats.totalVendors || 0) - (stats.activeVendors || 0))}</p>
                 </div>
               </div>
             </div>
@@ -141,7 +156,7 @@ const AdminDashboard = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Active Shops</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.shops.active}</p>
+                  <p className="text-2xl font-semibold text-gray-900">{stats.activeShops}</p>
                 </div>
               </div>
             </div>
@@ -155,12 +170,11 @@ const AdminDashboard = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Inactive Shops</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.shops.inactive}</p>
+                  <p className="text-2xl font-semibold text-gray-900">{Math.max(0, (stats.totalShops || 0) - (stats.activeShops || 0))}</p>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -18,7 +18,7 @@ const NotificationBell = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/notifications', {
+      const response = await fetch('http://localhost:5001/api/food-admin/notifications', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -40,7 +40,7 @@ const NotificationBell = () => {
   const markAsRead = async (notificationId) => {
     try {
       const token = localStorage.getItem('adminToken');
-      await fetch(`http://localhost:5001/api/admin/notifications/${notificationId}/read`, {
+      await fetch(`http://localhost:5001/api/food-admin/notifications/${notificationId}/read`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -88,7 +88,7 @@ const NotificationBell = () => {
       case 'shop_rejected':
         return 'text-red-600';
       case 'vendor_registered':
-        return 'text-blue-600';
+        return 'text-orange-600';
       case 'order_placed':
         return 'text-purple-600';
       default:
@@ -110,7 +110,7 @@ const NotificationBell = () => {
     <div className="relative">
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full"
+        className="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 rounded-full"
       >
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9z"/>
@@ -155,7 +155,7 @@ const NotificationBell = () => {
                     setShowDropdown(false);
                   }}
                   className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                    !notification.isRead ? 'bg-blue-50' : ''
+                    !notification.isRead ? 'bg-orange-50' : ''
                   }`}
                 >
                   <div className="flex items-start space-x-3">
@@ -176,7 +176,7 @@ const NotificationBell = () => {
                       </p>
                     </div>
                     {!notification.isRead && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
                     )}
                   </div>
                 </div>
@@ -186,7 +186,7 @@ const NotificationBell = () => {
 
           {notifications.length > 10 && (
             <div className="p-3 border-t border-gray-200 text-center">
-              <button className="text-sm text-blue-600 hover:text-blue-800">
+              <button className="text-sm text-orange-600 hover:text-orange-800">
                 View all notifications
               </button>
             </div>

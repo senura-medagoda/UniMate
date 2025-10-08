@@ -5,12 +5,12 @@ import { useToast } from "@/context/ToastContext";
 
 export const AppContext = createContext();
 
-export const AppContextProvider = ({ children }) => {
+export const AppContextProvider = ({ children, user: propUser, setUser: propSetUser }) => {
   const currency = "Rs.";
   const { success: toastSuccess, error: toastError, info: toastInfo } = useToast();
 
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(propUser || null);
   const [isSeller, setIsSeller] = useState(false);
   const [showUserLogin, setshowUserLogin] = useState(false);
   const [Products, setProducts] = useState([]);
@@ -74,7 +74,8 @@ export const AppContextProvider = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch('http://localhost:5001/api/shop/all');
+      
+      const response = await makeAuthenticatedRequest('http://localhost:5001/api/shop/all');
       const data = await response.json();
       
       if (data.success) {
@@ -106,7 +107,8 @@ export const AppContextProvider = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`http://localhost:5001/api/menu/all?page=${page}&limit=${limit}`);
+      
+      const response = await makeAuthenticatedRequest(`http://localhost:5001/api/menu/all?page=${page}&limit=${limit}`);
       const data = await response.json();
       if (data.success) {
         if (page === 1) {
@@ -188,7 +190,7 @@ export const AppContextProvider = ({ children }) => {
 
   const fetchPopularMenus = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/menu/popular');
+      const response = await makeAuthenticatedRequest('http://localhost:5001/api/menu/popular');
       const data = await response.json();
       if (data.success) {
         setMenuItems(data.data);
@@ -267,7 +269,7 @@ export const AppContextProvider = ({ children }) => {
     return total;
   };
 
-  //// Get cart count
+  //  // Get cart count
   const getCartCount = () => {
     let count = 0;
     for (const itemId in cartItems) {
@@ -276,6 +278,64 @@ export const AppContextProvider = ({ children }) => {
       }
     }
     return count;
+  };
+
+  // Get user token
+  const getUserToken = () => {
+    return user?.token || null;
+  };
+
+  // Make authenticated API call
+  const makeAuthenticatedRequest = async (url, options = {}) => {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    
+    // Add authorization header if user token is available
+    if (user && user.token) {
+      headers['Authorization'] = `Bearer ${user.token}`;
+    }
+    
+    return fetch(url, {
+      ...options,
+      headers,
+    });
+  };
+
+  // Place order with user authentication
+  const placeOrder = async (orderData) => {
+    try {
+      if (!user || !user.token) {
+        toastError('Please log in to place an order');
+        return { success: false, message: 'User not authenticated' };
+      }
+
+      const response = await makeAuthenticatedRequest('http://localhost:5001/api/orders/create', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...orderData,
+          userId: user._id || user.id,
+          userEmail: user.email,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        toastSuccess('Order placed successfully!');
+        // Clear cart after successful order
+        clearCart();
+        return { success: true, data: data.data };
+      } else {
+        toastError(data.message || 'Failed to place order');
+        return { success: false, message: data.message };
+      }
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toastError('Failed to place order. Please try again.');
+      return { success: false, message: 'Network error' };
+    }
   };
 
   // Save cart items to localStorage whenever they change
@@ -287,6 +347,13 @@ export const AppContextProvider = ({ children }) => {
     }
   }, [cartItems]);
 
+  // Sync user state with prop
+  useEffect(() => {
+    if (propUser !== undefined) {
+      setUser(propUser);
+    }
+  }, [propUser]);
+
   useEffect(() => {
     fetchProducts();
     fetchShops();
@@ -296,7 +363,7 @@ export const AppContextProvider = ({ children }) => {
   const value = {
     navigate,
     user,
-    setUser,
+    setUser: propSetUser || setUser,
     setIsSeller,
     isSeller,
     showUserLogin,
@@ -314,6 +381,9 @@ export const AppContextProvider = ({ children }) => {
     clearCart,
     getCartTotal,
     getCartCount,
+    getUserToken, // Expose token getter
+    makeAuthenticatedRequest, // Expose authenticated request helper
+    placeOrder, // Expose order placement function
     fetchMenuItems, // Expose this for manual refresh
     fetchShops, // Expose this for manual refresh
   };

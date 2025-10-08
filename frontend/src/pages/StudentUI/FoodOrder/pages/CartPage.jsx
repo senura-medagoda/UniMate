@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, CreditCard, MapPin } from 'lucide-react';
 
 const CartContent = () => {
-  const { cartItems, addToCart, removeFromCart, updateCartItems, currency, menuItems } = useAppContext();
+  const { cartItems, addToCart, removeFromCart, updateCartItems, currency, menuItems, placeOrder, user } = useAppContext();
   const [paymentMethod, setPaymentMethod] = useState('COD');
   const [selectedAddress, setSelectedAddress] = useState('');
   const [showAddressInput, setShowAddressInput] = useState(false);
@@ -44,13 +44,40 @@ const CartContent = () => {
     }
   };
 
+  const handlePlaceOrder = async () => {
+    if (!user) {
+      alert('Please log in to place an order');
+      return;
+    }
+
+    if (!selectedAddress) {
+      alert('Please select or add a delivery address');
+      return;
+    }
+
+    const orderData = {
+      items: getCartItems(),
+      totalAmount: getTotalPrice(),
+      paymentMethod,
+      deliveryAddress: selectedAddress,
+      orderDate: new Date().toISOString(),
+    };
+
+    const result = await placeOrder(orderData);
+    
+    if (result.success) {
+      // Order placed successfully, user will be redirected or shown success message
+      console.log('Order placed successfully:', result.data);
+    }
+  };
+
   const cartItemsList = getCartItems();
 
   if (cartItemsList.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-orange-50/20">
         <FoodNavbar />
-        <div className="pt-20 pb-12">
+        <div className="pt-24 pb-12">
           <div className="max-w-4xl mx-auto px-6 text-center">
             <div className="bg-white rounded-2xl shadow-lg p-12">
               <div className="inline-flex items-center justify-center w-24 h-24 bg-orange-100 rounded-full mb-6">
@@ -88,21 +115,25 @@ const CartContent = () => {
     <div className="min-h-screen bg-gray-50">
       <FoodNavbar />
       
-      <div className="pt-20 pb-12">
+      {/* Cart Header Section */}
+      <div className="pt-24 pb-8 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6">
-          
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">My Cart</h1>
-            <p className="text-gray-600 text-sm">
-              {getTotalItems()} items in your cart
-              <span 
-                className="text-orange-600 ml-2 cursor-pointer hover:underline"
-                onClick={() => window.location.href = '/menu'}
-              >
-                Add more →
-              </span>
-            </p>
-          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">My Cart</h1>
+          <p className="text-gray-600 text-sm">
+            {getTotalItems()} items in your cart
+            <span 
+              className="text-orange-600 ml-2 cursor-pointer hover:underline"
+              onClick={() => window.location.href = '/menu'}
+            >
+              Add more →
+            </span>
+          </p>
+        </div>
+      </div>
+
+      {/* Cart Content */}
+      <div className="py-12">
+        <div className="max-w-7xl mx-auto px-6">
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
            
@@ -305,7 +336,10 @@ const CartContent = () => {
                   </div>
                 </div>
                 
-                <button className="w-full bg-[#fc944c] hover:bg-orange-600 text-white py-3 px-6 rounded-lg font-semibold text-lg transition-colors">
+                <button 
+                  onClick={handlePlaceOrder}
+                  className="w-full bg-[#fc944c] hover:bg-orange-600 text-white py-3 px-6 rounded-lg font-semibold text-lg transition-colors"
+                >
                   Place Order
                 </button>
               </div>
@@ -319,9 +353,9 @@ const CartContent = () => {
   );
 };
 
-const CartPage = () => {
+const CartPage = ({ user, setUser }) => {
   return (
-    <AppContextProvider>
+    <AppContextProvider user={user} setUser={setUser}>
       <CartContent />
     </AppContextProvider>
   );

@@ -734,7 +734,7 @@ const MenuManagement = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Price *
+                    Price (Rs.) *
                   </label>
                   <input
                     type="number"
@@ -1009,7 +1009,7 @@ const MenuManagement = () => {
                       <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
                       
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-lg font-bold text-orange-600">₹{item.price}</span>
+                        <span className="text-lg font-bold text-orange-600">Rs.{item.price}</span>
                         <span className="text-xs text-gray-500">{item.preparationTime || 15} min</span>
                       </div>
                       

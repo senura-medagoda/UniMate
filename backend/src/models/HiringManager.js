@@ -107,8 +107,7 @@ hmSchema.methods.correctPassword = async function(candidatePassword) {
 };
 
 // Indexes for efficient querying
-hmSchema.index({ hm_email: 1 });
-hmSchema.index({ hm_workID: 1 });
+// Note: hm_email and hm_workID already have unique indexes from unique: true
 hmSchema.index({ hm_status: 1 });
 
 const HiringManager = mongoose.model("HiringManager", hmSchema);

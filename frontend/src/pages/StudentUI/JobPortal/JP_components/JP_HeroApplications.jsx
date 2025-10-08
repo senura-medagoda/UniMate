@@ -17,7 +17,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 
-function JP_HeroApplications() {
+function JP_HeroApplications({ user }) {
   const [activeTab, setActiveTab] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')

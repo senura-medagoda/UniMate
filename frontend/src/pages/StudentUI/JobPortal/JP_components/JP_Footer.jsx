@@ -262,3 +262,4 @@ const JP_Footer = () => {
 };
 
 export default JP_Footer;
+

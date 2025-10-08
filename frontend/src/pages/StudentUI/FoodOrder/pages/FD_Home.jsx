@@ -35,9 +35,9 @@ const HomeContent = () => {
   );
 };
 
-const FD_Home = () => {
+const FD_Home = ({ user, setUser }) => {
   return (
-    <AppContextProvider>
+    <AppContextProvider user={user} setUser={setUser}>
       <HomeContent />
     </AppContextProvider>
   );
