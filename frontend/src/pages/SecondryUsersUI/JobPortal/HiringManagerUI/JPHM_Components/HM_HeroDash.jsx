@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
+import { useHMAuth } from '@/context/HMAuthContext'
 import { 
   Briefcase, 
   Users, 
@@ -14,54 +16,151 @@ import {
   ArrowRight,
   BarChart3,
   Target,
-  Award
+  Award,
+  RefreshCw
 } from 'lucide-react'
 
-function HM_HeroDash() {
-  const stats = {
-    activeJobs: 12,
-    pendingJobs: 5,
-    totalApplicants: 247,
-    newApplicants: 23
-  };
+function HM_HeroDash({ user }) {
+  const { hm, makeAuthenticatedRequest } = useHMAuth();
+  const navigate = useNavigate();
+  
+  // Debug: Log HM data to see what we're getting
+  console.log('HM_HeroDash - HM data:', hm);
+  console.log('HM_HeroDash - HM firstName:', hm?.firstName);
+  
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    activeJobs: 0,
+    pendingJobs: 0,
+    totalApplicants: 0,
+    newApplicants: 0,
+    recentApplications: []
+  });
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const handleNewJob = () => {
-    // In a real app, this would navigate to a job creation form
-    alert('Opening new job form...');
+    // Check if hiring manager is verified
+    if (hm && hm.status !== 'Verified') {
+      alert(`You need to be verified to create new jobs. Current status: ${hm.status}`);
+      return;
+    }
+    navigate('/addnewjob');
   };
 
-  const recentActivity = [
-    {
-      id: 1,
-      jobTitle: 'Software Developer Intern',
-      activity: '5 new applications',
-      date: 'Today, 10:30 AM',
-      status: 'active',
-      icon: <Users className="w-4 h-4" />
-    },
-    {
-      id: 2,
-      jobTitle: 'Research Assistant - Biology',
-      activity: 'Position approved',
-      date: 'Yesterday, 3:45 PM',
-      status: 'live',
-      icon: <CheckCircle className="w-4 h-4" />
-    },
-    {
-      id: 3,
-      jobTitle: 'Campus Tour Guide',
-      activity: 'Application deadline passed',
-      date: 'Oct 20, 2023',
-      status: 'closed',
-      icon: <Clock className="w-4 h-4" />
+  // Fetch dashboard statistics
+  const fetchDashboardStats = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await makeAuthenticatedRequest('http://localhost:5001/api/hm/dashboard/stats');
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        setStats({
+          activeJobs: result.data.activeJobs,
+          pendingJobs: result.data.pendingJobs,
+          totalApplicants: result.data.totalApplicants,
+          newApplicants: result.data.newApplicants,
+          recentApplications: result.data.recentApplications || []
+        });
+        setLastUpdated(new Date());
+      } else {
+        console.error('Failed to fetch dashboard stats:', result.message);
+        // Keep default values on error
+      }
+      
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      // Keep default values on error
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, [makeAuthenticatedRequest]);
+
+  // Auto-refresh dashboard data every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchDashboardStats();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [makeAuthenticatedRequest]);
+
+  // Refresh data when component becomes visible (user navigates back to dashboard)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchDashboardStats();
+      }
+    };
+
+    const handleFocus = () => {
+      fetchDashboardStats();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [makeAuthenticatedRequest]);
+
+  // Format recent applications for display
+  const formatRecentActivity = () => {
+    if (!stats.recentApplications || stats.recentApplications.length === 0) {
+      return [
+        {
+          id: 'no-applications',
+          jobTitle: 'No recent applications',
+          activity: 'No new applications yet',
+          date: 'N/A',
+          status: 'inactive',
+          icon: <Users className="w-4 h-4" />
+        }
+      ];
+    }
+
+    return stats.recentApplications.map((app, index) => {
+      // Transform status for display
+      let displayStatus = app.status;
+      if (app.status === 'hired') {
+        displayStatus = 'approved';
+      } else if (app.status === 'pending') {
+        displayStatus = 'active';
+      }
+
+      return {
+        id: app._id || index,
+        jobTitle: app.jobId?.title || 'Unknown Job',
+        activity: `New application from ${app.studentName}`,
+        date: new Date(app.appliedAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        status: displayStatus,
+        icon: <Users className="w-4 h-4" />
+      };
+    });
+  };
+
+  const recentActivity = formatRecentActivity();
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800 border-green-200'
+      case 'approved': return 'bg-green-100 text-green-800 border-green-200'
       case 'live': return 'bg-blue-100 text-blue-800 border-blue-200'
       case 'closed': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'rejected': return 'bg-red-100 text-red-800 border-red-200'
+      case 'shortlisted': return 'bg-purple-100 text-purple-800 border-purple-200'
       default: return 'bg-gray-100 text-gray-800 border-gray-200'
     }
   }
@@ -79,21 +178,43 @@ function HM_HeroDash() {
         >
           <div className="mb-6 lg:mb-0">
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-              Welcome back, <span className="text-transparent bg-clip-text" style={{ background: 'linear-gradient(to right, #fc944c, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Hiring Manager</span>
+              Welcome back, <span className="text-transparent bg-clip-text" style={{ background: 'linear-gradient(to right, #fc944c, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{hm?.firstName || hm?.name?.split(' ')[0] || 'Hiring Manager'}</span>
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl">
               Here's what's happening with your job postings and applications. Manage your recruitment process efficiently.
             </p>
+            {lastUpdated && (
+              <p className="text-sm text-gray-500 mt-2">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </p>
+            )}
           </div>
-          <motion.button
-            onClick={handleNewJob}
-            className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Plus className="w-5 h-5" />
-            List a New Job
-          </motion.button>
+          <div className="flex gap-4">
+            <motion.button
+              onClick={fetchDashboardStats}
+              className="px-6 py-4 font-semibold rounded-xl shadow-lg transition-all duration-300 flex items-center gap-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 hover:shadow-xl transform hover:scale-105"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              disabled={loading}
+            >
+              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              Refresh Data
+            </motion.button>
+            <motion.button
+              onClick={handleNewJob}
+              className={`px-8 py-4 font-semibold rounded-xl shadow-lg transition-all duration-300 flex items-center gap-3 ${
+                hm && hm.status === 'Verified' 
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white hover:shadow-xl transform hover:scale-105' 
+                  : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+              }`}
+              whileHover={hm && hm.status === 'Verified' ? { scale: 1.05 } : {}}
+              whileTap={hm && hm.status === 'Verified' ? { scale: 0.95 } : {}}
+              disabled={hm && hm.status !== 'Verified'}
+            >
+              <Plus className="w-5 h-5" />
+              {hm && hm.status === 'Verified' ? 'List a New Job' : 'Verification Required'}
+            </motion.button>
+          </div>
         </motion.div>
 
         {/* Stats Grid */}
@@ -108,7 +229,9 @@ function HM_HeroDash() {
               <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(252, 148, 76, 0.1)' }}>
                 <Briefcase className="w-6 h-6" style={{ color: '#fc944c' }} />
               </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.activeJobs}</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {loading ? '...' : stats.activeJobs}
+              </span>
             </div>
             <h3 className="text-sm font-semibold text-gray-600 mb-1">Active Jobs</h3>
             <p className="text-xs text-gray-500">Currently live positions</p>
@@ -119,7 +242,9 @@ function HM_HeroDash() {
               <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(252, 148, 76, 0.1)' }}>
                 <Clock className="w-6 h-6" style={{ color: '#fc944c' }} />
               </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.pendingJobs}</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {loading ? '...' : stats.pendingJobs}
+              </span>
             </div>
             <h3 className="text-sm font-semibold text-gray-600 mb-1">Pending Jobs</h3>
             <p className="text-xs text-gray-500">Awaiting approval</p>
@@ -130,7 +255,9 @@ function HM_HeroDash() {
               <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(252, 148, 76, 0.1)' }}>
                 <Users className="w-6 h-6" style={{ color: '#fc944c' }} />
               </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.totalApplicants}</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {loading ? '...' : stats.totalApplicants}
+              </span>
             </div>
             <h3 className="text-sm font-semibold text-gray-600 mb-1">Total Applicants</h3>
             <p className="text-xs text-gray-500">All time applications</p>
@@ -141,7 +268,9 @@ function HM_HeroDash() {
               <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(252, 148, 76, 0.1)' }}>
                 <TrendingUp className="w-6 h-6" style={{ color: '#fc944c' }} />
               </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.newApplicants}</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {loading ? '...' : stats.newApplicants}
+              </span>
             </div>
             <h3 className="text-sm font-semibold text-gray-600 mb-1">New This Week</h3>
             <p className="text-xs text-gray-500">Recent applications</p>
@@ -165,7 +294,10 @@ function HM_HeroDash() {
                 <p className="text-sm text-gray-600">View and edit your job postings</p>
               </div>
             </div>
-            <button className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+            <button 
+              onClick={() => navigate('/myjobs')}
+              className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+            >
               View Jobs <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -180,7 +312,10 @@ function HM_HeroDash() {
                 <p className="text-sm text-gray-600">Check new applicant submissions</p>
               </div>
             </div>
-            <button className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+            <button 
+              onClick={() => navigate('/applicants')}
+              className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+            >
               View Applications <ArrowRight className="w-4 h-4" />
             </button>
           </div>

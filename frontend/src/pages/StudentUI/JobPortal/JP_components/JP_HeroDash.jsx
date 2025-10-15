@@ -1,11 +1,12 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { 
   Briefcase, 
   Building2, 
   Users, 
   Search, 
-  Lightbulb, 
+  FileText, 
   TrendingUp,
   Clock,
   CheckCircle
@@ -13,6 +14,7 @@ import {
 import emp1 from '../../../landingComponents/Images/emp1.jpg'
 
 const JP_HeroDash = ({ user }) => {
+  const navigate = useNavigate();
   return (
     <div 
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
@@ -64,13 +66,21 @@ const JP_HeroDash = ({ user }) => {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
           >
-            <button className="group text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3" style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}>
+            
+            <button 
+              onClick={() => navigate('/jobs')}
+              className="group text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3" 
+              style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}
+            >
               <Search className="w-5 h-5" />
               Browse Jobs
-            </button>
-            <button className="group bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-semibold py-4 px-8 rounded-xl border border-white/30 hover:border-white/50 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3">
-              <Lightbulb className="w-5 h-5" />
-              Application Tips
+            </button> 
+            <button 
+              onClick={() => navigate('/applications')}
+              className="group bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-semibold py-4 px-8 rounded-xl border border-white/30 hover:border-white/50 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3"
+            >
+              <FileText className="w-5 h-5" />
+              My Applications
             </button>
           </motion.div>
           

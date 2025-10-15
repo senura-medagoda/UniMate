@@ -34,6 +34,12 @@ const hmSchema = new mongoose.Schema(
             trim: true,
             maxlength: [100, "Company name cannot exceed 100 characters"]
         },
+        hm_company_address: {
+            type: String,
+            required: [true, "Company address is required"],
+            trim: true,
+            maxlength: [500, "Company address cannot exceed 500 characters"]
+        },
         hm_workID: {
             type: String,
             required: [true, "Work ID is required"],
@@ -55,7 +61,7 @@ const hmSchema = new mongoose.Schema(
         },
         hm_status: {
             type: String,
-            enum: ["Unverified", "Verified", "Suspended", "Banned"],
+            enum: ["Unverified", "Verified", "Rejected", "Suspended", "Banned"],
             default: "Unverified"
         },
         lastLogin: {
@@ -83,6 +89,20 @@ const hmSchema = new mongoose.Schema(
             type: String,
             trim: true,
             maxlength: [100, "Position cannot exceed 100 characters"]
+        },
+        linkedin: {
+            type: String,
+            trim: true,
+            maxlength: [200, "LinkedIn URL cannot exceed 200 characters"]
+        },
+        proof_document: {
+            type: String,
+            trim: true,
+            required: [true, "Proof document is required"]
+        },
+        proof_document_original_name: {
+            type: String,
+            trim: true
         }
     }, 
     { timestamps: true }

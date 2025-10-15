@@ -4,12 +4,17 @@ import { toast } from 'react-toastify';
 import { ShopContext } from '../context/M_ShopContext';
 import M_Title from '../components/M_Title';
 import MarketPlace_Navbar from '../components/MarketPlace_Navbar';
+import OrderTrackingModal from '../components/OrderTrackingModal';
 
 const MarketPlace_Orders = ({ user, setUser }) => {
   const { token, currency } = useContext(ShopContext);
 
   const [orderData, setOrderData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderLocation, setOrderLocation] = useState(null);
+  const [filter, setFilter] = useState('all');
 
   const loadOrderData = async () => {
     try {
@@ -42,12 +47,10 @@ const MarketPlace_Orders = ({ user, setUser }) => {
         setOrderData(allOrdersItem);
       } else {
         setOrderData([]);
-        console.log('No orders found or API returned error:', data?.message);
       }
     } catch (error) {
       console.error('Orders API not available:', error);
       setOrderData([]);
-      // Don't show error toast - just show empty orders
     } finally {
       setLoading(false);
     }
@@ -70,53 +73,46 @@ const MarketPlace_Orders = ({ user, setUser }) => {
     }
   };
 
-  const statusBadge = (status) => {
-    const text = (status || 'Processing').toString();
-    const isGood = /delivered|completed|shipped|ready/i.test(text);
-    const base =
-      'flex items-center gap-3 px-4 py-2 rounded-full border text-sm font-semibold';
-    return (
-      <div
-        className={
-          isGood
-            ? `${base} bg-green-50 border-green-200 text-green-700`
-            : `${base} bg-amber-50 border-amber-200 text-amber-700`
-        }
-      >
-        <div className="relative">
-          <div
-            className={
-              isGood ? 'w-3 h-3 bg-green-500 rounded-full' : 'w-3 h-3 bg-amber-500 rounded-full'
-            }
-          />
-          <div
-            className={
-              isGood
-                ? 'absolute inset-0 w-3 h-3 bg-green-500 rounded-full animate-ping opacity-75'
-                : 'absolute inset-0 w-3 h-3 bg-amber-500 rounded-full animate-ping opacity-75'
-            }
-          />
-        </div>
-        <span>{text}</span>
-      </div>
-    );
+  const getStatusConfig = (status) => {
+    const text = (status || 'Processing').toString().toLowerCase();
+    
+    if (/delivered|completed/.test(text)) {
+      return {
+        label: 'Delivered',
+        bg: 'bg-orange-500',
+        text: 'text-orange-700',
+        lightBg: 'bg-orange-50'
+      };
+    } else if (/shipped|ready/.test(text)) {
+      return {
+        label: 'Shipped',
+        bg: 'bg-yellow-500',
+        text: 'text-yellow-700',
+        lightBg: 'bg-yellow-50'
+      };
+    } else {
+      return {
+        label: 'Processing',
+        bg: 'bg-orange-400',
+        text: 'text-orange-700',
+        lightBg: 'bg-orange-50'
+      };
+    }
   };
 
-  // 🆕 Track order by opening Google Maps with current delivery location
   const handleTrackOrder = async (item) => {
     try {
       if (!item.orderId) {
-        alert("Order ID missing");
+        toast.error("Order ID missing");
         return;
       }
 
-      // Check if we have location data
+      setSelectedOrder(item);
+
       if (item.lat && item.lng) {
-        // Open Google Maps with existing location
-        const googleMapsUrl = `https://www.google.com/maps?q=${item.lat},${item.lng}`;
-        window.open(googleMapsUrl, "_blank");
+        setOrderLocation({ lat: item.lat, lng: item.lng });
+        setShowTrackingModal(true);
       } else {
-        // Fetch latest location from backend
         try {
           const studentToken = localStorage.getItem('studentToken');
           const { data } = await axios.post(
@@ -129,128 +125,178 @@ const MarketPlace_Orders = ({ user, setUser }) => {
             const order = data.orders.find(o => o._id === item.orderId);
             if (order?.location?.lat && order?.location?.lng) {
               const { lat, lng } = order.location;
-              const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-              window.open(googleMapsUrl, "_blank");
+              setOrderLocation({ lat, lng });
+              setShowTrackingModal(true);
             } else {
-              alert("Location not available yet. The delivery person hasn't started delivery.");
+              setOrderLocation(null);
+              setShowTrackingModal(true);
             }
           } else {
-            alert("Unable to fetch order information. Please try again later.");
+            toast.error("Unable to fetch order information.");
           }
         } catch (fetchError) {
           console.error("Error fetching order location:", fetchError);
-          alert("Order tracking not available. Please try again later.");
+          toast.error("Order tracking not available.");
         }
       }
     } catch (error) {
       console.error("Track Order failed:", error);
-      alert("Failed to track order. Please try again.");
+      toast.error("Failed to track order.");
     }
   };
 
+  const getFilteredOrders = () => {
+    if (filter === 'all') return orderData;
+    return orderData.filter(item => {
+      const status = (item.status || '').toLowerCase();
+      if (filter === 'delivered') return /delivered|completed/.test(status);
+      if (filter === 'shipped') return /shipped|ready/.test(status);
+      if (filter === 'processing') return /processing|pending/.test(status);
+      return true;
+    });
+  };
+
+  const filteredOrders = getFilteredOrders();
+
   return (
-    <div className="mr-10 ml-10">
+    <div>
       <MarketPlace_Navbar user={user} setUser={setUser} />
-      <div className="border-t pt-16 mb-20">
-        <div className="text-2xl mb-8">
-          <M_Title text1={'MY '} text2={'ORDERS'} />
-        </div>
-
-        {loading && (
-          <div className="text-center text-gray-600 py-12">Loading your orders…</div>
-        )}
-
-        {!loading && orderData.length === 0 && (
-          <div className="text-center text-gray-600 py-12">
-            You don’t have any orders yet.
+      
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50">
+        <div className="p-8 pt-24 max-w-6xl mx-auto">
+          
+          {/* Header */}
+          <div className='mb-8'>
+            <h1 className='text-3xl font-bold text-orange-600 mb-2'>My Orders</h1>
+            <p className='text-gray-600'>Track and manage your purchases</p>
           </div>
-        )}
 
-        {!loading && orderData.length > 0 && (
-          <div className="space-y-6">
-            {orderData.map((item, index) => {
-              const img =
-                Array.isArray(item.image) ? item.image[0] :
-                typeof item.image === 'string' ? item.image :
-                '';
-
-              return (
-                <div
-                  key={`${item._id || item.productId || index}-${index}`}
-                  className="bg-gradient-to-br from-orange-50/90 to-yellow-50/90 backdrop-blur-md rounded-2xl p-6 border border-orange-200/40 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+          {/* Filter Tabs */}
+          <div className="mb-8 bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+              {[
+                { key: 'all', label: 'All', count: orderData.length },
+                { key: 'delivered', label: 'Delivered', count: orderData.filter(o => /delivered|completed/.test((o.status || '').toLowerCase())).length },
+                { key: 'shipped', label: 'Shipped', count: orderData.filter(o => /shipped|ready/.test((o.status || '').toLowerCase())).length },
+                { key: 'processing', label: 'Processing', count: orderData.filter(o => /processing|pending/.test((o.status || '').toLowerCase())).length }
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setFilter(tab.key)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    filter === tab.key
+                      ? 'bg-white text-orange-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                    {/* Product Info */}
-                    <div className="flex items-start gap-6">
-                      <div className="relative">
+                  {tab.label} ({tab.count})
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Loading */}
+          {loading && (
+            <div className='flex justify-center items-center py-12'>
+              <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500'></div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && filteredOrders.length === 0 && (
+            <div className='text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200'>
+              <div className='text-gray-400 mb-4'>
+                <svg className='w-16 h-16 mx-auto' fill='currentColor' viewBox='0 0 20 20'>
+                  <path fillRule='evenodd' d='M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z' clipRule='evenodd' />
+                </svg>
+              </div>
+              <h3 className='text-lg font-medium text-gray-900 mb-2'>No {filter === 'all' ? '' : filter} orders found</h3>
+              <p className='text-gray-500'>
+                {filter === 'all' 
+                  ? "You haven't placed any orders yet." 
+                  : `You don't have any ${filter} orders at the moment.`
+                }
+              </p>
+            </div>
+          )}
+
+          {/* Orders List */}
+          {!loading && filteredOrders.length > 0 && (
+            <div className="space-y-4">
+              {filteredOrders.map((item, index) => {
+                const img = Array.isArray(item.image) ? item.image[0] : typeof item.image === 'string' ? item.image : '';
+                const statusConfig = getStatusConfig(item.status);
+
+                return (
+                  <div
+                    key={`${item._id || item.productId || index}-${index}`}
+                    className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'
+                  >
+                    <div className='flex items-start justify-between gap-6'>
+                      <div className='flex items-start gap-6 flex-1'>
+                        {/* Image */}
                         <img
-                          className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl shadow-md border border-white/50"
+                          className='w-20 h-20 object-cover rounded-lg border border-gray-200'
                           src={img}
                           alt={item.name || 'Product'}
                           onError={(e) => { e.currentTarget.src = ''; }}
                         />
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">
-                            {item.quantity ?? 1}
-                          </span>
+                        
+                        {/* Details */}
+                        <div className='flex-1'>
+                          <h3 className='text-lg font-semibold text-gray-900 mb-2'>{item.name || 'Unnamed product'}</h3>
+                          
+                          <div className='grid grid-cols-3 gap-4 mb-3'>
+                            <div>
+                              <p className='text-sm text-gray-600'>Price</p>
+                              <p className='font-semibold text-gray-900'>{currency}{item.price ?? 0}</p>
+                            </div>
+                            <div>
+                              <p className='text-sm text-gray-600'>Quantity</p>
+                              <p className='font-semibold text-gray-900'>{item.quantity ?? 1}</p>
+                            </div>
+                            <div>
+                              <p className='text-sm text-gray-600'>Size</p>
+                              <p className='font-semibold text-gray-900'>{item.size ?? '-'}</p>
+                            </div>
+                          </div>
+                          
+                          <p className='text-sm text-gray-500'>Order Date: {formatDate(item.date)}</p>
                         </div>
                       </div>
-
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-gray-800 mb-2">
-                          {item.name || 'Unnamed product'}
-                        </h3>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl font-bold text-orange-600">
-                              {currency}{item.price ?? 0}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <div className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center">
-                              <span className="text-xs font-semibold text-orange-700">Q</span>
-                            </div>
-                            <span className="font-medium">
-                              Qty: {item.quantity ?? 1}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <div className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center">
-                              <span className="text-xs font-semibold text-orange-700">S</span>
-                            </div>
-                            <span className="font-medium">
-                              Size: {item.size ?? '-'}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <span>Order Date:</span>
-                          <span className="font-semibold text-gray-700">
-                            {formatDate(item.date)}
-                          </span>
-                        </div>
+                      
+                      {/* Status & Action */}
+                      <div className='flex flex-col items-end gap-3'>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusConfig.lightBg} ${statusConfig.text}`}>
+                          {statusConfig.label}
+                        </span>
+                        <button
+                          onClick={() => handleTrackOrder(item)}
+                          className='px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors'
+                        >
+                          Track Order
+                        </button>
                       </div>
-                    </div>
-
-                    {/* Status & Action */}
-                    <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-start sm:items-center lg:items-end xl:items-center gap-4 lg:min-w-fit">
-                      {statusBadge(item.status)}
-                      <button
-                        onClick={() => handleTrackOrder(item)}
-                        className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center gap-2"
-                      >
-                        Track Order
-                      </button>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Order Tracking Modal */}
+      <OrderTrackingModal
+        isOpen={showTrackingModal}
+        onClose={() => {
+          setShowTrackingModal(false);
+          setSelectedOrder(null);
+          setOrderLocation(null);
+        }}
+        orderData={selectedOrder}
+        location={orderLocation}
+      />
     </div>
   );
 };

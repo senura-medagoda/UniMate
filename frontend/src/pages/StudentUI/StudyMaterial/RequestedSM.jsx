@@ -1,3 +1,4 @@
+// SM - Requested Study Materials Component
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -11,6 +12,8 @@ import {
   FaSearch,
   FaBell,
   FaArrowLeft,
+  FaFile,
+  FaTimes,
 } from "react-icons/fa";
 import Navbar from "./Components/Navbar.jsx";
 
@@ -34,6 +37,32 @@ const RequestedSM = ({ user, setUser }) => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+  // System data states
+  const [systemData, setSystemData] = useState({
+    campuses: [],
+    courses: [],
+    years: [],
+    semesters: [],
+    subjects: []
+  });
+  const [systemDataLoading, setSystemDataLoading] = useState(false);
+
+  // Fetch system data for dropdowns
+  const fetchSystemData = async () => {
+    setSystemDataLoading(true);
+    try {
+      const response = await fetch('http://localhost:5001/api/system-data/all');
+      const data = await response.json();
+      if (data.success) {
+        setSystemData(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching system data:', error);
+    } finally {
+      setSystemDataLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
@@ -41,6 +70,7 @@ const RequestedSM = ({ user, setUser }) => {
       setTimeout(() => setShowSuccessMessage(false), 5000);
     }
     fetchRequests();
+    fetchSystemData();
   }, [location.state]);
 
   const fetchRequests = async () => {
@@ -225,12 +255,14 @@ const RequestedSM = ({ user, setUser }) => {
                   value={filters.campus}
                   onChange={handleFilterChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  disabled={systemDataLoading}
                 >
-                  <option value="">All Campuses</option>
-                  <option value="Malabe">Malabe</option>
-                  <option value="Kandy">Kandy</option>
-                  <option value="Matara">Matara</option>
-                  <option value="Jaffna">Jaffna</option>
+                  <option value="">{systemDataLoading ? "Loading..." : "All Campuses"}</option>
+                  {systemData.campuses.map((campus) => (
+                    <option key={campus._id} value={campus.name}>
+                      {campus.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -241,15 +273,14 @@ const RequestedSM = ({ user, setUser }) => {
                   value={filters.course}
                   onChange={handleFilterChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  disabled={systemDataLoading}
                 >
-                  <option value="">All Courses</option>
-                  <option value="Computer Science">Computer Science</option>
-                  <option value="Software Engineering">Software Engineering</option>
-                  <option value="Information Technology">
-                    Information Technology
-                  </option>
-                  <option value="Cyber Security">Cyber Security</option>
-                  <option value="Data Science">Data Science</option>
+                  <option value="">{systemDataLoading ? "Loading..." : "All Courses"}</option>
+                  {systemData.courses.map((course) => (
+                    <option key={course._id} value={course.name}>
+                      {course.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -260,15 +291,14 @@ const RequestedSM = ({ user, setUser }) => {
                   value={filters.subject}
                   onChange={handleFilterChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  disabled={systemDataLoading}
                 >
-                  <option value="">All Subjects</option>
-                  <option value="Mathematics">Mathematics</option>
-                  <option value="Physics">Physics</option>
-                  <option value="Programming">Programming</option>
-                  <option value="OOP">Object-Oriented Programming</option>
-                  <option value="DSA">Data Structures & Algorithms</option>
-                  <option value="Database">Database Management</option>
-                  <option value="Networking">Computer Networking</option>
+                  <option value="">{systemDataLoading ? "Loading..." : "All Subjects"}</option>
+                  {systemData.subjects.map((subject) => (
+                    <option key={subject._id} value={subject.name}>
+                      {subject.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -412,10 +442,11 @@ const UploadModal = ({ request, onClose, onSuccess }) => {
     year: request.year,
     semester: request.semester,
     keywords: [],
-    file: null,
+    files: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -426,10 +457,60 @@ const UploadModal = ({ request, onClose, onSuccess }) => {
   };
 
   const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    console.log('Files selected for request upload:', selectedFiles);
     setFormData((prev) => ({
       ...prev,
-      file: e.target.files[0],
+      files: [...prev.files, ...selectedFiles],
     }));
+    // Clear the input so the same files can be selected again
+    e.target.value = '';
+  };
+
+  const addFiles = (newFiles) => {
+    setFormData(prev => {
+      // Filter out duplicates based on file name and size
+      const existingFiles = prev.files.map(f => `${f.name}-${f.size}`);
+      const uniqueNewFiles = newFiles.filter(file => 
+        !existingFiles.includes(`${file.name}-${file.size}`)
+      );
+      return { ...prev, files: [...prev.files, ...uniqueNewFiles] };
+    });
+  };
+
+  const removeFile = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      files: prev.files.filter((_, index) => index !== indexToRemove)
+    }));
+  };
+
+  const clearAllFiles = () => {
+    setFormData(prev => ({
+      ...prev,
+      files: []
+    }));
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    console.log('Files dropped for request upload:', droppedFiles);
+    addFiles(droppedFiles);
   };
 
   const handleSubmit = async (e) => {
@@ -438,26 +519,63 @@ const UploadModal = ({ request, onClose, onSuccess }) => {
     setError("");
 
     try {
-      const uploadFormData = new FormData();
-      Object.keys(formData).forEach((key) => {
-        if (key === "keywords") {
-          uploadFormData.append(key, JSON.stringify(formData[key]));
-        } else if (key === "file") {
-          if (formData[key]) {
-            uploadFormData.append(key, formData[key]);
-          }
-        } else {
-          uploadFormData.append(key, formData[key]);
-        }
-      });
+      // Validate required fields
+      if (!formData.title.trim()) {
+        setError("Title is required");
+        setLoading(false);
+        return;
+      }
+      if (!formData.subject.trim()) {
+        setError("Subject is required");
+        setLoading(false);
+        return;
+      }
+      if (formData.files.length === 0) {
+        setError("Please select at least one file");
+        setLoading(false);
+        return;
+      }
 
+      console.log('=== REQUEST UPLOAD DEBUG START ===');
+      console.log('Files to upload:', formData.files);
+      console.log('Number of files:', formData.files.length);
+
+      const uploadFormData = new FormData();
+      
+      // Append all files
+      formData.files.forEach((file, index) => {
+        console.log(`Appending file ${index}:`, file.name, 'Size:', file.size);
+        uploadFormData.append(`file${index}`, file);
+      });
+      uploadFormData.append("fileCount", formData.files.length);
+      
+      // Append other form data
+      uploadFormData.append("title", formData.title);
+      uploadFormData.append("description", formData.description);
+      uploadFormData.append("subject", formData.subject);
+      uploadFormData.append("campus", formData.campus);
+      uploadFormData.append("course", formData.course);
+      uploadFormData.append("year", formData.year);
+      uploadFormData.append("semester", formData.semester);
+      uploadFormData.append("keywords", JSON.stringify(formData.keywords));
       uploadFormData.append("fulfilledRequest", request._id);
-      uploadFormData.append("uploadedBy", "student1"); // TODO: Replace with auth user
+      // uploadedBy will be set by the backend from the authenticated user
+
+      // Get authentication token
+      const token = localStorage.getItem('studentToken');
+      if (!token) {
+        setError('Authentication required. Please log in again.');
+        setLoading(false);
+        return;
+      }
 
       const response = await fetch(
         "http://localhost:5001/api/study-materials/upload",
         {
           method: "POST",
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
           body: uploadFormData,
         }
       );
@@ -561,18 +679,111 @@ const UploadModal = ({ request, onClose, onSuccess }) => {
                 />
               </div>
 
-              <div>
+              <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  File *
+                  Files * (Multiple files allowed)
                 </label>
-                <input
-                  type="file"
-                  name="file"
-                  onChange={handleFileChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
-                  required
-                />
+                
+                {/* File Upload Area */}
+                <div 
+                  className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors duration-200 ${
+                    isDragOver 
+                      ? 'border-orange-500 bg-orange-50' 
+                      : 'border-gray-300 hover:border-orange-400'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.docx,.pptx"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="request-file-upload"
+                    multiple
+                  />
+                  <label htmlFor="request-file-upload" className="cursor-pointer">
+                    <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <FaUpload className="text-xl text-orange-600" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 mb-1">
+                      {isDragOver 
+                        ? "Drop files here to upload multiple files" 
+                        : formData.files.length > 0 
+                          ? `${formData.files.length} file${formData.files.length > 1 ? 's' : ''} selected` 
+                          : "Click to upload files (multiple files allowed)"
+                      }
+                    </p>
+                    {formData.files.length > 0 ? (
+                      <p className="text-xs text-green-600 font-medium">
+                        ✓ {formData.files.length} file{formData.files.length > 1 ? 's' : ''} ready for upload
+                      </p>
+                    ) : (
+                      <p className="text-xs text-red-600 font-medium">
+                        ⚠ Please select at least one file to upload
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Supported formats: PDF, JPG, PNG, DOCX, PPTX
+                    </p>
+                    <p className="text-xs text-orange-600 mt-1">
+                      💡 Tip: Hold Ctrl/Cmd to select multiple files or drag & drop files here
+                    </p>
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          console.log('Button clicked, triggering file input');
+                          const fileInput = document.getElementById('request-file-upload');
+                          if (fileInput) {
+                            fileInput.value = '';
+                            fileInput.click();
+                          }
+                        }}
+                        className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                      >
+                        Select Multiple Files
+                      </button>
+                    </div>
+                  </label>
+                </div>
+                
+                {/* Selected Files List */}
+                {formData.files.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-sm font-medium text-gray-700">Selected Files:</h4>
+                      <button
+                        type="button"
+                        onClick={clearAllFiles}
+                        className="text-sm text-red-600 hover:text-red-700 font-medium"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {formData.files.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-lg">
+                          <div className="flex items-center">
+                            <FaFile className="text-orange-500 mr-2" />
+                            <span className="text-sm font-medium text-gray-900">{file.name}</span>
+                            <span className="text-xs text-gray-500 ml-2">
+                              ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                          >
+                            <FaTimes className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -1,9 +1,11 @@
+// SM - Material Request Controller
 import { MaterialRequest } from "../models/MaterialRequest.js";
 import { StudyMaterial } from "../models/StudyMaterial.js";
 
 // @desc Create a new material request
 export const createRequest = async (req, res) => {
   try {
+    console.log('Received request body:', req.body);
     const {
       title,
       description,
@@ -29,8 +31,10 @@ export const createRequest = async (req, res) => {
     });
 
     await request.save();
+    console.log('Request saved successfully:', request);
     res.status(201).json(request);
   } catch (error) {
+    console.error('Error creating request:', error);
     res.status(400).json({ message: "Failed to create request", error: error.message });
   }
 };

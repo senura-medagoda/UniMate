@@ -37,6 +37,15 @@ const addProduct = async (req, res) => {
 
         console.log("Uploaded images:", imagesUrl);
 
+        // Validate price value
+        const priceValue = Number(price);
+        if (isNaN(priceValue) || priceValue <= 0) {
+            return res.json({ 
+                success: false, 
+                message: "Price must be greater than 0" 
+            });
+        }
+
         // Validate stock value
         const stockValue = Number(stock);
         if (isNaN(stockValue) || stockValue < 0) {
@@ -51,7 +60,7 @@ const addProduct = async (req, res) => {
             name,
             description,
             category,
-            price: Number(price),
+            price: priceValue,
             stock: stockValue,
             subCategory,
             bestseller: bestseller === "true" ? true : false,

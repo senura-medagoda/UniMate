@@ -18,18 +18,11 @@ const QuickActions = () => {
       color: 'orange'
     },
     {
-      title: 'View Analytics',
-      description: 'Check platform performance metrics',
-      icon: '📊',
-      link: '/food/admin/analytics',
-      color: 'green'
-    },
-    {
-      title: 'System Settings',
-      description: 'Configure platform settings',
-      icon: '⚙️',
-      link: '/food/admin/settings',
-      color: 'gray'
+      title: 'View Orders',
+      description: 'Manage and track all customer orders',
+      icon: '📋',
+      link: '/food/admin/orders',
+      color: 'blue'
     }
   ];
 

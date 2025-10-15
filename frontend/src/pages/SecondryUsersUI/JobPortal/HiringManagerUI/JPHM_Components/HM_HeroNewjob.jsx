@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router';
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion'
+import axios from 'axios';
+import { useHMAuth } from '@/context/HMAuthContext';
 import { 
   ArrowLeft, 
   Plus, 
@@ -24,7 +26,9 @@ import {
   Shield
 } from 'lucide-react'
 
-function HM_HeroNewjob() {
+function HM_HeroNewjob({ user }) {
+  const navigate = useNavigate();
+  const { hm, token, makeAuthenticatedRequest } = useHMAuth();
   const [formData, setFormData] = useState({
     title: '',
     department: '',
@@ -41,6 +45,7 @@ function HM_HeroNewjob() {
 
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -50,14 +55,73 @@ function HM_HeroNewjob() {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert('Job position created successfully!');
+  const handleSubmit = async () => {
+    if (!hm) {
+      alert('Please log in to create a job posting.');
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      // Map frontend field names to backend field names
+      const jobData = {
+        title: formData.title,
+        department: formData.department,
+        jobtype: formData.jobType, // Map jobType to jobtype
+        location: formData.location,
+        compensation: formData.pay, // Map pay to compensation
+        deadline: formData.applicationDeadline, // Map applicationDeadline to deadline
+        description: formData.description,
+        requirements: formData.requirements,
+        responsibilities: formData.responsibilities,
+        benefits: formData.benefits
+        // postedby will be set by the backend from the authenticated user
+      };
+
+      console.log('Submitting job data:', jobData);
+      console.log('HM token available:', !!token);
+      console.log('HM data:', hm);
+
+      const response = await makeAuthenticatedRequest('http://localhost:5001/api/job', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jobData)
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      const result = await response.json();
+      console.log('Response result:', result);
+
+      if (response.status === 201 && result.success) {
+        alert('Job position created successfully!');
+        navigate('/myjobs');
+      } else {
+        console.error('Job creation failed:', result);
+        throw new Error(result.message || 'Failed to create job posting');
+      }
+    } catch (error) {
+      console.error('Error creating job:', error);
+      console.error('Error details:', error.message);
+      
+      let errorMessage = 'Failed to create job posting. Please try again.';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBack = () => {
-    console.log('Going back to jobs list');
+    navigate('/hmdash');
   };
 
   const nextStep = () => {
@@ -236,9 +300,13 @@ function HM_HeroNewjob() {
                   name="applicationDeadline"
                   value={formData.applicationDeadline}
                   onChange={handleInputChange}
+                  min={new Date().toISOString().split('T')[0]}
                   className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   required
                 />
+                <label className="label">
+                  <span className="label-text-alt text-gray-500">Cannot select past dates</span>
+                </label>
               </div>
             </div>
           </div>
@@ -459,7 +527,7 @@ function HM_HeroNewjob() {
           </div>
 
           {/* Form Content */}
-          <form onSubmit={handleSubmit} className="p-8">
+          <div className="p-8">
             <motion.div
               key={currentStep}
               initial={{ opacity: 0, x: 20 }}
@@ -502,19 +570,32 @@ function HM_HeroNewjob() {
                   </motion.button>
                 ) : (
                   <motion.button
-                    type="submit"
-                    className="px-8 py-3 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className={`px-8 py-3 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 ${
+                      loading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                     style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={!loading ? { scale: 1.05 } : {}}
+                    whileTap={!loading ? { scale: 0.95 } : {}}
                   >
-                    <Save className="w-4 h-4" />
-                    Create Job Posting
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Create Job Posting
+                      </>
+                    )}
                   </motion.button>
                 )}
               </div>
             </div>
-          </form>
+          </div>
         </motion.div>
       </div>
     </div>

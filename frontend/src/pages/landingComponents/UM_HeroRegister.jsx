@@ -17,14 +17,6 @@ function UM_HeroRegister() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
 
-  const universities = [
-    'University of Peradeniya',
-    'SLIIT',
-    'University of Moratuwa',
-    'ICBT',
-    'ACBT',
-    'Horizon Campus'
-  ];
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -74,7 +66,7 @@ function UM_HeroRegister() {
     if (!s_fname.trim()) newErrors.firstName = 'First name required';
     if (!s_lname.trim()) newErrors.lastName = 'Last name required';
     if (!s_email.trim()) newErrors.email = 'Email required';
-    if (!s_uni) newErrors.university = 'University required';
+    if (!s_uni.trim()) newErrors.university = 'University required';
     if (!s_uniID.trim()) newErrors.uniId = 'Student ID required';
     if (!s_password) newErrors.password = 'Password required';
     if (!confirmPassword) newErrors.confirmPassword = 'Confirm password';
@@ -128,11 +120,11 @@ function UM_HeroRegister() {
 
   const isFormValid = () => {
     return agreeToTerms && 
-           s_fname && 
-           s_lname && 
-           s_email && 
-           s_uni && 
-           s_uniID && 
+           s_fname.trim() && 
+           s_lname.trim() && 
+           s_email.trim() && 
+           s_uni.trim() && 
+           s_uniID.trim() && 
            s_password && 
            confirmPassword && 
            s_password === confirmPassword &&
@@ -288,17 +280,14 @@ function UM_HeroRegister() {
                   <label className="label py-1">
                     <span className="label-text text-sm font-medium">University*</span>
                   </label>
-                  <select
+                  <input
+                    type="text"
                     name="university"
                     value={s_uni}
                     onChange={handleInputChange}
-                    className={`select select-bordered w-full ${errors.university ? 'select-error border-red-500' : 'border-gray-300 focus:border-emerald-500'} transition-colors`}
-                  >
-                    <option value="">Select University</option>
-                    {universities.map((uni, index) => (
-                      <option key={index} value={uni}>{uni}</option>
-                    ))}
-                  </select>
+                    className={`input input-bordered w-full ${errors.university ? 'input-error border-red-500' : 'border-gray-300 focus:border-emerald-500'} transition-colors`}
+                    placeholder="Enter your university name"
+                  />
                   {errors.university && <span className="text-red-500 text-xs mt-1 flex items-center gap-1">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />

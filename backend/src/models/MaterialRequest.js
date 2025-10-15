@@ -1,3 +1,4 @@
+// SM - Material Request Model
 import mongoose from "mongoose";
 
 const materialRequestSchema = new mongoose.Schema({
@@ -21,7 +22,7 @@ const materialRequestSchema = new mongoose.Schema({
   campus: {
     type: String,
     required: [true, "Campus is required"],
-    enum: ["Malabe", "Kandy", "Matara", "Jaffna"]
+    trim: true
   },
   course: {
     type: String,
@@ -31,12 +32,12 @@ const materialRequestSchema = new mongoose.Schema({
   year: {
     type: String,
     required: [true, "Year is required"],
-    enum: ["1", "2", "3", "4"]
+    trim: true
   },
   semester: {
     type: String,
     required: [true, "Semester is required"],
-    enum: ["1", "2"]
+    trim: true
   },
   urgency: {
     type: String,

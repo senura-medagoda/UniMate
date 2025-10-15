@@ -6,7 +6,12 @@ const ProtectedAdminRoute = ({ children, requiredPermission = null }) => {
   const { isAuthenticated, hasPermission, loading } = useAdminAuth();
   const location = useLocation();
 
+  console.log('ProtectedAdminRoute - requiredPermission:', requiredPermission);
+  console.log('ProtectedAdminRoute - loading:', loading);
+  console.log('ProtectedAdminRoute - isAuthenticated:', isAuthenticated());
+
   if (loading) {
+    console.log('ProtectedAdminRoute - showing loading');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -18,10 +23,12 @@ const ProtectedAdminRoute = ({ children, requiredPermission = null }) => {
   }
 
   if (!isAuthenticated()) {
+    console.log('ProtectedAdminRoute - not authenticated, redirecting to login');
     return <Navigate to="/food/admin/login" state={{ from: location }} replace />;
   }
 
   if (requiredPermission && !hasPermission(requiredPermission)) {
+    console.log('ProtectedAdminRoute - no permission for:', requiredPermission);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -33,6 +40,7 @@ const ProtectedAdminRoute = ({ children, requiredPermission = null }) => {
     );
   }
 
+  console.log('ProtectedAdminRoute - rendering children');
   return children;
 };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Briefcase, 
@@ -16,143 +16,210 @@ import {
   Users,
   AlertCircle,
   Search,
-  Filter
+  Filter,
+  Loader2
 } from 'lucide-react';
+import { useJPAuth } from '@/context/JPAuthContext';
 
 const JPA_HeroJobs = () => {
-  const [activeTab, setActiveTab] = useState('unreviewed');
+  const [activeTab, setActiveTab] = useState('pending');
   const [searchTerm, setSearchTerm] = useState('');
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState({});
+  
+  const { makeAuthenticatedRequest } = useJPAuth();
 
-  // Sample data - unreviewed jobs
-  const unreviewedJobs = [
-    {
-      id: 1,
-      title: 'Senior React Developer',
-      company: 'Tech Solutions Inc.',
-      location: 'New York, NY',
-      salary: '$90,000 - $120,000',
-      postedDate: '2024-01-15',
-      status: 'pending',
-      postedBy: 'john@techsolutions.com',
-      description: 'We are looking for a senior React developer to join our team...'
-    },
-    {
-      id: 2,
-      title: 'UX/UI Designer',
-      company: 'Creative Studio',
-      location: 'San Francisco, CA',
-      salary: '$70,000 - $90,000',
-      postedDate: '2024-01-14',
-      status: 'pending',
-      postedBy: 'sarah@creative.com',
-      description: 'Join our design team to create beautiful user experiences...'
-    },
-    {
-      id: 3,
-      title: 'Backend Engineer',
-      company: 'Data Systems LLC',
-      location: 'Austin, TX',
-      salary: '$85,000 - $110,000',
-      postedDate: '2024-01-13',
-      status: 'pending',
-      postedBy: 'mike@datasystems.com',
-      description: 'Looking for a backend engineer to work on our data platform...'
+  // Fetch all jobs for JP Admin
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log('JPA_HeroJobs: Fetching jobs...');
+        const response = await makeAuthenticatedRequest('http://localhost:5001/api/job/admin/all');
+        console.log('JPA_HeroJobs: Response status:', response.status);
+        
+        const result = await response.json();
+        console.log('JPA_HeroJobs: Response data:', result);
+        
+        if (response.ok && result.success) {
+          console.log('JPA_HeroJobs: Setting jobs:', result.data);
+          setJobs(result.data);
+          
+          // If no jobs found, show a helpful message
+          if (result.data.length === 0) {
+            console.log('JPA_HeroJobs: No jobs found in database');
+          }
+        } else {
+          console.error('JPA_HeroJobs: API error:', result.message);
+          setError(result.message || 'Failed to fetch jobs');
+        }
+      } catch (err) {
+        console.error('JPA_HeroJobs: Error fetching jobs:', err);
+        setError(err.message || 'Failed to fetch jobs');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, [makeAuthenticatedRequest]);
+
+  // Helper function to format date
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Helper function to check if deadline has passed
+  const isDeadlinePassed = (deadline) => {
+    return new Date(deadline) < new Date();
+  };
+
+  // Categorize jobs by status
+  const pendingJobs = jobs.filter(job => job.status === 'pending');
+  const liveJobs = jobs.filter(job => job.status === 'live');
+  const archivedJobs = jobs.filter(job => job.status === 'archived' || job.status === 'rejected');
+  
+  // Debug logging
+  console.log('JPA_HeroJobs: Total jobs:', jobs.length);
+  console.log('JPA_HeroJobs: Pending jobs:', pendingJobs.length);
+  console.log('JPA_HeroJobs: Live jobs:', liveJobs.length);
+  console.log('JPA_HeroJobs: Archived jobs:', archivedJobs.length);
+  console.log('JPA_HeroJobs: All jobs:', jobs);
+
+  const handleApprove = async (jobId) => {
+    try {
+      setActionLoading(prev => ({ ...prev, [jobId]: 'approve' }));
+      
+      const response = await makeAuthenticatedRequest(`http://localhost:5001/api/job/admin/${jobId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'live' })
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        // Update the job in the local state
+        setJobs(prev => prev.map(job => 
+          job._id === jobId ? { ...job, status: 'live' } : job
+        ));
+        alert('Job approved successfully!');
+      } else {
+        alert(result.message || 'Failed to approve job');
+      }
+    } catch (error) {
+      console.error('Error approving job:', error);
+      alert('Failed to approve job. Please try again.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [jobId]: null }));
     }
-  ];
+  };
 
-  // Sample data - live jobs
-  const liveJobs = [
-    {
-      id: 101,
-      title: 'Frontend Developer',
-      company: 'Web Innovations',
-      location: 'Remote',
-      salary: '$80,000 - $100,000',
-      postedDate: '2024-01-10',
-      expiresDate: '2024-02-10',
-      status: 'live',
-      applications: 24,
-      description: 'Remote frontend developer position with flexible hours...'
-    },
-    {
-      id: 102,
-      title: 'DevOps Engineer',
-      company: 'Cloud Services',
-      location: 'Seattle, WA',
-      salary: '$100,000 - $130,000',
-      postedDate: '2024-01-08',
-      expiresDate: '2024-02-08',
-      status: 'live',
-      applications: 18,
-      description: 'DevOps engineer to manage our cloud infrastructure...'
+  const handleReject = async (jobId) => {
+    try {
+      setActionLoading(prev => ({ ...prev, [jobId]: 'reject' }));
+      
+      const response = await makeAuthenticatedRequest(`http://localhost:5001/api/job/admin/${jobId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'rejected' })
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        // Update the job in the local state
+        setJobs(prev => prev.map(job => 
+          job._id === jobId ? { ...job, status: 'rejected' } : job
+        ));
+        alert('Job rejected successfully!');
+      } else {
+        alert(result.message || 'Failed to reject job');
+      }
+    } catch (error) {
+      console.error('Error rejecting job:', error);
+      alert('Failed to reject job. Please try again.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [jobId]: null }));
     }
-  ];
+  };
 
-  // Sample data - old jobs
-  const oldJobs = [
-    {
-      id: 201,
-      title: 'Junior Developer',
-      company: 'Startup Co',
-      location: 'Boston, MA',
-      salary: '$60,000 - $75,000',
-      postedDate: '2023-12-01',
-      expiredDate: '2023-12-31',
-      status: 'expired',
-      applications: 15,
-      description: 'Entry-level developer position for recent graduates...'
-    },
-    {
-      id: 202,
-      title: 'Product Manager',
-      company: 'Tech Growth',
-      location: 'Chicago, IL',
-      salary: '$95,000 - $120,000',
-      postedDate: '2023-11-20',
-      expiredDate: '2023-12-20',
-      status: 'expired',
-      applications: 32,
-      description: 'Product manager to lead our product development team...'
+  const handleDelete = async (jobId) => {
+    if (!window.confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+      return;
     }
-  ];
-
-  const handleApprove = (jobId) => {
-    console.log('Approving job:', jobId);
-    // API call to approve job
+    
+    try {
+      setActionLoading(prev => ({ ...prev, [jobId]: 'delete' }));
+      
+      const response = await makeAuthenticatedRequest(`http://localhost:5001/api/job/admin/${jobId}`, {
+        method: 'DELETE'
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        // Remove the job from the local state
+        setJobs(prev => prev.filter(job => job._id !== jobId));
+        alert('Job deleted successfully!');
+      } else {
+        alert(result.message || 'Failed to delete job');
+      }
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      alert('Failed to delete job. Please try again.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [jobId]: null }));
+    }
   };
 
-  const handleReject = (jobId) => {
-    console.log('Rejecting job:', jobId);
-    // API call to reject job
-  };
-
-  const handleEdit = (jobId) => {
-    console.log('Editing job:', jobId);
-    // Navigate to edit page
-  };
-
-  const handleDelete = (jobId) => {
-    console.log('Deleting job:', jobId);
-    // API call to delete job
-  };
-
-  const handleRepost = (jobId) => {
-    console.log('Reposting job:', jobId);
-    // API call to repost job
+  const handleRepost = async (jobId) => {
+    try {
+      setActionLoading(prev => ({ ...prev, [jobId]: 'repost' }));
+      
+      const response = await makeAuthenticatedRequest(`http://localhost:5001/api/job/admin/${jobId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'live' })
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        // Update the job in the local state
+        setJobs(prev => prev.map(job => 
+          job._id === jobId ? { ...job, status: 'live' } : job
+        ));
+        alert('Job reposted successfully!');
+      } else {
+        alert(result.message || 'Failed to repost job');
+      }
+    } catch (error) {
+      console.error('Error reposting job:', error);
+      alert('Failed to repost job. Please try again.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [jobId]: null }));
+    }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
       case 'live': return 'bg-green-100 text-green-800 border-green-200'
-      case 'expired': return 'bg-gray-100 text-gray-800 border-gray-200'
+      case 'rejected': return 'bg-red-100 text-red-800 border-red-200'
+      case 'archived': return 'bg-gray-100 text-gray-800 border-gray-200'
       default: return 'bg-gray-100 text-gray-800 border-gray-200'
     }
   };
 
   const renderJobCard = (job, type) => (
     <motion.div 
-      key={job.id} 
+      key={job._id} 
       className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6 hover:shadow-xl transition-all duration-300"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -167,7 +234,7 @@ const JPA_HeroJobs = () => {
             <div className="flex-1">
               <h3 className="text-xl font-bold text-gray-900 mb-2">{job.title}</h3>
               <p className="text-gray-600 mb-2 flex items-center gap-2">
-                <span className="font-medium">{job.company}</span>
+                <span className="font-medium">{job.department}</span>
                 <span className="text-gray-400">•</span>
                 <span className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
@@ -176,7 +243,7 @@ const JPA_HeroJobs = () => {
               </p>
               <p className="text-green-600 font-semibold mb-2 flex items-center gap-1">
                 <DollarSign className="w-4 h-4" />
-                {job.salary}
+                {job.compensation || 'Not specified'}
               </p>
             </div>
           </div>
@@ -188,13 +255,14 @@ const JPA_HeroJobs = () => {
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(job.status)}`}>
             {job.status === 'pending' && <Clock className="w-4 h-4 mr-1" />}
             {job.status === 'live' && <CheckCircle className="w-4 h-4 mr-1" />}
-            {job.status === 'expired' && <XCircle className="w-4 h-4 mr-1" />}
+            {job.status === 'rejected' && <XCircle className="w-4 h-4 mr-1" />}
+            {job.status === 'archived' && <XCircle className="w-4 h-4 mr-1" />}
             {job.status}
           </span>
           {type === 'live' && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
               <Users className="w-4 h-4 mr-1" />
-              {job.applications} applications
+              0 applications
             </span>
           )}
         </div>
@@ -203,110 +271,104 @@ const JPA_HeroJobs = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm text-gray-600">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4" />
-          <span><strong>Posted:</strong> {job.postedDate}</span>
+          <span><strong>Posted:</strong> {formatDate(job.createdAt)}</span>
         </div>
-        {job.expiresDate && (
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            <span><strong>Expires:</strong> {job.expiresDate}</span>
-          </div>
-        )}
-        {job.expiredDate && (
-          <div className="flex items-center gap-2">
-            <XCircle className="w-4 h-4" />
-            <span><strong>Expired:</strong> {job.expiredDate}</span>
-          </div>
-        )}
-        {job.postedBy && (
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4" />
+          <span><strong>Deadline:</strong> {formatDate(job.deadline)}</span>
+        </div>
+        {job.postedby && (
           <div className="flex items-center gap-2">
             <User className="w-4 h-4" />
-            <span><strong>Posted by:</strong> {job.postedBy}</span>
+            <span><strong>Posted by:</strong> {job.postedby}</span>
           </div>
         )}
+        <div className="flex items-center gap-2">
+          <Briefcase className="w-4 h-4" />
+          <span><strong>Type:</strong> {job.jobtype}</span>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3">
-        {type === 'unreviewed' && (
+        {type === 'pending' && (
           <>
             <motion.button
-              onClick={() => handleReject(job.id)}
-              className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              onClick={() => handleReject(job._id)}
+              disabled={actionLoading[job._id]}
+              className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: actionLoading[job._id] ? 1 : 1.02 }}
+              whileTap={{ scale: actionLoading[job._id] ? 1 : 0.98 }}
             >
-              <XCircle className="w-4 h-4" />
+              {actionLoading[job._id] === 'reject' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <XCircle className="w-4 h-4" />
+              )}
               Reject
             </motion.button>
             <motion.button
-              onClick={() => handleApprove(job.id)}
-              className="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              onClick={() => handleApprove(job._id)}
+              disabled={actionLoading[job._id]}
+              className="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: actionLoading[job._id] ? 1 : 1.02 }}
+              whileTap={{ scale: actionLoading[job._id] ? 1 : 0.98 }}
             >
-              <CheckCircle className="w-4 h-4" />
+              {actionLoading[job._id] === 'approve' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CheckCircle className="w-4 h-4" />
+              )}
               Approve
             </motion.button>
             <motion.button
-              onClick={() => handleEdit(job.id)}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              onClick={() => handleDelete(job._id)}
+              disabled={actionLoading[job._id]}
+              className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: actionLoading[job._id] ? 1 : 1.02 }}
+              whileTap={{ scale: actionLoading[job._id] ? 1 : 0.98 }}
             >
-              <Edit className="w-4 h-4" />
-              Edit
+              {actionLoading[job._id] === 'delete' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              Delete
             </motion.button>
           </>
         )}
         {type === 'live' && (
           <>
             <motion.button
-              onClick={() => handleEdit(job.id)}
-              className="px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              onClick={() => handleDelete(job._id)}
+              disabled={actionLoading[job._id]}
+              className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: actionLoading[job._id] ? 1 : 1.02 }}
+              whileTap={{ scale: actionLoading[job._id] ? 1 : 0.98 }}
             >
-              <Edit className="w-4 h-4" />
-              Edit
-            </motion.button>
-            <motion.button
-              onClick={() => handleDelete(job.id)}
-              className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Trash2 className="w-4 h-4" />
+              {actionLoading[job._id] === 'delete' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
               Delete
             </motion.button>
           </>
         )}
-        {type === 'old' && (
+        {type === 'archived' && (
           <>
             <motion.button
-              onClick={() => handleRepost(job.id)}
-              className="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              onClick={() => handleRepost(job._id)}
+              disabled={actionLoading[job._id]}
+              className="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: actionLoading[job._id] ? 1 : 1.02 }}
+              whileTap={{ scale: actionLoading[job._id] ? 1 : 0.98 }}
             >
-              <RotateCcw className="w-4 h-4" />
+              {actionLoading[job._id] === 'repost' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RotateCcw className="w-4 h-4" />
+              )}
               Repost
-            </motion.button>
-            <motion.button
-              onClick={() => handleDelete(job.id)}
-              className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Trash2 className="w-4 h-4" />
-              Delete
-            </motion.button>
-            <motion.button
-              onClick={() => handleEdit(job.id)}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Eye className="w-4 h-4" />
-              View Details
             </motion.button>
           </>
         )}
@@ -316,17 +378,18 @@ const JPA_HeroJobs = () => {
 
   const getCurrentJobs = () => {
     switch (activeTab) {
-      case 'unreviewed': return unreviewedJobs;
+      case 'pending': return pendingJobs;
       case 'live': return liveJobs;
-      case 'old': return oldJobs;
+      case 'archived': return archivedJobs;
       default: return [];
     }
   };
 
   const filteredJobs = getCurrentJobs().filter(job =>
     job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.location.toLowerCase().includes(searchTerm.toLowerCase())
+    job.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    job.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    job.postedby.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -361,21 +424,21 @@ const JPA_HeroJobs = () => {
             <div className="p-3 rounded-xl bg-yellow-100 mx-auto mb-4 w-fit">
               <Clock className="w-8 h-8 text-yellow-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-2">{unreviewedJobs.length}</div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{loading ? '...' : pendingJobs.length}</div>
             <div className="text-gray-600 font-medium">Pending Review</div>
           </div>
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 text-center hover:shadow-xl transition-all duration-300">
             <div className="p-3 rounded-xl bg-green-100 mx-auto mb-4 w-fit">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-2">{liveJobs.length}</div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{loading ? '...' : liveJobs.length}</div>
             <div className="text-gray-600 font-medium">Live Listings</div>
           </div>
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 text-center hover:shadow-xl transition-all duration-300">
             <div className="p-3 rounded-xl bg-gray-100 mx-auto mb-4 w-fit">
               <Briefcase className="w-8 h-8 text-gray-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-2">{oldJobs.length}</div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{loading ? '...' : archivedJobs.length}</div>
             <div className="text-gray-600 font-medium">Archived Jobs</div>
           </div>
         </motion.div>
@@ -414,9 +477,9 @@ const JPA_HeroJobs = () => {
         >
           <div className="flex flex-wrap gap-2">
             {[
-              { key: 'unreviewed', label: 'Pending Review', icon: <Clock className="w-4 h-4" />, count: unreviewedJobs.length },
+              { key: 'pending', label: 'Pending Review', icon: <Clock className="w-4 h-4" />, count: pendingJobs.length },
               { key: 'live', label: 'Live Listings', icon: <CheckCircle className="w-4 h-4" />, count: liveJobs.length },
-              { key: 'old', label: 'Archived', icon: <Briefcase className="w-4 h-4" />, count: oldJobs.length }
+              { key: 'archived', label: 'Archived', icon: <Briefcase className="w-4 h-4" />, count: archivedJobs.length }
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -450,17 +513,39 @@ const JPA_HeroJobs = () => {
         >
           <div className="p-6 border-b border-gray-100">
             <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-              {activeTab === 'unreviewed' && <Clock className="w-6 h-6 text-yellow-600" />}
+              {activeTab === 'pending' && <Clock className="w-6 h-6 text-yellow-600" />}
               {activeTab === 'live' && <CheckCircle className="w-6 h-6 text-green-600" />}
-              {activeTab === 'old' && <Briefcase className="w-6 h-6 text-gray-600" />}
-              {activeTab === 'unreviewed' && 'Jobs Pending Review'}
+              {activeTab === 'archived' && <Briefcase className="w-6 h-6 text-gray-600" />}
+              {activeTab === 'pending' && 'Jobs Pending Review'}
               {activeTab === 'live' && 'Live Job Listings'}
-              {activeTab === 'old' && 'Archived Job Listings'}
+              {activeTab === 'archived' && 'Archived Job Listings'}
             </h2>
           </div>
           
           <div className="p-6">
-            {filteredJobs.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="p-4 rounded-full bg-blue-100 w-fit mx-auto mb-4">
+                  <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Loading jobs...</h3>
+                <p className="text-gray-600">Please wait while we fetch the job listings</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <div className="p-4 rounded-full bg-red-100 w-fit mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8 text-red-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Error loading jobs</h3>
+                <p className="text-gray-600 mb-4">{error}</p>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : filteredJobs.length > 0 ? (
               filteredJobs.map(job => renderJobCard(job, activeTab))
             ) : (
               <div className="text-center py-12">
@@ -468,9 +553,19 @@ const JPA_HeroJobs = () => {
                   <AlertCircle className="w-8 h-8 text-gray-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No jobs found</h3>
-                <p className="text-gray-600">
-                  {searchTerm ? 'Try adjusting your search terms' : `No ${activeTab} jobs at the moment`}
+                <p className="text-gray-600 mb-4">
+                  {searchTerm ? 'Try adjusting your search terms' : 
+                   jobs.length === 0 ? 
+                   'No jobs have been posted yet. Hiring Managers need to create job postings first.' :
+                   `No ${activeTab} jobs at the moment`}
                 </p>
+                {jobs.length === 0 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                    <p className="text-blue-800 text-sm">
+                      <strong>Tip:</strong> To see jobs here, Hiring Managers need to create job postings through their dashboard.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

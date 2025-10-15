@@ -27,7 +27,7 @@ const VendorNavbar = () => {
         
           <div className="flex items-center">
             <Link to="/vendor/dashboard" className="flex items-center">
-              <img className="h-8 sm:h-9 md:h-10 lg:h-11 transition-all duration-300" src={logo} alt="logo" />
+              <img className="h-7 sm:h-9 md:h-10 lg:h-8 transition-all duration-300" src={logo} alt="logo" />
             </Link>
           </div>
 

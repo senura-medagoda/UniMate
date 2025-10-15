@@ -36,15 +36,19 @@ const OwnerLogin = () => {
     setLoading(true);
     try {
       console.log('OwnerLogin: Calling loginOwner function...');
-      const success = await loginOwner(email, password);
-      console.log('OwnerLogin: loginOwner result:', success);
+      const result = await loginOwner(email, password);
+      console.log('OwnerLogin: loginOwner result:', result);
       
-      if (success) {
+      if (result === true || (result && result.success)) {
         const from = location.state?.from?.pathname || '/owner/dashboard';
         console.log('OwnerLogin: Navigating to:', from);
         navigate(from, { replace: true });
+      } else if (result && result.status === 'pending') {
+        // Redirect to pending approval page
+        console.log('OwnerLogin: Redirecting to pending approval page');
+        navigate('/owner/pending-approval', { replace: true });
       } else {
-        console.log('OwnerLogin: Login failed, success was false');
+        console.log('OwnerLogin: Login failed, result:', result);
       }
     } catch (error) {
       console.error('OwnerLogin: Login error:', error);

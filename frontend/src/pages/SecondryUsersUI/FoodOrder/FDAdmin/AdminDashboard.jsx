@@ -92,14 +92,14 @@ const AdminDashboard = () => {
               title="Total Vendors"
               value={stats.totalVendors || 0}
               change={`+${stats.activeVendors || 0} active`}
-              icon="👥"
+              icon="👨‍🍳"
               color="orange"
             />
             <StatsCard
               title="Active Vendors"
               value={stats.activeVendors || 0}
               change={`${(stats.totalVendors || 0) > 0 ? Math.round(((stats.activeVendors || 0) / (stats.totalVendors || 1)) * 100) : 0}% of total`}
-              icon="✅"
+              icon="✔️"
               color="green"
             />
             <StatsCard

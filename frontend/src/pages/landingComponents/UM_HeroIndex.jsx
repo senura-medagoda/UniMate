@@ -97,7 +97,7 @@ const UM_HeroIndex = () => {
               transition={{ duration: 0.8, delay: 0.6 }}
             >
               <Link 
-                to="/join" 
+                to="/stdregister" 
                 className="group inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
               >
                 Get Started
@@ -150,7 +150,7 @@ const UM_HeroIndex = () => {
               >
                 <div className="relative overflow-hidden rounded-2xl shadow-2xl">
                   <img 
-                    src="/src/pages/landingComponents/Images/std_img1.jpg" 
+                    src="/images/std_img1.jpg" 
                     alt="Students studying together"
                     className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
                   />
@@ -173,7 +173,7 @@ const UM_HeroIndex = () => {
               >
                 <div className="relative overflow-hidden rounded-2xl shadow-xl">
                   <img 
-                    src="/src/pages/landingComponents/Images/std_img2.jpg" 
+                    src="/images/std_img2.jpg" 
                     alt="Student accommodation"
                     className="w-full h-24 object-cover group-hover:scale-110 transition-transform duration-500"
                   />
@@ -217,7 +217,7 @@ const UM_HeroIndex = () => {
               >
                 <div className="relative overflow-hidden rounded-2xl shadow-xl">
                   <img 
-                    src="/src/pages/landingComponents/Images/std_img3.jpg" 
+                    src="/images/std_img3.jpg" 
                     alt="Students in campus life"
                     className="w-full h-20 object-cover group-hover:scale-110 transition-transform duration-500"
                   />

@@ -131,6 +131,7 @@ console.log('User _ID:', user?._id);
               </div>
             </Link>
 
+
             <Link
               to="/student/accommodation/services"
               className={`px-4 xl:px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${

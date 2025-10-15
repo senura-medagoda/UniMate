@@ -308,11 +308,11 @@ const M_Analytics = () => {
     <div className="min-h-screen bg-gray-50">
       <Admin_Navbar />
       <div className="flex">
-        <div className="w-64 bg-white shadow-sm border-r border-gray-200">
-          <M_SIdebar />
-        </div>
+        {/* Fixed Sidebar */}
+        <M_SIdebar />
 
-        <div className="flex-1 p-6">
+        {/* Main Content with left margin for fixed sidebar */}
+        <div className="flex-1 lg:ml-64 p-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">Sales Analytics</h1>
             <div className="flex items-center gap-2">

@@ -126,7 +126,7 @@ const MyBookingsPage = ({ user, setUser }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AccommodationNavbar />
+      <AccommodationNavbar user={user} setUser={setUser} />
       
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
@@ -185,16 +185,6 @@ const MyBookingsPage = ({ user, setUser }) => {
               }`}
             >
               Pending ({validBookings.filter(b => b.status === 'pending').length})
-            </button>
-            <button
-              onClick={() => setFilter('confirmed')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                filter === 'confirmed'
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Confirmed ({validBookings.filter(b => b.status === 'confirmed').length})
             </button>
             <button
               onClick={() => setFilter('cancelled')}

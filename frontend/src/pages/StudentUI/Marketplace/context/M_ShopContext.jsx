@@ -14,6 +14,7 @@ import { useNavigate } from "react-router";
     const [search,setSearch] =useState('');
     const [showSearch,setShowSearch] = useState(false);
     const [cartItems,setCartItem] =useState ({});
+    const [favorites, setFavorites] = useState([]);
     const navigate= useNavigate();
     const [token,setToken] = useState('');
     const [products,setProducts] =useState([]);
@@ -30,6 +31,28 @@ import { useNavigate } from "react-router";
         } catch (error) {
             console.error('Error saving cart to localStorage:', error);
         }
+    };
+
+    // Save favorites to localStorage
+    const saveFavoritesToStorage = (favoritesData) => {
+        try {
+            localStorage.setItem('marketplaceFavorites', JSON.stringify(favoritesData));
+        } catch (error) {
+            console.error('Error saving favorites to localStorage:', error);
+        }
+    };
+
+    // Load favorites from localStorage
+    const loadFavoritesFromStorage = () => {
+        try {
+            const savedFavorites = localStorage.getItem('marketplaceFavorites');
+            if (savedFavorites) {
+                return JSON.parse(savedFavorites);
+            }
+        } catch (error) {
+            console.error('Error loading favorites from localStorage:', error);
+        }
+        return [];
     };
 
     // Load cart from localStorage
@@ -173,6 +196,92 @@ import { useNavigate } from "react-router";
         return totalAmount;
     }
 
+    // Clear entire cart
+    const clearCart = () => {
+        // Clear localStorage first
+        localStorage.removeItem('marketplaceCart');
+        // Clear context state
+        setCartItem({});
+        // Force a small delay to ensure state updates
+        setTimeout(() => {
+            setCartItem({});
+        }, 50);
+        toast.success('Cart cleared successfully!');
+    }
+
+    // Force refresh cart state
+    const refreshCart = () => {
+        const savedCart = loadCartFromStorage();
+        setCartItem(savedCart);
+    }
+
+    // Add to favorites
+    const addToFavorites = async (productId) => {
+        const product = products.find(p => p._id === productId);
+        if (!product) {
+            toast.error('Product not found');
+            return;
+        }
+
+        if (favorites.includes(productId)) {
+            toast.info('Product is already in favorites');
+            return;
+        }
+
+        const newFavorites = [...favorites, productId];
+        setFavorites(newFavorites);
+        saveFavoritesToStorage(newFavorites);
+
+        const studentToken = getStudentToken();
+        if (studentToken) {
+            try {
+                await axios.post('http://localhost:5001/api/favorites/MU_add', { productId }, { headers: { token: studentToken } });
+                toast.success(`❤️ ${product.name} added to favorites!`);
+            } catch (error) {
+                console.log('Favorites API not available, using local favorites:', error.message);
+                toast.success(`❤️ ${product.name} added to favorites!`);
+            }
+        } else {
+            toast.success(`❤️ ${product.name} added to favorites!`);
+        }
+    };
+
+    // Remove from favorites
+    const removeFromFavorites = async (productId) => {
+        const product = products.find(p => p._id === productId);
+        if (!product) {
+            toast.error('Product not found');
+            return;
+        }
+
+        const newFavorites = favorites.filter(id => id !== productId);
+        setFavorites(newFavorites);
+        saveFavoritesToStorage(newFavorites);
+
+        const studentToken = getStudentToken();
+        if (studentToken) {
+            try {
+                await axios.post('http://localhost:5001/api/favorites/MU_remove', { productId }, { headers: { token: studentToken } });
+                toast.success(`💔 ${product.name} removed from favorites`);
+            } catch (error) {
+                console.log('Favorites API not available, using local favorites:', error.message);
+                toast.success(`💔 ${product.name} removed from favorites`);
+            }
+        } else {
+            toast.success(`💔 ${product.name} removed from favorites`);
+        }
+    };
+
+    // Check if product is in favorites
+    const isFavorite = (productId) => {
+        return favorites.includes(productId);
+    };
+
+    // Get favorites count
+    const getFavoritesCount = () => {
+        return favorites.length;
+    };
+
     const getProductsData =async ()=>{
 
         try {
@@ -234,13 +343,34 @@ import { useNavigate } from "react-router";
                 console.log('Loaded cart from localStorage:', savedCart);
             }
         }
+
+        // Load favorites from localStorage
+        const savedFavorites = loadFavoritesFromStorage();
+        if (savedFavorites.length > 0) {
+            setFavorites(savedFavorites);
+            console.log('Loaded favorites from localStorage:', savedFavorites);
+        }
     },[])
+
+    // Listen for storage changes to sync cart across tabs
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === 'marketplaceCart') {
+                const newCart = e.newValue ? JSON.parse(e.newValue) : {};
+                setCartItem(newCart);
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     const value ={
         products,currency,delivery_fee,
         search,setSearch,showSearch,setShowSearch,
-        cartItems,addToCart,getCartCount,updateQuantity,getCartAmount,navigate,
-        setToken,token: getStudentToken(),setCartItem
+        cartItems,addToCart,getCartCount,updateQuantity,getCartAmount,clearCart,refreshCart,navigate,
+        setToken,token: getStudentToken(),setCartItem,
+        favorites,addToFavorites,removeFromFavorites,isFavorite,getFavoritesCount
 
 
     }

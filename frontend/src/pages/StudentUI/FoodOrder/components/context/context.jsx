@@ -77,19 +77,19 @@ export const AppContextProvider = ({ children, user: propUser, setUser: propSetU
       
       const response = await makeAuthenticatedRequest('http://localhost:5001/api/shop/all');
       const data = await response.json();
+      console.log('API Response:', data);
       
       if (data.success) {
         // Handle different response formats
         if (Array.isArray(data.data)) {
           setShops(data.data);
-          console.log("🏪 Fetched shops from database:", data.data);
         } else if (data.data && Array.isArray(data.data.shops)) {
           setShops(data.data.shops);
-          console.log("🏪 Fetched shops from database:", data.data.shops);
         } else {
           console.warn("Invalid shops data format:", data);
           // Keep the fallback data if API returns invalid format
         }
+        console.log('Shops loaded successfully:', data.data?.shops?.length || 0);
       } else {
         setError(data.message || "Failed to load shops");
         console.error("API Error:", data.message);
@@ -108,21 +108,25 @@ export const AppContextProvider = ({ children, user: propUser, setUser: propSetU
       setIsLoading(true);
       setError(null);
       
+      console.log('Fetching menu items...');
       const response = await makeAuthenticatedRequest(`http://localhost:5001/api/menu/all?page=${page}&limit=${limit}`);
       const data = await response.json();
+      console.log('Menu items response:', data);
+      
       if (data.success) {
+        console.log('Menu items loaded successfully:', data.data?.length || 0);
         if (page === 1) {
-          setMenuItems(data.data);
+          setMenuItems(data.data || []);
         } else {
           // For pagination, don't modify the global menuItems state
           // Let the component handle the pagination
         }
-        console.log("📋 Fetched menu items from database:", data.data);
         return {
-          items: data.data,
+          items: data.data || [],
           pagination: data.pagination
         };
       } else {
+        console.error('Failed to load menu items:', data.message);
         setError(data.message || "Failed to load menu items");
         return null;
       }
@@ -131,7 +135,8 @@ export const AppContextProvider = ({ children, user: propUser, setUser: propSetU
       setError("Failed to load menu items");
       // Set some dummy data for development
       if (page === 1) {
-        setMenuItems([
+        console.log('Using fallback menu items');
+        const fallbackItems = [
           {
             _id: '1',
             name: 'Chicken Wings',
@@ -180,7 +185,12 @@ export const AppContextProvider = ({ children, user: propUser, setUser: propSetU
             preparationTime: 10,
             calories: 200
           }
-        ]);
+        ];
+        setMenuItems(fallbackItems);
+        return {
+          items: fallbackItems,
+          pagination: null
+        };
       }
       return null;
     } finally {
@@ -282,7 +292,7 @@ export const AppContextProvider = ({ children, user: propUser, setUser: propSetU
 
   // Get user token
   const getUserToken = () => {
-    return user?.token || null;
+    return user?.token || localStorage.getItem('studentToken');
   };
 
   // Make authenticated API call
@@ -292,49 +302,158 @@ export const AppContextProvider = ({ children, user: propUser, setUser: propSetU
       ...options.headers,
     };
     
-    // Add authorization header if user token is available
-    if (user && user.token) {
-      headers['Authorization'] = `Bearer ${user.token}`;
+    // Get token from user object or localStorage
+    const token = user?.token || localStorage.getItem('studentToken');
+    
+    console.log('makeAuthenticatedRequest called with:', {
+      url,
+      method: options.method,
+      hasToken: !!token,
+      user: user?._id || user?.id,
+      tokenLength: token?.length || 0
+    });
+    
+    // Add authorization header if token is available
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      console.warn('No authentication token found');
     }
     
-    return fetch(url, {
+    console.log('Request headers:', headers);
+    console.log('Request options:', options);
+    
+    const response = await fetch(url, {
       ...options,
       headers,
     });
+    
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+    
+    return response;
   };
 
   // Place order with user authentication
   const placeOrder = async (orderData) => {
     try {
-      if (!user || !user.token) {
+      // Check if user is authenticated (either from context or localStorage)
+      const token = user?.token || localStorage.getItem('studentToken');
+      const userId = user?._id || user?.id || JSON.parse(localStorage.getItem('studentUser') || '{}')._id;
+      
+      if (!token || !userId) {
         toastError('Please log in to place an order');
         return { success: false, message: 'User not authenticated' };
       }
 
-      const response = await makeAuthenticatedRequest('http://localhost:5001/api/orders/create', {
-        method: 'POST',
-        body: JSON.stringify({
-          ...orderData,
-          userId: user._id || user.id,
-          userEmail: user.email,
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        toastSuccess('Order placed successfully!');
-        // Clear cart after successful order
-        clearCart();
-        return { success: true, data: data.data };
-      } else {
-        toastError(data.message || 'Failed to place order');
-        return { success: false, message: data.message };
+      // Prevent multiple simultaneous order submissions
+      if (window.orderInProgress) {
+        toastError('Order is already being processed. Please wait...');
+        return { success: false, message: 'Order in progress' };
       }
+      window.orderInProgress = true;
+
+      console.log('placeOrder called with orderData:', orderData);
+      console.log('User ID:', userId);
+      console.log('Token available:', !!token);
+
+      // Validate order data
+      if (!orderData.items || orderData.items.length === 0) {
+        console.error('No items in order data');
+        toastError('No items in cart. Please add items before placing order.');
+        return { success: false, message: 'No items in cart' };
+      }
+
+      if (!orderData.totalAmount || orderData.totalAmount <= 0) {
+        console.error('Invalid total amount:', orderData.totalAmount);
+        toastError('Invalid order total. Please try again.');
+        return { success: false, message: 'Invalid order total' };
+      }
+
+      if (!orderData.deliveryAddress) {
+        console.error('No delivery address provided');
+        toastError('Please provide a delivery address.');
+        return { success: false, message: 'No delivery address' };
+      }
+
+      // Generate a unique clientOrderKey for each order attempt
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 15);
+      const clientOrderKey = `${userId}-${timestamp}-${randomId}`;
+
+      // Fix the payload structure to match backend expectations
+      const payload = {
+        foodItems: orderData.items?.map(it => ({
+          foodItemId: it._id,
+          name: it.name,
+          quantity: it.quantity,
+          price: it.price,
+        })) || [],
+        totalAmount: orderData.totalAmount,
+        address: orderData.deliveryAddress,
+        clientOrderKey: clientOrderKey,
+      };
+
+      console.log('Order payload:', payload);
+      console.log('Payment method:', orderData.paymentMethod);
+
+      if (orderData.paymentMethod === 'COD') {
+        console.log('Processing COD order...');
+        try {
+          const resp = await makeAuthenticatedRequest('http://localhost:5001/api/orders/cod', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          });
+          
+          console.log('COD order response status:', resp.status);
+          const data = await resp.json();
+          console.log('COD order response data:', data);
+          
+          if (data.success) {
+            console.log('COD order created successfully:', data.order);
+            toastSuccess('Order placed successfully!');
+            clearCart();
+            try { localStorage.removeItem('marketplaceCart'); } catch {}
+            navigate('/student/my-orders');
+            return { success: true, data: data.order };
+          } else {
+            console.error('COD order failed:', data.message);
+            toastError(data.message || 'Failed to place order');
+            return { success: false, message: data.message };
+          }
+        } catch (error) {
+          console.error('COD order request failed:', error);
+          toastError('Failed to place order. Please try again.');
+          return { success: false, message: 'Network error' };
+        }
+      }
+
+      // Online payment - create Stripe session
+      console.log('Creating Stripe session with payload:', payload);
+      const resp = await makeAuthenticatedRequest('http://localhost:5001/api/orders/stripe/create-session', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      console.log('Stripe session response status:', resp.status);
+      const data = await resp.json();
+      console.log('Stripe session response data:', data);
+      
+      if (data.success && data.url) {
+        console.log('Stripe session created successfully, redirecting to:', data.url);
+        // Persist info for success finalization if needed
+        sessionStorage.setItem('lastOrderPayload', JSON.stringify(payload));
+        window.location.href = data.url;
+        return { success: true };
+      }
+      console.error('Stripe session creation failed:', data.message);
+      toastError(data.message || 'Failed to initiate payment');
+      return { success: false, message: data.message };
     } catch (error) {
       console.error('Error placing order:', error);
       toastError('Failed to place order. Please try again.');
       return { success: false, message: 'Network error' };
+    } finally {
+      window.orderInProgress = false;
     }
   };
 

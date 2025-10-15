@@ -5,6 +5,7 @@ export { default as VendorsManagement } from './VendorsManagement';
 export { default as ShopsManagement } from './ShopsManagement';
 export { default as Analytics } from './Analytics';
 export { default as ProfileSettings } from './ProfileSettings';
+export { default as OrdersManagement } from './OrdersManagement';
 
 // Admin Components
 export { default as AdminNavbar } from './components/AdminNavbar';

@@ -20,8 +20,8 @@ const submitResellRequest = async (req, res) => {
 
         // Handle image uploads if any
         let imagesUrl = [];
-        if (req.files && Object.keys(req.files).length > 0) {
-            const imageFiles = Object.values(req.files).flat();
+        if (req.files && req.files.length > 0) {
+            const imageFiles = req.files;
             
             try {
                 // Try to upload to Cloudinary first
@@ -179,6 +179,76 @@ const rejectResellRequest = async (req, res) => {
     }
 };
 
+// Delete resell request (admin only)
+const deleteResellRequest = async (req, res) => {
+    try {
+        const { requestId } = req.params;
+        
+        const request = await resellRequestModel.findById(requestId);
+        if (!request) {
+            return res.json({ success: false, message: "Request not found" });
+        }
+
+        // Only allow deletion of rejected requests
+        if (request.status !== 'rejected') {
+            return res.json({ 
+                success: false, 
+                message: "Only rejected requests can be deleted" 
+            });
+        }
+
+        await resellRequestModel.findByIdAndDelete(requestId);
+
+        res.json({ 
+            success: true, 
+            message: "Resell request deleted successfully" 
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Delete resell request by user (user can delete their own requests)
+const deleteUserResellRequest = async (req, res) => {
+    try {
+        const { requestId } = req.params;
+        const { userId } = req.body;
+        
+        if (!userId) {
+            return res.json({ success: false, message: "User ID is required" });
+        }
+        
+        const request = await resellRequestModel.findById(requestId);
+        if (!request) {
+            return res.json({ success: false, message: "Request not found" });
+        }
+
+        // Check if the user owns this request
+        if (request.userId !== userId) {
+            return res.json({ 
+                success: false, 
+                message: "You can only delete your own requests" 
+            });
+        }
+
+        // Allow deletion of all request statuses (pending, approved, rejected)
+        // Users should be able to delete their own requests regardless of status
+
+        await resellRequestModel.findByIdAndDelete(requestId);
+
+        res.json({ 
+            success: true, 
+            message: "Resell request deleted successfully" 
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 // Get all resell items
 const getAllResellItems = async (req, res) => {
     try {
@@ -229,13 +299,53 @@ const markItemAsSold = async (req, res) => {
     }
 };
 
+// Delete resell item
+const deleteResellItem = async (req, res) => {
+    try {
+        const { itemId } = req.params;
+        const adminToken = req.headers.token;
+
+        if (!adminToken) {
+            return res.status(401).json({ success: false, message: 'Admin token required' });
+        }
+
+        // Find and delete the item
+        const deletedItem = await resellItemModel.findByIdAndDelete(itemId);
+
+        if (!deletedItem) {
+            return res.status(404).json({ success: false, message: 'Resell item not found' });
+        }
+
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Resell item deleted successfully',
+            deletedItem: {
+                id: deletedItem._id,
+                itemName: deletedItem.itemName,
+                price: deletedItem.price
+            }
+        });
+
+    } catch (error) {
+        console.error('Error deleting resell item:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Failed to delete resell item',
+            error: error.message 
+        });
+    }
+};
+
 export { 
     submitResellRequest, 
     getAllResellRequests, 
     getUserResellRequests,
     approveResellRequest, 
-    rejectResellRequest, 
+    rejectResellRequest,
+    deleteResellRequest,
+    deleteUserResellRequest,
     getAllResellItems,
     getResellItemsByCategory,
-    markItemAsSold
+    markItemAsSold,
+    deleteResellItem
 };

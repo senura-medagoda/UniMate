@@ -14,6 +14,19 @@ const VendorsManagement = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [vendorToDelete, setVendorToDelete] = useState(null);
+  const [newVendor, setNewVendor] = useState({
+    businessName: '',
+    ownerName: '',
+    email: '',
+    phone: '',
+    address: '',
+    businessLicense: ''
+  });
+  const [validationErrors, setValidationErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchVendors();
@@ -146,6 +159,142 @@ const VendorsManagement = () => {
     }
   };
 
+  const deleteVendor = async (vendorId) => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/food-admin/vendors/${vendorId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        toastSuccess('Vendor deleted successfully');
+        fetchVendors(); // Refresh the list
+        setShowDeleteModal(false);
+        setVendorToDelete(null);
+      } else {
+        const error = await response.json();
+        toastError(error.message || 'Failed to delete vendor');
+      }
+    } catch (error) {
+      console.error('Error deleting vendor:', error);
+      toastError('Failed to delete vendor');
+    }
+  };
+
+  const addVendor = async () => {
+    // Validate form before submission
+    if (!validateForm()) {
+      toastError('Please correct the errors in the form');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      console.log('Sending vendor data:', newVendor);
+      console.log('Admin token:', localStorage.getItem('adminToken'));
+      
+      const response = await fetch('http://localhost:5001/api/food-admin/vendors', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newVendor)
+      });
+      
+      console.log('Response status:', response.status);
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
+
+      if (response.ok) {
+        toastSuccess('Vendor added successfully');
+        fetchVendors(); // Refresh the list
+        setShowAddModal(false);
+        setNewVendor({
+          businessName: '',
+          ownerName: '',
+          email: '',
+          phone: '',
+          address: '',
+          businessLicense: ''
+        });
+        setValidationErrors({}); // Clear validation errors
+      } else {
+        toastError(responseData.message || 'Failed to add vendor');
+      }
+    } catch (error) {
+      console.error('Error adding vendor:', error);
+      toastError('Failed to add vendor');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteClick = (vendor) => {
+    setVendorToDelete(vendor);
+    setShowDeleteModal(true);
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    
+    // Business Name validation
+    if (!newVendor.businessName.trim()) {
+      errors.businessName = 'Business Name is required';
+    } else if (newVendor.businessName.trim().length < 2) {
+      errors.businessName = 'Business Name must be at least 2 characters';
+    }
+    
+    // Owner Name validation
+    if (!newVendor.ownerName.trim()) {
+      errors.ownerName = 'Owner Name is required';
+    } else if (newVendor.ownerName.trim().length < 2) {
+      errors.ownerName = 'Owner Name must be at least 2 characters';
+    } else if (!/^[a-zA-Z\s]+$/.test(newVendor.ownerName.trim())) {
+      errors.ownerName = 'Owner Name can only contain letters and spaces';
+    }
+    
+    // Email validation
+    if (!newVendor.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newVendor.email.trim())) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    // Phone validation
+    if (!newVendor.phone.trim()) {
+      errors.phone = 'Phone Number is required';
+    } else if (!/^[0-9]{10}$/.test(newVendor.phone.trim())) {
+      errors.phone = 'Phone Number must be exactly 10 digits';
+    }
+    
+    // Address validation
+    if (!newVendor.address.trim()) {
+      errors.address = 'Address is required';
+    } else if (newVendor.address.trim().length < 10) {
+      errors.address = 'Address must be at least 10 characters';
+    }
+    
+    // Business License validation (optional but if provided, should be valid)
+    if (newVendor.businessLicense.trim() && newVendor.businessLicense.trim().length < 5) {
+      errors.businessLicense = 'Business License must be at least 5 characters if provided';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleInputChange = (field, value) => {
+    setNewVendor(prev => ({ ...prev, [field]: value }));
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
   if (!hasPermission('manage_vendors')) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -172,8 +321,23 @@ const VendorsManagement = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Vendors Management</h1>
-          <p className="text-gray-600 mt-2">Manage and monitor all food vendors on the platform</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Vendors Management</h1>
+              <p className="text-gray-600 mt-2">Manage and monitor all food vendors on the platform</p>
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Add Vendor</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Filters */}
@@ -395,6 +559,16 @@ const VendorsManagement = () => {
                                </button>
                              </>
                            )}
+                           
+                           <button
+                             onClick={() => handleDeleteClick(vendor)}
+                             className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-3 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                           >
+                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v2m0 0V7m0 2H9m6 0h-6" />
+                             </svg>
+                             <span className="hidden sm:inline">Remove</span>
+                           </button>
                          </div>
                        </div>
                      </div>
@@ -567,6 +741,211 @@ const VendorsManagement = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Vendor Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Add New Vendor</h2>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Name *</label>
+                  <input
+                    type="text"
+                    value={newVendor.businessName}
+                    onChange={(e) => handleInputChange('businessName', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      validationErrors.businessName ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter business name"
+                    disabled={isSubmitting}
+                  />
+                  {validationErrors.businessName && (
+                    <p className="text-red-500 text-xs mt-1">{validationErrors.businessName}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Owner Name *</label>
+                  <input
+                    type="text"
+                    value={newVendor.ownerName}
+                    onChange={(e) => handleInputChange('ownerName', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      validationErrors.ownerName ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter owner name"
+                    disabled={isSubmitting}
+                  />
+                  {validationErrors.ownerName && (
+                    <p className="text-red-500 text-xs mt-1">{validationErrors.ownerName}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                  <input
+                    type="email"
+                    value={newVendor.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      validationErrors.email ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter email address"
+                    disabled={isSubmitting}
+                  />
+                  {validationErrors.email && (
+                    <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                  <input
+                    type="tel"
+                    value={newVendor.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      validationErrors.phone ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter 10-digit phone number"
+                    maxLength="10"
+                    disabled={isSubmitting}
+                  />
+                  {validationErrors.phone && (
+                    <p className="text-red-500 text-xs mt-1">{validationErrors.phone}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                  <textarea
+                    value={newVendor.address}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      validationErrors.address ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter complete address"
+                    rows="3"
+                    disabled={isSubmitting}
+                  />
+                  {validationErrors.address && (
+                    <p className="text-red-500 text-xs mt-1">{validationErrors.address}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Business License</label>
+                  <input
+                    type="text"
+                    value={newVendor.businessLicense}
+                    onChange={(e) => handleInputChange('businessLicense', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      validationErrors.businessLicense ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter business license (optional)"
+                    disabled={isSubmitting}
+                  />
+                  {validationErrors.businessLicense && (
+                    <p className="text-red-500 text-xs mt-1">{validationErrors.businessLicense}</p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setValidationErrors({});
+                    setNewVendor({
+                      businessName: '',
+                      ownerName: '',
+                      email: '',
+                      phone: '',
+                      address: '',
+                      businessLicense: ''
+                    });
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={addVendor}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Adding Vendor...</span>
+                    </>
+                  ) : (
+                    <span>Add Vendor</span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && vendorToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Delete Vendor</h3>
+                  <p className="text-sm text-gray-500">This action cannot be undone.</p>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-gray-700">
+                  Are you sure you want to delete <strong>{vendorToDelete.businessName || vendorToDelete.ownerName}</strong>? 
+                  This will permanently remove the vendor and all associated data.
+                </p>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setVendorToDelete(null);
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteVendor(vendorToDelete._id)}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200"
+                >
+                  Delete Vendor
+                </button>
               </div>
             </div>
           </div>

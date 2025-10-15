@@ -1,5 +1,6 @@
 import { StudyMaterial } from "../models/StudyMaterial.js";
 
+// SM - Study Material Controller
 // @desc Upload study material
 export const uploadMaterial = async (req, res) => {
   try {
@@ -12,9 +13,21 @@ export const uploadMaterial = async (req, res) => {
       semester,
       subject,
       keywords,
+      fileCount,
     } = req.body;
 
-    const fileUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    // Handle multiple files
+    const fileUrls = [];
+    
+    if (req.files && req.files.length > 0) {
+      // Handle multiple files from req.files array
+      req.files.forEach(file => {
+        fileUrls.push(`/uploads/${file.filename}`);
+      });
+    } else if (req.file) {
+      // Fallback to single file for backward compatibility
+      fileUrls.push(`/uploads/${req.file.filename}`);
+    }
 
     const newMaterial = new StudyMaterial({
       title,
@@ -25,8 +38,9 @@ export const uploadMaterial = async (req, res) => {
       semester,
       subject,
       keywords: keywords ? keywords.split(",") : [],
-      fileUrl,
-      uploadedBy: "student1", // TODO: replace with logged-in student ID later
+      fileUrl: fileUrls.length > 0 ? fileUrls[0] : null, // Keep first file as primary for backward compatibility
+      fileUrls: fileUrls, // Store all files
+      uploadedBy: req.std._id, // Use authenticated student ID
     });
 
     await newMaterial.save();
@@ -40,6 +54,16 @@ export const uploadMaterial = async (req, res) => {
 export const getMaterials = async (req, res) => {
   try {
     const materials = await StudyMaterial.find().sort({ createdAt: -1 });
+    res.json(materials);
+  } catch (error) {
+    res.status(500).json({ message: "Fetching failed", error: error.message });
+  }
+};
+
+// @desc Get materials uploaded by current user
+export const getMyUploads = async (req, res) => {
+  try {
+    const materials = await StudyMaterial.find({ uploadedBy: req.std._id }).sort({ createdAt: -1 });
     res.json(materials);
   } catch (error) {
     res.status(500).json({ message: "Fetching failed", error: error.message });
@@ -75,12 +99,12 @@ export const searchMaterials = async (req, res) => {
       ];
     }
     
-    // Filter by other criteria
-    if (campus) query.campus = campus;
-    if (course) query.course = course;
-    if (year) query.year = year;
-    if (semester) query.semester = semester;
-    if (subject) query.subject = subject;
+    // Filter by other criteria (case-insensitive)
+    if (campus) query.campus = { $regex: campus, $options: 'i' };
+    if (course) query.course = { $regex: course, $options: 'i' };
+    if (year) query.year = year; // Year is usually numeric, so exact match is fine
+    if (semester) query.semester = semester; // Semester is usually numeric, so exact match is fine
+    if (subject) query.subject = { $regex: subject, $options: 'i' };
     
     const materials = await StudyMaterial.find(query).sort({ createdAt: -1 });
     res.json(materials);
@@ -89,22 +113,22 @@ export const searchMaterials = async (req, res) => {
   }
 };
 
-// @desc Get top materials by likes and reviews
+// @desc Get top materials by average rating
 export const getTopMaterials = async (req, res) => {
   try {
     const { campus, course, year, semester, subject } = req.query;
     
     let query = {};
     
-    // Filter by criteria
-    if (campus) query.campus = campus;
-    if (course) query.course = course;
-    if (year) query.year = year;
-    if (semester) query.semester = semester;
-    if (subject) query.subject = subject;
+    // Filter by criteria (case-insensitive for text fields)
+    if (campus) query.campus = { $regex: campus, $options: 'i' };
+    if (course) query.course = { $regex: course, $options: 'i' };
+    if (year) query.year = year; // Year is usually numeric, so exact match is fine
+    if (semester) query.semester = semester; // Semester is usually numeric, so exact match is fine
+    if (subject) query.subject = { $regex: subject, $options: 'i' };
     
     const materials = await StudyMaterial.find(query)
-      .sort({ likeCount: -1, reviewCount: -1, downloadCount: -1 })
+      .sort({ rating: -1, reviewCount: -1, downloadCount: -1 }) // Sort by average rating first
       .limit(20);
     
     res.json(materials);
@@ -211,10 +235,7 @@ export const addReview = async (req, res) => {
       material.reviewCount += 1;
     }
     
-    // Calculate average rating
-    const totalRating = material.reviewedBy.reduce((sum, r) => sum + r.rating, 0);
-    material.rating = totalRating / material.reviewedBy.length;
-    
+    // Rating will be automatically calculated by pre-save middleware
     await material.save();
     res.json(material);
   } catch (error) {
@@ -239,6 +260,38 @@ export const updateRating = async (req, res) => {
     res.json(material);
   } catch (error) {
     res.status(500).json({ message: "Rating update failed", error: error.message });
+  }
+};
+
+// @desc Update material
+export const updateMaterial = async (req, res) => {
+  try {
+    const { title, description, campus, course, year, semester, subject, keywords } = req.body;
+    
+    const updateData = {
+      title,
+      description,
+      campus,
+      course,
+      year,
+      semester,
+      subject,
+      keywords: keywords ? keywords.split(",").map(k => k.trim()) : []
+    };
+
+    const material = await StudyMaterial.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+    
+    if (!material) {
+      return res.status(404).json({ message: "Study material not found" });
+    }
+    
+    res.json(material);
+  } catch (error) {
+    res.status(500).json({ message: "Update failed", error: error.message });
   }
 };
 

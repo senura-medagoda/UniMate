@@ -33,10 +33,12 @@ export const OwnerAuthProvider = ({ children }) => {
 
       console.log("ownerAuthContext: API response:", res.data);
 
-      const { token, ownerId, fullName } = res.data;
-      const ownerData = { ownerId, fullName };
+      const { token, ownerId, fullName, status } = res.data;
+      
+      const ownerData = { ownerId, fullName, status: status || 'active' };
 
       console.log("ownerAuthContext: Login successful, token received:", token ? token.substring(0, 20) + "..." : "No token");
+      console.log("ownerAuthContext: Owner status:", status);
 
       setOwner(ownerData);
       setToken(token);
@@ -48,8 +50,40 @@ export const OwnerAuthProvider = ({ children }) => {
     } catch (err) {
       console.error("ownerAuthContext: Login error:", err.response?.data || err.message);
       console.error("ownerAuthContext: Full error:", err);
-      toast.error("Login failed. Please check your credentials.");
-      return false;
+      
+      // Handle specific error messages from backend
+      if (err.response?.status === 403) {
+        const errorMessage = err.response?.data?.message || "Access denied";
+        const status = err.response?.data?.status;
+        
+        // For pending users, we need to get the owner data from the login attempt
+        if (status === 'pending') {
+          try {
+            // Try to get owner data by email for pending users
+            const ownerRes = await axios.get(`http://localhost:5001/api/owner/find-by-email/${email}`);
+            if (ownerRes.data) {
+              const ownerData = { 
+                ownerId: ownerRes.data._id, 
+                fullName: ownerRes.data.fullName, 
+                status: 'pending' 
+              };
+              setOwner(ownerData);
+              localStorage.setItem("owner", JSON.stringify(ownerData));
+            }
+          } catch (findError) {
+            console.error("Could not find owner data:", findError);
+          }
+        }
+        
+        toast.error(errorMessage);
+        
+        // Return status information for the component to handle navigation
+        return { success: false, status: status, message: errorMessage };
+      } else {
+        toast.error("Login failed. Please check your credentials.");
+      }
+      
+      return { success: false, status: null, message: "Login failed" };
     }
   };
 
@@ -60,8 +94,18 @@ export const OwnerAuthProvider = ({ children }) => {
     localStorage.removeItem("token");
   };
 
+  const getOwnerByEmail = async (email) => {
+    try {
+      const response = await axios.get(`http://localhost:5001/api/owner/find-by-email/${email}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error getting owner by email:', error);
+      return null;
+    }
+  };
+
   return (
-    <OwnerAuthContext.Provider value={{ owner, token, loginOwner, logout }}>
+    <OwnerAuthContext.Provider value={{ owner, token, loginOwner, logout, getOwnerByEmail }}>
       {children}
     </OwnerAuthContext.Provider>
   );

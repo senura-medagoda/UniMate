@@ -19,7 +19,7 @@ const HomeContent = () => {
       <MainBanner />
       <ShopCards />
       <Shops />
-      <Feedback />
+      {/* <Feedback /> */}
       <Plate />
       <IconBar />
       <Footer />

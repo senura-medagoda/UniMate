@@ -34,10 +34,10 @@ const AdminLoginPage = () => {
       title: 'Job Portal Admin',
       description: 'Manage job postings, hiring managers, and employment opportunities',
       icon: Briefcase,
-      color: 'from-blue-500 to-cyan-600',
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-blue-600',
-      route: '/jpadmin-dash'
+      color: 'from-orange-500 to-amber-600',
+      bgColor: 'bg-orange-50',
+      iconColor: 'text-primary',
+      route: '/jpadmin-login'
     },
     {
       id: 'food',

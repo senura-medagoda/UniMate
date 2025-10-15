@@ -18,7 +18,7 @@ const M_SIdebar = () => {
       {/* Mobile Menu Button */}
       <button
         onClick={toggleSidebar}
-        className="lg:hidden fixed top-20 left-4 z-50 p-2 rounded-md bg-white shadow-md border border-gray-200"
+        className="lg:hidden fixed top-20 left-4 z-[60] p-2 rounded-md bg-white shadow-md border border-gray-200"
         aria-label="Toggle Menu"
       >
         <div className="w-6 h-6 flex flex-col justify-center items-center">
@@ -38,11 +38,11 @@ const M_SIdebar = () => {
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:sticky top-0 left-0 z-40 
-        w-64 bg-white shadow-lg lg:shadow-sm border-r border-gray-200
+        fixed top-0 left-0 z-50 
+        w-64 bg-white shadow-lg border-r border-gray-200
         transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
         lg:translate-x-0 transition-transform duration-300 ease-in-out
-        h-screen lg:h-[100vh] flex flex-col
+        h-screen flex flex-col
       `}>
         {/* Sidebar Header */}
         <div className='p-6 border-b border-gray-200 flex-shrink-0'>

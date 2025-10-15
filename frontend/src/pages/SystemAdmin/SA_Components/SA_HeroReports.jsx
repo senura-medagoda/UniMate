@@ -66,7 +66,7 @@ const SA_HeroReports = () => {
       id: 1,
       name: 'Monthly User Report',
       type: 'User Analytics',
-      generatedBy: 'System Admin',
+      generatedBy: user?.sa_fname ? `${user.sa_fname} ${user.sa_lname}` : 'System Admin',
       date: '2024-01-20',
       size: '2.4 MB',
       status: 'completed'
@@ -75,7 +75,7 @@ const SA_HeroReports = () => {
       id: 2,
       name: 'Admin Activity Summary',
       type: 'Admin Activity',
-      generatedBy: 'System Admin',
+      generatedBy: user?.sa_fname ? `${user.sa_fname} ${user.sa_lname}` : 'System Admin',
       date: '2024-01-19',
       size: '1.8 MB',
       status: 'completed'
@@ -84,7 +84,7 @@ const SA_HeroReports = () => {
       id: 3,
       name: 'System Health Check',
       type: 'System Health',
-      generatedBy: 'System Admin',
+      generatedBy: user?.sa_fname ? `${user.sa_fname} ${user.sa_lname}` : 'System Admin',
       date: '2024-01-18',
       size: '3.2 MB',
       status: 'completed'
@@ -93,7 +93,7 @@ const SA_HeroReports = () => {
       id: 4,
       name: 'Weekly Overview',
       type: 'System Overview',
-      generatedBy: 'System Admin',
+      generatedBy: user?.sa_fname ? `${user.sa_fname} ${user.sa_lname}` : 'System Admin',
       date: '2024-01-17',
       size: '1.5 MB',
       status: 'generating'

@@ -52,81 +52,80 @@ const Navbar = ({ user, setUser }) => {
 
     return (
         <div className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
-            <nav className="max-w-7xl mx-auto pr-4 sm:pr-6 lg:pr-8">
-                <div className="flex items-center h-20">
-                    {/* Logo - Left aligned */}
-                    <div className="flex-shrink-0 pl-4 sm:pl-6 lg:pl-8">
-                        <Link to="/std-dash" className="flex items-center">
+            <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center h-20 min-w-0">
+                    {/* Logo - Left aligned with image, no left margin */}
+                    <div className="flex-shrink-0">
+                        <Link to="/std-dash" className="flex items-center space-x-3">
                             <img 
-                                src="/Logo.png" 
+                                src="/src/pages/StudentUI/Accommodation/assets/unimatelogo.png" 
                                 alt="UniMate Logo" 
-                                className="h-12 w-auto"
+                                className="h-8 w-auto"
                             />
-                           
                         </Link>
                     </div>
 
-                    {/* Desktop Navigation - Centered */}
-                    <div className="hidden md:flex items-center space-x-10 flex-1 justify-center">
+                    {/* Desktop Navigation - With proper spacing from logo */}
+                    <div className="hidden md:flex items-center space-x-6 ml-8 flex-shrink min-w-0">
                         <Link 
                             to="/StudyMaterialDash" 
-                            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                            className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                                 isActive('/StudyMaterialDash') 
-                                    ? 'bg-orange-100 text-orange-700' 
+                                    ? 'bg-orange-100 text-orange-700 shadow-sm' 
                                     : 'text-gray-700 hover:text-orange-600 hover:bg-orange-50'
                             }`}
                         >
-                            <FaHome className="inline mr-2" />
+                            <FaHome className="mr-2" />
                             Dashboard
                         </Link>
                         <Link 
                             to="/BrowseSM" 
-                            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                            className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                                 isActive('/BrowseSM') 
-                                    ? 'bg-orange-100 text-orange-700' 
+                                    ? 'bg-orange-100 text-orange-700 shadow-sm' 
                                     : 'text-gray-700 hover:text-orange-600 hover:bg-orange-50'
                             }`}
                         >
-                            <FaSearch className="inline mr-2" />
+                            <FaSearch className="mr-2" />
                             Browse
                         </Link>
                         <Link 
                             to="/UploadSM" 
-                            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                            className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                                 isActive('/UploadSM') 
-                                    ? 'bg-orange-100 text-orange-700' 
+                                    ? 'bg-orange-100 text-orange-700 shadow-sm' 
                                     : 'text-gray-700 hover:text-orange-600 hover:bg-orange-50'
                             }`}
                         >
-                            <FaUpload className="inline mr-2" />
+                            <FaUpload className="mr-2" />
                             Upload
                         </Link>
                         <Link 
                             to="/RequestSM" 
-                            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                            className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                                 isActive('/RequestSM') 
-                                    ? 'bg-orange-100 text-orange-700' 
+                                    ? 'bg-orange-100 text-orange-700 shadow-sm' 
                                     : 'text-gray-700 hover:text-orange-600 hover:bg-orange-50'
                             }`}
                         >
-                            <FaHandPaper className="inline mr-2" />
+                            <FaHandPaper className="mr-2" />
                             Request
                         </Link>
                         <Link 
                             to="/ForumSM" 
-                            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                            className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                                 isActive('/ForumSM') 
-                                    ? 'bg-orange-100 text-orange-700' 
+                                    ? 'bg-orange-100 text-orange-700 shadow-sm' 
                                     : 'text-gray-700 hover:text-orange-600 hover:bg-orange-50'
                             }`}
                         >
-                            <FaComments className="inline mr-2" />
+                            <FaComments className="mr-2" />
                             Forum
                         </Link>
                     </div>
 
                     {/* Right Section - Search and Profile */}
-                    <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-3 ml-auto pr-4 flex-shrink-0">
                         {/* Search Bar */}
                         <div className="hidden lg:flex items-center">
                             <form onSubmit={handleSearch} className="relative">
@@ -137,7 +136,7 @@ const Navbar = ({ user, setUser }) => {
                                         placeholder="Search materials..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                                        className="w-56 lg:w-60 xl:w-64 pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-gray-50 hover:bg-white transition-colors duration-200"
                                     />
                                 </div>
                             </form>
@@ -146,16 +145,16 @@ const Navbar = ({ user, setUser }) => {
                         {/* Profile Section */}
                         <div className="relative" ref={dropdownRef}>
                             <button 
-                                className="flex items-center space-x-3 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                className="flex items-center space-x-2 text-sm rounded-lg px-2 py-2 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors duration-200"
                                 onClick={toggleProfile}
                                 type="button"
                             >
-                                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center">
+                                <div className="h-9 w-9 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center shadow-sm">
                                     <span className="text-white font-semibold text-sm">
                                         {(user?.name || user?.fname || 'S').charAt(0).toUpperCase()}
                                     </span>
                                 </div>
-                                <span className="hidden md:block text-gray-700 font-medium">
+                                <span className="hidden lg:block text-gray-700 font-medium text-sm max-w-24 truncate">
                                     {user?.name || user?.fname || 'Student'}
                                 </span>
                             </button>
@@ -203,6 +202,15 @@ const Navbar = ({ user, setUser }) => {
                                         <FaStar className="mr-3 text-orange-600" />
                                         Top & Recent
                                     </Link>
+
+                                    <Link
+                                        to="/StudentMessaging"
+                                        className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors duration-200"
+                                        onClick={() => setOpenProfile(false)}
+                                    >
+                                        <FaQuestionCircle className="mr-3 text-orange-600" />
+                                        Contact Admin
+                                    </Link>
                                     
                                     <div className="border-t border-gray-200 mt-2 pt-2">
                                         <button
@@ -220,7 +228,7 @@ const Navbar = ({ user, setUser }) => {
                         {/* Mobile menu button */}
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="md:hidden p-3 rounded-md text-gray-700 hover:text-orange-600 hover:bg-orange-50"
+                            className="md:hidden p-3 rounded-lg text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200"
                         >
                             {mobileMenuOpen ? <FaTimes className="w-6 h-6" /> : <FaBars className="w-6 h-6" />}
                         </button>
@@ -230,50 +238,50 @@ const Navbar = ({ user, setUser }) => {
                 {/* Mobile menu */}
                 {mobileMenuOpen && (
                     <div className="md:hidden">
-                        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-50 rounded-lg mt-2">
+                        <div className="px-4 pt-4 pb-4 space-y-2 bg-gray-50 rounded-lg mt-2 mx-2">
                             <Link 
                                 to="/StudyMaterialDash" 
-                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50"
+                                className="flex items-center px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                <FaHome className="inline mr-2" />
+                                <FaHome className="mr-3" />
                                 Dashboard
                             </Link>
                             <Link 
                                 to="/BrowseSM" 
-                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50"
+                                className="flex items-center px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                <FaSearch className="inline mr-2" />
+                                <FaSearch className="mr-3" />
                                 Browse
                             </Link>
                             <Link 
                                 to="/UploadSM" 
-                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50"
+                                className="flex items-center px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                <FaUpload className="inline mr-2" />
+                                <FaUpload className="mr-3" />
                                 Upload
                             </Link>
                             <Link 
                                 to="/RequestSM" 
-                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50"
+                                className="flex items-center px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                <FaHandPaper className="inline mr-2" />
+                                <FaHandPaper className="mr-3" />
                                 Request
                             </Link>
                             <Link 
                                 to="/ForumSM" 
-                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50"
+                                className="flex items-center px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                <FaComments className="inline mr-2" />
+                                <FaComments className="mr-3" />
                                 Forum
                             </Link>
                             
                             {/* Mobile Search */}
-                            <div className="px-3 py-2">
+                            <div className="px-4 py-3">
                                 <form onSubmit={handleSearch} className="relative">
                                     <div className="relative">
                                         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -282,7 +290,7 @@ const Navbar = ({ user, setUser }) => {
                                             placeholder="Search materials..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                                            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white"
                                         />
                                     </div>
                                 </form>

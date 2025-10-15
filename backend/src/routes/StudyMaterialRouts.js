@@ -1,5 +1,7 @@
+// SM - Study Material Routes
 import express from "express";
 import multer from "multer";
+import { protect } from "../middleware/authSTDMW.js";
 import { 
   uploadMaterial, 
   getMaterials, 
@@ -10,8 +12,10 @@ import {
   unlikeMaterial,
   addReview,
   updateRating, 
+  updateMaterial,
   deleteMaterial,
-  trackDownload
+  trackDownload,
+  getMyUploads
 } from "../controllers/StudyMaterialController.js";
 
 const router = express.Router();
@@ -28,11 +32,13 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Routes
-router.post("/upload", upload.single("file"), uploadMaterial);
+router.post("/upload", protect, upload.any(), uploadMaterial);
 router.get("/all", getMaterials);
+router.get("/my-uploads", protect, getMyUploads);
 router.get("/top", getTopMaterials);
 router.get("/search", searchMaterials);
 router.get("/:id", getMaterialById);
+router.put("/:id", protect, updateMaterial);
 router.post("/:id/like", likeMaterial);
 router.post("/:id/unlike", unlikeMaterial);
 router.post("/:id/review", addReview);

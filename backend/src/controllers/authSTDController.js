@@ -1,6 +1,9 @@
 import Student from "../models/Student.js";
 import jwt from "jsonwebtoken"
 
+const generateToken = (id) => {
+    return jwt.sign({id},process.env.JWT_SECRET,{expiresIn:"7d"})
+}
 
 export async function loginAuth(req, res) {
     const { s_email, s_password } = req.body;
@@ -28,7 +31,8 @@ export async function loginAuth(req, res) {
             name: `${std.s_fname} ${std.s_lname}`,
             fname: std.s_fname,
             lname: std.s_lname,
-            uid: std.s_uniID, 
+            uid: std.s_uniID,
+            s_status: std.s_status,
             token, 
             message: "Login Success"
         });
@@ -42,9 +46,7 @@ export async function loginAuth(req, res) {
 }
 
 export async function currentUser(req,res){
+    console.log('Current user request - student data:', req.std);
+    console.log('Student s_status:', req.std?.s_status);
     res.status(200).json(req.std)
-}
-
-const generateToken = (id) => {
-    return jwt.sign({id},process.env.JWT_SECRET,{expiresIn:"7d"})
 }

@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Utensils, Briefcase, Home, BookOpen, ShoppingBag, ArrowRight, CheckCircle, Star, Users, Shield } from 'lucide-react'
+import { Link } from 'react-router';
 
 function UM_HeroServices() {
   const services = [
@@ -166,6 +167,7 @@ function UM_HeroServices() {
                 Join UniMate and start offering your services to thousands of students today.
               </motion.p>
 
+            <Link to = "/su-signuphub">
               <motion.button 
                 className="group inline-flex items-center gap-3 bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
                 initial={{ opacity: 0, x: -30 }}
@@ -176,7 +178,7 @@ function UM_HeroServices() {
               >
                 Register as a Service Provider
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-              </motion.button>
+              </motion.button> </Link>
             </div>
 
             {/* Visual Elements */}

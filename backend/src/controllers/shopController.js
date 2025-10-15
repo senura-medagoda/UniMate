@@ -1054,3 +1054,259 @@ export const toggleShopActiveStatus = async (req, res) => {
     }
 };
 
+// Delete Shop (Admin only)
+export const deleteShop = async (req, res) => {
+    try {
+        const { shopId } = req.params;
+
+        const shop = await ShopModel.findById(shopId);
+
+        if (!shop) {
+            return res.status(404).json({
+                success: false,
+                message: "Shop not found"
+            });
+        }
+
+        // Delete the shop
+        await ShopModel.findByIdAndDelete(shopId);
+
+        res.status(200).json({
+            success: true,
+            message: "Shop deleted successfully"
+        });
+
+    } catch (error) {
+        console.error("Delete shop error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+
+// Add Shop (Admin only) - Create shop for a vendor
+export const addShop = async (req, res) => {
+    try {
+        console.log('Add shop request body:', req.body);
+        const {
+            vendorId,
+            shopName,
+            description,
+            address,
+            phone,
+            email,
+            openingHours,
+            category
+        } = req.body;
+
+        // Validate required fields
+        if (!vendorId || !shopName || !description || !address || !phone || !email) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing required fields"
+            });
+        }
+
+        // Check if vendor exists
+        const VendorModel = (await import('../models/VendorModel.js')).default;
+        const vendor = await VendorModel.findById(vendorId);
+        if (!vendor) {
+            return res.status(404).json({
+                success: false,
+                message: "Vendor not found"
+            });
+        }
+
+        // Check if vendor already has a shop
+        const existingShop = await ShopModel.findOne({ vendorId });
+        if (existingShop) {
+            return res.status(400).json({
+                success: false,
+                message: "Vendor already has a shop"
+            });
+        }
+
+        // Create new shop
+        const shopData = {
+            vendorId,
+            businessName: shopName, // Map shopName to businessName for the model
+            description,
+            address: {
+                street: address,
+                city: 'Unknown' // Default city since frontend sends only address string
+            },
+            contactInfo: {
+                phone,
+                email
+            },
+            openingHours: openingHours ? (typeof openingHours === 'string' ? JSON.parse(openingHours) : openingHours) : {},
+            category: category || 'General',
+            isActive: true,
+            isApproved: true,
+            approvalStatus: 'approved' // Auto-approve admin-created shops
+        };
+        
+        console.log('Creating shop with data:', shopData);
+        const shop = new ShopModel(shopData);
+
+        await shop.save();
+        console.log('Shop saved successfully:', shop._id);
+
+        res.status(201).json({
+            success: true,
+            message: "Shop added successfully",
+            data: shop
+        });
+
+    } catch (error) {
+        console.error("Add shop error:", error);
+        console.error("Error details:", {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        
+        // Handle specific MongoDB errors
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({
+                success: false,
+                message: "Validation error",
+                errors: validationErrors
+            });
+        }
+        
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            return res.status(400).json({
+                success: false,
+                message: `${field} already exists`
+            });
+        }
+        
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+
+// Rate Shop (Admin)
+export const rateShop = async (req, res) => {
+    try {
+        const { shopId } = req.params;
+        const { rating, comment } = req.body;
+        const adminId = req.adminId;
+
+        console.log(`[RateShop] Attempting to rate shop: ${shopId} by admin: ${adminId} with rating: ${rating}, comment: ${comment}`);
+
+        // Validate adminId
+        if (!adminId) {
+            console.error("[RateShop] Error: adminId is missing from request. Unauthorized access attempt.");
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized: Admin ID not found."
+            });
+        }
+
+        // Validate rating
+        if (!rating || rating < 1 || rating > 5) {
+            console.error(`[RateShop] Error: Invalid rating value: ${rating}. Rating must be between 1 and 5.`);
+            return res.status(400).json({
+                success: false,
+                message: "Rating must be between 1 and 5"
+            });
+        }
+
+        // Find the shop
+        const shop = await ShopModel.findById(shopId);
+        if (!shop) {
+            console.error(`[RateShop] Error: Shop not found with ID: ${shopId}`);
+            return res.status(404).json({
+                success: false,
+                message: "Shop not found"
+            });
+        }
+        console.log(`[RateShop] Found shop: ${shop.businessName} (${shopId})`);
+
+        // Initialize adminRatings array if it doesn't exist
+        if (!shop.adminRatings) {
+            shop.adminRatings = [];
+        }
+
+        // Check if admin has already rated this shop
+        const existingRatingIndex = shop.adminRatings.findIndex(
+            (r) => r.adminId.toString() === adminId.toString()
+        );
+
+        if (existingRatingIndex > -1) {
+            // Update existing rating
+            shop.adminRatings[existingRatingIndex].rating = rating;
+            shop.adminRatings[existingRatingIndex].comment = comment || '';
+            shop.adminRatings[existingRatingIndex].ratedAt = new Date();
+            console.log(`[RateShop] Updated existing rating for shop ${shopId} by admin ${adminId}`);
+        } else {
+            // Add new rating
+            shop.adminRatings.push({ 
+                adminId: adminId, 
+                rating: rating, 
+                comment: comment || '',
+                ratedAt: new Date()
+            });
+            console.log(`[RateShop] Added new rating for shop ${shopId} by admin ${adminId}`);
+        }
+
+        // Calculate new average rating from admin ratings only
+        const totalRatings = shop.adminRatings.reduce((sum, r) => sum + r.rating, 0);
+        shop.averageRating = shop.adminRatings.length > 0 ? totalRatings / shop.adminRatings.length : 0;
+        shop.totalReviews = shop.adminRatings.length;
+        
+        console.log(`[RateShop] New average rating for shop ${shopId}: ${shop.averageRating}`);
+
+        await shop.save();
+        console.log(`[RateShop] Shop ${shopId} saved successfully after rating.`);
+
+        // Try to create notification for vendor (with error handling)
+        try {
+            await createAdminNotification({
+                type: 'shop_rated',
+                title: 'Shop Rated',
+                message: `Your shop "${shop.businessName}" has been rated ${rating} stars by admin`,
+                recipientId: shop.vendorId,
+                data: { shopId: shop._id, rating: rating }
+            });
+            console.log(`[RateShop] Notification sent to vendor ${shop.vendorId}`);
+        } catch (notificationError) {
+            console.warn(`[RateShop] Failed to send notification to vendor: ${notificationError.message}`);
+            // Don't fail the entire operation if notification fails
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Shop rated successfully",
+            data: {
+                shopId: shop._id,
+                averageRating: shop.averageRating,
+                totalReviews: shop.totalReviews
+            }
+        });
+
+    } catch (error) {
+        console.error("[RateShop] CRITICAL ERROR rating shop:", error);
+        console.error("[RateShop] Error details:", {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+

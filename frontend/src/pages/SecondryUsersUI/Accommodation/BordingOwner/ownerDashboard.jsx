@@ -4,6 +4,7 @@ import { useOwnerAuth } from "../../../../context/ownerAuthContext";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { getImageUrl, getFirstImage } from "../../../../utils/imageUtils";
+import ImageGallery from "./components/ImageGallery";
 
 const OwnerDashboard = () => {
   const [boardingPlaces, setBoardingPlaces] = useState([]);
@@ -13,9 +14,34 @@ const OwnerDashboard = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState("places");
   const [bookingFilter, setBookingFilter] = useState("all");
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [showImageGallery, setShowImageGallery] = useState(false);
   const { token, owner, logout } = useOwnerAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Check owner approval status
+  useEffect(() => {
+    const checkApprovalStatus = async () => {
+      if (!owner?.ownerId) return;
+      
+      try {
+        const response = await axios.get(`http://localhost:5001/api/owner/status/${owner.ownerId}`);
+        const status = response.data.status;
+        
+        if (status !== 'active') {
+          // Redirect to pending approval page
+          navigate('/owner/pending-approval');
+        }
+      } catch (error) {
+        console.error('Error checking approval status:', error);
+        // If there's an error, still redirect to pending approval for safety
+        navigate('/owner/pending-approval');
+      }
+    };
+
+    checkApprovalStatus();
+  }, [owner?.ownerId, navigate]);
 
   const fetchBoardingPlaces = async () => {
     if (!token) return;
@@ -30,9 +56,8 @@ const OwnerDashboard = () => {
       );
       setBoardingPlaces(res.data);
     } catch (err) {
-      if (err.response?.status !== 401) {
-        toast.error("Failed to load your boarding places.");
-      }
+      // Silently handle errors - don't show error messages for new owners
+      console.log("Error loading boarding places:", err);
     } finally {
       setLoading(false);
     }
@@ -51,9 +76,8 @@ const OwnerDashboard = () => {
       );
       setBookings(res.data);
     } catch (err) {
-      if (err.response?.status !== 401) {
-        toast.error("Failed to load bookings.");
-      }
+      // Silently handle errors - don't show error messages for new owners
+      console.log("Error loading bookings:", err);
     } finally {
       setBookingsLoading(false);
     }
@@ -92,6 +116,26 @@ const OwnerDashboard = () => {
   const handleEdit = (placeId) => {
     // Navigate to edit page with the place ID
     navigate(`/edit-boarding-place/${placeId}`);
+  };
+
+  const handleImageGallery = (place) => {
+    setSelectedPlace(place);
+    setShowImageGallery(true);
+  };
+
+  const handleImageUpdate = (updatedImages) => {
+    setBoardingPlaces(prev => 
+      prev.map(place => 
+        place._id === selectedPlace._id 
+          ? { ...place, images: updatedImages }
+          : place
+      )
+    );
+  };
+
+  const handleCloseImageGallery = () => {
+    setShowImageGallery(false);
+    setSelectedPlace(null);
   };
 
   const handleDelete = async (placeId) => {
@@ -286,16 +330,16 @@ const OwnerDashboard = () => {
                     </svg>
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                    My Boarding Places
+                    Welcome to Your Dashboard! 🎉
                   </h2>
                   <h3 className="text-xl font-semibold mb-4 text-gray-700">
-                    👋 Welcome!
+                    Ready to get started?
                   </h3>
                   <p className="text-gray-600 mb-2 text-lg">
-                    You haven't listed any boarding places yet.
+                    Create your first boarding place listing to begin attracting students.
                   </p>
                   <p className="text-gray-500 mb-8">
-                    Start by creating your first listing to get started.
+                    It's quick and easy - let's get you set up!
                   </p>
                   <button
                     onClick={() => navigate("/create-boarding-place")}
@@ -314,7 +358,7 @@ const OwnerDashboard = () => {
                         d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                       />
                     </svg>
-                    Create Your First Listing
+                    Get Started - Create Listing
                   </button>
                 </div>
               </div>
@@ -359,6 +403,25 @@ const OwnerDashboard = () => {
                         
                         <div className="absolute top-4 right-4 flex gap-2">
                           <button
+                            onClick={() => handleImageGallery(place)}
+                            className="bg-white/90 hover:bg-blue-500 text-gray-700 hover:text-white p-2 rounded-lg shadow-md transition-all duration-200"
+                            title="Manage Images"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </button>
+                          <button
                             onClick={() => handleEdit(place._id)}
                             className="bg-white/90 hover:bg-white text-gray-700 hover:text-orange-600 p-2 rounded-lg shadow-md transition-all duration-200"
                             title="Edit"
@@ -398,9 +461,19 @@ const OwnerDashboard = () => {
                           </button>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                          <p className="text-white font-bold text-2xl">
-                            Rs. {place.price}
-                          </p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-white font-bold text-2xl">
+                              Rs. {place.price}
+                            </p>
+                            {place.images && place.images.length > 0 && (
+                              <div className="flex items-center gap-1 bg-black/50 text-white px-2 py-1 rounded-full text-sm">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>{place.images.length}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -555,10 +628,10 @@ const OwnerDashboard = () => {
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  No bookings yet
+                  No bookings yet 📋
                 </h3>
                 <p className="text-gray-600">
-                  You haven't received any booking requests yet.
+                  Once you create listings, students will be able to book your places and you'll see their requests here.
                 </p>
               </div>
             ) : (
@@ -585,17 +658,6 @@ const OwnerDashboard = () => {
                     >
                       Pending (
                       {bookings.filter((b) => b.status === "pending" && b.boardingPlaceId?.title && b.boardingPlaceId.title.trim().length > 0).length})
-                    </button>
-                    <button
-                      onClick={() => setBookingFilter("confirmed")}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                        bookingFilter === "confirmed"
-                          ? "bg-orange-500 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      Confirmed (
-                      {bookings.filter((b) => b.status === "confirmed" && b.boardingPlaceId?.title && b.boardingPlaceId.title.trim().length > 0).length})
                     </button>
                     <button
                       onClick={() => setBookingFilter("completed")}
@@ -793,7 +855,7 @@ const OwnerDashboard = () => {
                                         onClick={() =>
                                           handleBookingStatusUpdate(
                                             booking._id,
-                                            "confirmed"
+                                            "completed"
                                           )
                                         }
                                         className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
@@ -811,7 +873,7 @@ const OwnerDashboard = () => {
                                             d="M5 13l4 4L19 7"
                                           />
                                         </svg>
-                                        Confirm Booking
+                                        Approve Booking
                                       </button>
                                       <button
                                         onClick={() =>
@@ -840,32 +902,6 @@ const OwnerDashboard = () => {
                                     </>
                                   )}
 
-                                  {booking.status === "confirmed" && (
-                                    <button
-                                      onClick={() =>
-                                        handleBookingStatusUpdate(
-                                          booking._id,
-                                          "completed"
-                                        )
-                                      }
-                                      className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
-                                    >
-                                      <svg
-                                        className="w-4 h-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        />
-                                      </svg>
-                                      Mark as Completed
-                                    </button>
-                                  )}
 
                                   {booking.status === "completed" && (
                                     <button
@@ -905,6 +941,16 @@ const OwnerDashboard = () => {
           </>
         )}
       </div>
+
+      {/* Image Gallery Modal */}
+      {showImageGallery && selectedPlace && (
+        <ImageGallery
+          place={selectedPlace}
+          onUpdate={handleImageUpdate}
+          onClose={handleCloseImageGallery}
+          token={token}
+        />
+      )}
     </div>
   );
 };

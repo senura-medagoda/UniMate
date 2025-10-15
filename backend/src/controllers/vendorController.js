@@ -659,3 +659,129 @@ export const getVendorById = async (req, res) => {
     }
 };
 
+// Add Vendor (Admin only)
+export const addVendor = async (req, res) => {
+    try {
+        console.log('Add vendor request body:', req.body);
+        const {
+            businessName = "",
+            ownerName,
+            email,
+            phone,
+            address,
+            businessLicense = ""
+        } = req.body;
+
+        // Check for existing vendor by email
+        const existingVendor = await VendorModel.findOne({ email });
+
+        if (existingVendor) {
+            return res.status(400).json({
+                success: false,
+                message: "Email already registered"
+            });
+        }
+
+        // Check for existing vendor by business license only if provided
+        if (businessLicense && businessLicense.trim() !== "") {
+            const existingLicense = await VendorModel.findOne({ businessLicense });
+            if (existingLicense) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Business license already registered"
+                });
+            }
+        }
+
+        // Create new vendor
+        const vendorData = {
+            businessName: businessName.trim() || null,
+            ownerName,
+            email,
+            phone,
+            password: 'TempPassword123!', // Default password for admin-created vendors
+            address,
+            businessLicense: businessLicense.trim() || null,
+            isActive: true,
+            isVerified: false,
+            approvalStatus: 'approved' // Auto-approve admin-created vendors
+        };
+        
+        console.log('Creating vendor with data:', vendorData);
+        const vendor = new VendorModel(vendorData);
+
+        await vendor.save();
+        console.log('Vendor saved successfully:', vendor._id);
+
+        res.status(201).json({
+            success: true,
+            message: "Vendor added successfully",
+            data: vendor.getPublicProfile()
+        });
+
+    } catch (error) {
+        console.error("Add vendor error:", error);
+        console.error("Error details:", {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        
+        // Handle specific MongoDB errors
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({
+                success: false,
+                message: "Validation error",
+                errors: validationErrors
+            });
+        }
+        
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            return res.status(400).json({
+                success: false,
+                message: `${field} already exists`
+            });
+        }
+        
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+
+// Delete Vendor (Admin only)
+export const deleteVendor = async (req, res) => {
+    try {
+        const { vendorId } = req.params;
+
+        const vendor = await VendorModel.findById(vendorId);
+
+        if (!vendor) {
+            return res.status(404).json({
+                success: false,
+                message: "Vendor not found"
+            });
+        }
+
+        // Delete the vendor
+        await VendorModel.findByIdAndDelete(vendorId);
+
+        res.status(200).json({
+            success: true,
+            message: "Vendor deleted successfully"
+        });
+
+    } catch (error) {
+        console.error("Delete vendor error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+

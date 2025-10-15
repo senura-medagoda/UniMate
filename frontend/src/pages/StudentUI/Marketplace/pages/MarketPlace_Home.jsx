@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext, useEffect } from 'react'
 import M_Hero from '../components/M_Hero'
 import M_LatestCollection from '../components/M_LatestCollection'
 import M_BestSeller from '../components/M_BestSeller'
@@ -6,8 +6,16 @@ import M_OurPolicy from '../components/M_OurPolicy'
 import M_NewsletterBox from '../components/M_NewsletterBox'
 import MarketPlace_Navbar from '../components/MarketPlace_Navbar'
 import M_Footer from '../components/M_Footer'
+import { ShopContext } from '../context/M_ShopContext'
 
 const MarketPlace_Home = ({ user, setUser }) => {
+  const { refreshCart } = useContext(ShopContext);
+
+  // Refresh cart when component mounts
+  useEffect(() => {
+    refreshCart();
+  }, []);
+
   return (
     <div>
       <M_Hero/>

@@ -25,13 +25,23 @@ export async function getStudentById(req, res) {
 export async function addStudent(req, res) {
     try {
         const { s_fname, s_lname, s_email, s_password, s_uni, s_uniID} = req.body;
-        const hashedPassword = await bcrypt.hash(s_password, 12);
-        const newStd = new Student({ s_fname, s_lname, s_email, s_password: hashedPassword, s_uni, s_uniID});
+        
+        // Sanitize and normalize the password to handle special characters
+        const normalizedPassword = s_password.trim();
+        
+        const newStd = new Student({ 
+            s_fname, 
+            s_lname, 
+            s_email, 
+            s_password: normalizedPassword, 
+            s_uni, 
+            s_uniID
+        });
         await newStd.save();
         res.status(201).json({ message: "Student added successfully..!" })
     } catch (error) {
         console.error("Error in addStudent : ", error);
-        res.status(500).json({ message: "Internal server errorse" });
+        res.status(500).json({ message: "Internal server error" });
     }
 }
 
@@ -40,6 +50,8 @@ export async function updateStudent(req, res) {
         const { 
             s_fname, 
             s_lname, 
+            s_uni,
+            s_uniID,
             s_NIC, 
             s_phone, 
             s_homeaddress, 
@@ -54,6 +66,8 @@ export async function updateStudent(req, res) {
         const updateData = {};
         if (s_fname !== undefined) updateData.s_fname = s_fname;
         if (s_lname !== undefined) updateData.s_lname = s_lname;
+        if (s_uni !== undefined) updateData.s_uni = s_uni;
+        if (s_uniID !== undefined) updateData.s_uniID = s_uniID;
         if (s_NIC !== undefined) updateData.s_NIC = s_NIC;
         if (s_phone !== undefined) updateData.s_phone = s_phone;
         if (s_homeaddress !== undefined) updateData.s_homeaddress = s_homeaddress;

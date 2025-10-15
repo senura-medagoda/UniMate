@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 const jobSchema = new mongoose.Schema({
 
     title:{
@@ -54,6 +55,7 @@ const jobSchema = new mongoose.Schema({
         type:String,
         required:true,
         default:"pending",
+        enum: ["pending", "live", "rejected", "archived"],
     },
 
     postedby:{

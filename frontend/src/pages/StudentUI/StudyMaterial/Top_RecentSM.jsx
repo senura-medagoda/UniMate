@@ -1,59 +1,77 @@
+// SM - Top Rated & Recently Uploaded Study Materials Component
 import React, { useState, useEffect } from "react";
 import { FaThumbsUp, FaThumbsDown, FaStar, FaDownload, FaCalendar } from "react-icons/fa";
 import Navbar from "./Components/Navbar.jsx";
 
 const MaterialsPage = ({ user, setUser }) => {
-  const [view, setView] = useState("top"); // default: top rated
-  const [topMaterials, setTopMaterials] = useState([]);
-  const [recentMaterials, setRecentMaterials] = useState([]);
+  const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     campus: "",
     course: "",
     year: "",
     semester: "",
-    subject: ""
+    subject: "",
+    sortBy: "top" // Add sort option to filters
   });
 
-  // Fetch top materials
-  const fetchTopMaterials = async () => {
+  // System data states
+  const [systemData, setSystemData] = useState({
+    campuses: [],
+    courses: [],
+    years: [],
+    semesters: [],
+    subjects: []
+  });
+  const [systemDataLoading, setSystemDataLoading] = useState(false);
+
+  // Fetch system data for dropdowns
+  const fetchSystemData = async () => {
+    setSystemDataLoading(true);
+    try {
+      const response = await fetch('http://localhost:5001/api/system-data/all');
+      const data = await response.json();
+      if (data.success) {
+        setSystemData(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching system data:', error);
+    } finally {
+      setSystemDataLoading(false);
+    }
+  };
+
+  // Fetch materials based on sort option
+  const fetchMaterials = async () => {
     setLoading(true);
     try {
-      let url = 'http://localhost:5001/api/study-materials/top?';
+      let url = '';
+      if (filters.sortBy === "top") {
+        url = 'http://localhost:5001/api/study-materials/top?';
+      } else {
+        url = 'http://localhost:5001/api/study-materials/all?';
+      }
+      
       const params = new URLSearchParams();
       
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value);
+        if (value && key !== 'sortBy') params.append(key, value);
       });
       
       const response = await fetch(url + params.toString());
       const data = await response.json();
-      setTopMaterials(data);
+      
+      if (filters.sortBy === "recent") {
+        // Sort by creation date (most recent first)
+        const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setMaterials(sortedData);
+      } else {
+        setMaterials(data);
+      }
     } catch (error) {
-      console.error('Error fetching top materials:', error);
+      console.error('Error fetching materials:', error);
       // Fallback data
-      setTopMaterials([
-        { id: 3, title: "Algorithms Book", uploadedBy: "Student C", likeCount: 25, unlikeCount: 2, downloadCount: 150, rating: 4.8, campus: "Malabe", course: "Computer Science", year: "3", semester: "2", subject: "Algorithms", description: "Comprehensive algorithms guide", createdAt: new Date().toISOString() },
-        { id: 4, title: "Chemistry Guide", uploadedBy: "Student D", likeCount: 18, unlikeCount: 1, downloadCount: 120, rating: 4.6, campus: "Kandy", course: "Engineering", year: "2", semester: "1", subject: "Chemistry", description: "Complete chemistry reference", createdAt: new Date().toISOString() }
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch recent materials
-  const fetchRecentMaterials = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('http://localhost:5001/api/study-materials/all');
-      const data = await response.json();
-      // Sort by creation date (most recent first)
-      const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      setRecentMaterials(sortedData);
-    } catch (error) {
-      console.error('Error fetching recent materials:', error);
-      // Fallback data
-      setRecentMaterials([
+      setMaterials([
         { id: 1, title: "Math Notes", uploadedBy: "Student A", likeCount: 12, unlikeCount: 0, downloadCount: 80, rating: 4.2, campus: "Malabe", course: "IT", year: "1", semester: "1", subject: "Mathematics", description: "Calculus and algebra notes", createdAt: new Date().toISOString() },
         { id: 2, title: "Physics PDF", uploadedBy: "Student B", likeCount: 5, unlikeCount: 1, downloadCount: 45, rating: 3.8, campus: "Matara", course: "Physics", year: "2", semester: "2", subject: "Physics", description: "Modern physics concepts", createdAt: new Date().toISOString() }
       ]);
@@ -63,12 +81,12 @@ const MaterialsPage = ({ user, setUser }) => {
   };
 
   useEffect(() => {
-    if (view === "top") {
-      fetchTopMaterials();
-    } else {
-      fetchRecentMaterials();
-    }
-  }, [view, filters]);
+    fetchSystemData();
+  }, []);
+
+  useEffect(() => {
+    fetchMaterials();
+  }, [filters]);
 
   const handleLike = async (materialId) => {
     try {
@@ -79,37 +97,21 @@ const MaterialsPage = ({ user, setUser }) => {
       });
       
       if (response.ok) {
-        // Update the material in the appropriate list
-        if (view === "top") {
-          setTopMaterials(prev => prev.map(material => 
-            (material._id === materialId || material.id === materialId)
-              ? { ...material, likeCount: (material.likeCount || 0) + 1 }
-              : material
-          ));
-        } else {
-          setRecentMaterials(prev => prev.map(material => 
-            (material._id === materialId || material.id === materialId)
-              ? { ...material, likeCount: (material.likeCount || 0) + 1 }
-              : material
-          ));
-        }
+        // Update the material in the list
+        setMaterials(prev => prev.map(material => 
+          (material._id === materialId || material.id === materialId)
+            ? { ...material, likeCount: (material.likeCount || 0) + 1 }
+            : material
+        ));
       }
     } catch (error) {
       console.error('Error liking material:', error);
       // Fallback: update local state
-      if (view === "top") {
-        setTopMaterials(prev => prev.map(material => 
-          (material._id === materialId || material.id === materialId)
-            ? { ...material, likeCount: (material.likeCount || 0) + 1 }
-            : material
-        ));
-      } else {
-        setRecentMaterials(prev => prev.map(material => 
-          (material._id === materialId || material.id === materialId)
-            ? { ...material, likeCount: (material.likeCount || 0) + 1 }
-            : material
-        ));
-      }
+      setMaterials(prev => prev.map(material => 
+        (material._id === materialId || material.id === materialId)
+          ? { ...material, likeCount: (material.likeCount || 0) + 1 }
+          : material
+      ));
     }
   };
 
@@ -122,37 +124,21 @@ const MaterialsPage = ({ user, setUser }) => {
       });
       
       if (response.ok) {
-        // Update the material in the appropriate list
-        if (view === "top") {
-          setTopMaterials(prev => prev.map(material => 
-            (material._id === materialId || material.id === materialId)
-              ? { ...material, unlikeCount: (material.unlikeCount || 0) + 1 }
-              : material
-          ));
-        } else {
-          setRecentMaterials(prev => prev.map(material => 
-            (material._id === materialId || material.id === materialId)
-              ? { ...material, unlikeCount: (material.unlikeCount || 0) + 1 }
-              : material
-          ));
-        }
+        // Update the material in the list
+        setMaterials(prev => prev.map(material => 
+          (material._id === materialId || material.id === materialId)
+            ? { ...material, unlikeCount: (material.unlikeCount || 0) + 1 }
+            : material
+        ));
       }
     } catch (error) {
       console.error('Error unliking material:', error);
       // Fallback: update local state
-      if (view === "top") {
-        setTopMaterials(prev => prev.map(material => 
-          (material._id === materialId || material.id === materialId)
-            ? { ...material, unlikeCount: (material.unlikeCount || 0) + 1 }
-            : material
-        ));
-      } else {
-        setRecentMaterials(prev => prev.map(material => 
-          (material._id === materialId || material.id === materialId)
-            ? { ...material, unlikeCount: (material.unlikeCount || 0) + 1 }
-            : material
-        ));
-      }
+      setMaterials(prev => prev.map(material => 
+        (material._id === materialId || material.id === materialId)
+          ? { ...material, unlikeCount: (material.unlikeCount || 0) + 1 }
+          : material
+      ));
     }
   };
 
@@ -176,22 +162,67 @@ const MaterialsPage = ({ user, setUser }) => {
       document.body.removeChild(a);
       
       // Update download count locally
-      if (view === "top") {
-        setTopMaterials(prev => prev.map(material => 
-          (material._id === materialId || material.id === materialId)
-            ? { ...material, downloadCount: (material.downloadCount || 0) + 1 }
-            : material
-        ));
-      } else {
-        setRecentMaterials(prev => prev.map(material => 
-          (material._id === materialId || material.id === materialId)
-            ? { ...material, downloadCount: (material.downloadCount || 0) + 1 }
-            : material
-        ));
-      }
+      setMaterials(prev => prev.map(material => 
+        (material._id === materialId || material.id === materialId)
+          ? { ...material, downloadCount: (material.downloadCount || 0) + 1 }
+          : material
+      ));
     } catch (error) {
       console.error('Error downloading file:', error);
       // Simulate download for demo purposes
+      alert('Download functionality would work here with a real file URL');
+    }
+  };
+
+  const handleDownloadAll = async (materialId, fileUrls) => {
+    try {
+      // Track download
+      await fetch(`http://localhost:5001/api/study-materials/${materialId}/download`, {
+        method: 'POST'
+      });
+      
+      console.log('Downloading all files:', fileUrls);
+      
+      // Download all files
+      for (let i = 0; i < fileUrls.length; i++) {
+        const fileUrl = fileUrls[i];
+        console.log(`Downloading file ${i + 1}/${fileUrls.length}:`, fileUrl);
+        
+        try {
+          const response = await fetch(`http://localhost:5001${fileUrl}`);
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileUrl.split('/').pop();
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            // Small delay between downloads to prevent browser blocking
+            if (i < fileUrls.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          } else {
+            console.error(`Failed to download file: ${fileUrl}`);
+          }
+        } catch (fileError) {
+          console.error(`Error downloading file ${fileUrl}:`, fileError);
+        }
+      }
+      
+      console.log('All files downloaded successfully');
+      
+      // Update download count locally
+      setMaterials(prev => prev.map(material => 
+        (material._id === materialId || material.id === materialId)
+          ? { ...material, downloadCount: (material.downloadCount || 0) + 1 }
+          : material
+      ));
+    } catch (error) {
+      console.error('Error downloading files:', error);
       alert('Download functionality would work here with a real file URL');
     }
   };
@@ -204,7 +235,7 @@ const MaterialsPage = ({ user, setUser }) => {
     });
   };
 
-  const currentMaterials = view === "top" ? topMaterials : recentMaterials;
+  const currentMaterials = materials;
 
   return (
     <>
@@ -215,83 +246,138 @@ const MaterialsPage = ({ user, setUser }) => {
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-4">Study Materials</h1>
         
-        {/* Toggle Buttons */}
-        <div className="flex justify-center gap-4 mb-6">
-          <button
-            onClick={() => setView("top")}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              view === "top" 
-                ? "bg-blue-500 text-white shadow-lg" 
-                : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            <FaStar className="inline mr-2" />
-            Top Rated
-          </button>
-          <button
-            onClick={() => setView("recent")}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              view === "recent" 
-                ? "bg-blue-500 text-white shadow-lg" 
-                : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            <FaCalendar className="inline mr-2" />
-            Recently Uploaded
-          </button>
-        </div>
-
         {/* Filters */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          <select
-            value={filters.campus}
-            onChange={(e) => setFilters(prev => ({ ...prev, campus: e.target.value }))}
-            className="border p-2 rounded"
-          >
-            <option value="">All Campuses</option>
-            <option value="Malabe">Malabe</option>
-            <option value="Kandy">Kandy</option>
-            <option value="Matara">Matara</option>
-            <option value="Jaffna">Jaffna</option>
-          </select>
-          
-          <input
-            type="text"
-            placeholder="Course"
-            value={filters.course}
-            onChange={(e) => setFilters(prev => ({ ...prev, course: e.target.value }))}
-            className="border p-2 rounded"
-          />
-          
-          <select
-            value={filters.year}
-            onChange={(e) => setFilters(prev => ({ ...prev, year: e.target.value }))}
-            className="border p-2 rounded"
-          >
-            <option value="">All Years</option>
-            <option value="1">Year 1</option>
-            <option value="2">Year 2</option>
-            <option value="3">Year 3</option>
-            <option value="4">Year 4</option>
-          </select>
-          
-          <select
-            value={filters.semester}
-            onChange={(e) => setFilters(prev => ({ ...prev, semester: e.target.value }))}
-            className="border p-2 rounded"
-          >
-            <option value="">All Semesters</option>
-            <option value="1">Semester 1</option>
-            <option value="2">Semester 2</option>
-          </select>
-          
-          <input
-            type="text"
-            placeholder="Subject"
-            value={filters.subject}
-            onChange={(e) => setFilters(prev => ({ ...prev, subject: e.target.value }))}
-            className="border p-2 rounded"
-          />
+        <div className="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 mb-6">
+          <div className="px-4 py-4">
+            <div className="bg-white rounded-2xl shadow-lg p-4">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                {/* Sort Filter */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Sort By
+                  </label>
+                  <select
+                    value={filters.sortBy}
+                    onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
+                    className="w-full h-12 px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-gray-300 text-sm"
+                  >
+                    <option value="top">Top Rated</option>
+                    <option value="recent">Recently Uploaded</option>
+                  </select>
+                </div>
+                
+                {/* Campus Filter */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Campus
+                  </label>
+                  <select
+                    value={filters.campus}
+                    onChange={(e) => setFilters(prev => ({ ...prev, campus: e.target.value }))}
+                    className="w-full h-12 px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-gray-300 text-sm"
+                    disabled={systemDataLoading}
+                  >
+                    <option value="">{systemDataLoading ? "Loading..." : "All Campuses"}</option>
+                    {systemData.campuses.map((campus) => (
+                      <option key={campus._id} value={campus.name}>
+                        {campus.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Course Filter */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Course
+                  </label>
+                  <select
+                    value={filters.course}
+                    onChange={(e) => setFilters(prev => ({ ...prev, course: e.target.value }))}
+                    className="w-full h-12 px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-gray-300 text-sm"
+                    disabled={systemDataLoading}
+                  >
+                    <option value="">{systemDataLoading ? "Loading..." : "All Courses"}</option>
+                    {systemData.courses.map((course) => (
+                      <option key={course._id} value={course.name}>
+                        {course.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Year Filter */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Year
+                  </label>
+                  <select
+                    value={filters.year}
+                    onChange={(e) => setFilters(prev => ({ ...prev, year: e.target.value }))}
+                    className="w-full h-12 px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-gray-300 text-sm"
+                    disabled={systemDataLoading}
+                  >
+                    <option value="">{systemDataLoading ? "Loading..." : "All Years"}</option>
+                    {systemData.years.map((year) => (
+                      <option key={year._id} value={year.year}>
+                        {year.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Semester Filter */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Semester
+                  </label>
+                  <select
+                    value={filters.semester}
+                    onChange={(e) => setFilters(prev => ({ ...prev, semester: e.target.value }))}
+                    className="w-full h-12 px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-gray-300 text-sm"
+                    disabled={systemDataLoading}
+                  >
+                    <option value="">{systemDataLoading ? "Loading..." : "All Semesters"}</option>
+                    {systemData.semesters.map((semester) => (
+                      <option key={semester._id} value={semester.semester}>
+                        {semester.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Subject Filter */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Subject
+                  </label>
+                  <select
+                    value={filters.subject}
+                    onChange={(e) => setFilters(prev => ({ ...prev, subject: e.target.value }))}
+                    className="w-full h-12 px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-gray-300 text-sm"
+                    disabled={systemDataLoading}
+                  >
+                    <option value="">{systemDataLoading ? "Loading..." : "All Subjects"}</option>
+                    {systemData.subjects.map((subject) => (
+                      <option key={subject._id} value={subject.name}>
+                        {subject.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {/* Clear All Filters Button */}
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => setFilters({ campus: "", course: "", year: "", semester: "", subject: "", sortBy: "top" })}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 text-sm font-medium"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -327,7 +413,7 @@ const MaterialsPage = ({ user, setUser }) => {
                   <p><span className="font-semibold">Course:</span> {material.course}</p>
                   <p><span className="font-semibold">Year:</span> {material.year} | <span className="font-semibold">Semester:</span> {material.semester}</p>
                   <p><span className="font-semibold">Subject:</span> {material.subject}</p>
-                  {view === "recent" && (
+                  {filters.sortBy === "recent" && (
                     <p><span className="font-semibold">Uploaded:</span> {formatDate(material.createdAt)}</p>
                   )}
                 </div>
@@ -371,11 +457,20 @@ const MaterialsPage = ({ user, setUser }) => {
                   </button>
                   
                   <button
-                    onClick={() => handleDownload(material._id || material.id, material.fileUrl || "#")}
+                    onClick={() => {
+                      if (material.fileUrls && material.fileUrls.length > 0) {
+                        handleDownloadAll(material._id || material.id, material.fileUrls);
+                      } else if (material.fileUrl) {
+                        handleDownload(material._id || material.id, material.fileUrl);
+                      }
+                    }}
                     className="px-3 py-2 bg-blue-500 text-white rounded text-xs font-medium hover:bg-blue-600 transition-colors"
                   >
                     <FaDownload className="inline mr-1" />
-                    Download
+                    {material.fileUrls && material.fileUrls.length > 0 
+                      ? `Download All (${material.fileUrls.length})` 
+                      : 'Download'
+                    }
                   </button>
                 </div>
               </div>

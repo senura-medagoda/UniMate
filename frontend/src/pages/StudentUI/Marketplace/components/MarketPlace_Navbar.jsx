@@ -8,7 +8,7 @@ const MarketPlace_Navbar = ({ user, setUser }) => {
    const [visible,setVisible] =useState(false);
    const [isScrolled, setIsScrolled] = useState(false);
    const location = useLocation();
-   const {setShowSearch ,getCartCount,navigate,token,setToken,setCartItem} = useContext(ShopContext);
+   const {setShowSearch ,getCartCount,navigate,token,setToken,setCartItem,getFavoritesCount,refreshCart} = useContext(ShopContext);
 
    // Check if we're on the home page
    const isHomePage = location.pathname === '/M_home' || location.pathname === '/mphome' || location.pathname === '/';
@@ -22,6 +22,11 @@ const MarketPlace_Navbar = ({ user, setUser }) => {
      window.addEventListener('scroll', handleScroll);
      return () => window.removeEventListener('scroll', handleScroll);
    }, []);
+
+   // Refresh cart when component mounts or location changes
+   useEffect(() => {
+     refreshCart();
+   }, [location.pathname]);
 
   const logout=()=>{
     navigate('/login-std')
@@ -96,12 +101,22 @@ const MarketPlace_Navbar = ({ user, setUser }) => {
           <div className='flex flex-col gap-2 w-36 py-3 px-5 bg-white text-gray-500 rounded-lg shadow-xl border border-gray-200' >
             <p className='cursor-pointer hover:text-black transition-colors duration-200' >My Profile</p>
             <p onClick={()=>navigate('/M_orders')} className='cursor-pointer hover:text-black transition-colors duration-200' >Orders</p>
+            <p onClick={()=>navigate('/M_my-requests')} className='cursor-pointer hover:text-black transition-colors duration-200' >My Requests</p>
             <p onClick={logout} className='cursor-pointer hover:text-black transition-colors duration-200' >Logout</p>
           </div>
         </div>
         }
         
       </div>
+      <Link to='/M_favorites' className='relative' >
+        <svg className={`w-5 min-w-5 ${
+          isHomePage && !isScrolled ? 'brightness-0 invert' : ''
+        }`} fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+        <p className='absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-red-500 text-white aspect-square rounded-full text-[8px]'>{getFavoritesCount()}</p>    
+      </Link>
+      
       <Link to='/M_cart'className='relative' >
       <img src={assets.cart_icon} className={`w-5 min-w-5 ${
         isHomePage && !isScrolled ? 'brightness-0 invert' : ''

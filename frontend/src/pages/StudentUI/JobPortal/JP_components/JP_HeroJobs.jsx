@@ -1,6 +1,7 @@
 // components/JP_HeroJobs.jsx
 import React, { useState, useEffect } from 'react';
 import api from '../../../../lib/axios';
+import JobDetailsPopup from './JobDetailsPopup';
 
 const JP_HeroJobs = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -11,8 +12,11 @@ const JP_HeroJobs = ({ user }) => {
     experience: ''
   });
   const [jobs, setJobs] = useState([]);
+  const [filteredJobs, setFilteredJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedJobId, setSelectedJobId] = useState(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   // Fetch jobs from API
   useEffect(() => {
@@ -64,6 +68,7 @@ const JP_HeroJobs = ({ user }) => {
           
           console.log('Transformed jobs:', transformedJobs);
           setJobs(transformedJobs);
+          setFilteredJobs(transformedJobs);
           setError(null);
         } else {
           console.error('API returned success: false');
@@ -129,9 +134,52 @@ const JP_HeroJobs = ({ user }) => {
     }
   };
 
+  // Filter jobs based on search term and filters
+  const filterJobs = () => {
+    let filtered = [...jobs];
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(job => 
+        job.title.toLowerCase().includes(searchLower) ||
+        job.company.toLowerCase().includes(searchLower) ||
+        job.description.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Filter by job type
+    if (filters.jobType) {
+      filtered = filtered.filter(job => 
+        job.type.toLowerCase() === filters.jobType.toLowerCase()
+      );
+    }
+
+    // Filter by location
+    if (filters.location) {
+      filtered = filtered.filter(job => 
+        job.location.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
+
+    // Filter by category (department)
+    if (filters.category) {
+      filtered = filtered.filter(job => 
+        job.company.toLowerCase().includes(filters.category.toLowerCase())
+      );
+    }
+
+    setFilteredJobs(filtered);
+  };
+
+  // Apply filters whenever search term or filters change
+  useEffect(() => {
+    filterJobs();
+  }, [searchTerm, filters, jobs]);
+
   const handleSearch = (e) => {
     e.preventDefault();
-    // In a real app, this would trigger an API call
+    filterJobs();
     console.log('Searching for:', searchTerm, filters);
   };
 
@@ -142,9 +190,23 @@ const JP_HeroJobs = ({ user }) => {
       return;
     }
     
-    // In a real app, this would open an application modal or page
-    console.log(`User ${user.name || user.email} applying for job #${jobId}`);
-    alert(`Applying for job #${jobId} as ${user.name || user.email}`);
+    console.log('=== JP_HeroJobs DEBUG ===');
+    console.log('User object in JP_HeroJobs:', user);
+    console.log('User s_status:', user?.s_status);
+    console.log('========================');
+    
+    setSelectedJobId(jobId);
+    setIsPopupOpen(true);
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+    setSelectedJobId(null);
+  };
+
+  const handleApplicationSuccess = () => {
+    // Optionally refresh the jobs list or show a success message
+    console.log('Application submitted successfully');
   };
 
   const toggleSaveJob = (jobId) => {
@@ -229,13 +291,25 @@ const JP_HeroJobs = ({ user }) => {
                   />
                 </div>
               </div>
-              <div className="flex items-end">
+              <div className="flex items-end gap-2">
                 <button type="submit" className="btn btn-primary w-full sm:w-auto h-12 px-8 border-0 text-white font-semibold" style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   Search Jobs
                 </button>
+                {(searchTerm || filters.jobType || filters.location || filters.category || filters.experience) && (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setFilters({ jobType: '', location: '', category: '', experience: '' });
+                    }}
+                    className="btn btn-outline h-12 px-4 border-gray-300 text-gray-600 hover:bg-gray-50"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
             </div>
 
@@ -269,10 +343,32 @@ const JP_HeroJobs = ({ user }) => {
                   onChange={(e) => setFilters({...filters, location: e.target.value})}
                 >
                   <option value="">All Locations</option>
-                  <option value="main-campus">Main Campus</option>
-                  <option value="north-campus">North Campus</option>
                   <option value="remote">Remote</option>
-                  <option value="local">Local</option>
+                  <option value="colombo">Colombo</option>
+                  <option value="gampaha">Gampaha</option>
+                  <option value="kalutara">Kalutara</option>
+                  <option value="kandy">Kandy</option>
+                  <option value="matale">Matale</option>
+                  <option value="nuwara eliya">Nuwara Eliya</option>
+                  <option value="galle">Galle</option>
+                  <option value="matara">Matara</option>
+                  <option value="hambantota">Hambantota</option>
+                  <option value="jaffna">Jaffna</option>
+                  <option value="kilinochchi">Kilinochchi</option>
+                  <option value="mannar">Mannar</option>
+                  <option value="mullaitivu">Mullaitivu</option>
+                  <option value="vavuniya">Vavuniya</option>
+                  <option value="batticaloa">Batticaloa</option>
+                  <option value="ampara">Ampara</option>
+                  <option value="trincomalee">Trincomalee</option>
+                  <option value="kurunegala">Kurunegala</option>
+                  <option value="puttalam">Puttalam</option>
+                  <option value="anuradhapura">Anuradhapura</option>
+                  <option value="polonnaruwa">Polonnaruwa</option>
+                  <option value="badulla">Badulla</option>
+                  <option value="moneragala">Moneragala</option>
+                  <option value="ratnapura">Ratnapura</option>
+                  <option value="kegalle">Kegalle</option>
                 </select>
               </div>
               
@@ -316,7 +412,12 @@ const JP_HeroJobs = ({ user }) => {
         {/* Results Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
-            <span style={{ color: '#fc944c' }}>{jobs.length}</span> Available Jobs
+            <span style={{ color: '#fc944c' }}>{filteredJobs.length}</span> Available Jobs
+            {filteredJobs.length !== jobs.length && (
+              <span className="text-sm font-normal text-gray-600 ml-2">
+                (filtered from {jobs.length} total)
+              </span>
+            )}
           </h2>
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-gray-600">Sort by:</span>
@@ -330,17 +431,35 @@ const JP_HeroJobs = ({ user }) => {
         </div>
 
         {/* Jobs Grid */}
-        {jobs.length === 0 ? (
+        {filteredJobs.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">📋</div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Jobs Available</h3>
-            <p className="text-gray-500">There are currently no job postings available. Check back later for new opportunities!</p>
+            <div className="text-gray-400 text-6xl mb-4">🔍</div>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              {jobs.length === 0 ? 'No Jobs Available' : 'No Jobs Found'}
+            </h3>
+            <p className="text-gray-500">
+              {jobs.length === 0 
+                ? 'There are currently no job postings available. Check back later for new opportunities!'
+                : 'Try adjusting your search criteria or filters to find more jobs.'
+              }
+            </p>
+            {jobs.length > 0 && (
+              <button 
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilters({ jobType: '', location: '', category: '', experience: '' });
+                }}
+                className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {jobs.map(job => (
-            <div key={job.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden">
-              <div className="p-4 sm:p-6">
+            {filteredJobs.map(job => (
+            <div key={job.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col">
+              <div className="p-4 sm:p-6 flex flex-col flex-grow">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 group-hover:text-emerald-600 transition-colors line-clamp-2">
@@ -379,11 +498,11 @@ const JP_HeroJobs = ({ user }) => {
                   </span>
                 </div>
                 
-                <p className="text-gray-600 mb-6 text-sm leading-relaxed line-clamp-3">
+                <p className="text-gray-600 mb-6 text-sm leading-relaxed line-clamp-3 flex-grow">
                   {job.description}
                 </p>
                 
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-auto">
                   <div className="text-xs text-gray-500 space-y-1">
                     <div className="flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -423,6 +542,15 @@ const JP_HeroJobs = ({ user }) => {
           </div>
         </div>
       </div>
+
+      {/* Job Details Popup */}
+      <JobDetailsPopup
+        jobId={selectedJobId}
+        isOpen={isPopupOpen}
+        onClose={handleClosePopup}
+        user={user}
+        onApplicationSuccess={handleApplicationSuccess}
+      />
     </div>
   );
 };

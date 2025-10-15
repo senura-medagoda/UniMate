@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useHMAuth } from '@/context/HMAuthContext'
 import { 
   Search, 
   Filter, 
@@ -23,128 +24,228 @@ import {
   TrendingUp,
   Target
 } from 'lucide-react'
+import ApplicantProfilePopup from './ApplicantProfilePopup'
+import CoverLetterPopup from './CoverLetterPopup'
 
-function HM_HeroApplicants() {
+function HM_HeroApplicants({ user }) {
+  const { hm, token, makeAuthenticatedRequest } = useHMAuth();
   const [selectedJob, setSelectedJob] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedApplicant, setSelectedApplicant] = useState(null);
+  const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
+  const [isCoverLetterPopupOpen, setIsCoverLetterPopupOpen] = useState(false);
 
-  const [jobs] = useState([
-    { id: 'all', title: 'All Positions' },
-    { id: 1, title: 'Software Developer Intern', department: 'Computer Science' },
-    { id: 2, title: 'Research Assistant - Biology', department: 'Biology Department' },
-    { id: 3, title: 'Campus Tour Guide', department: 'Admissions Office' }
+  const [jobs, setJobs] = useState([
+    { id: 'all', title: 'All Positions' }
   ]);
 
-  const [applicants] = useState([
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      position: 'Software Developer Intern',
-      status: 'new',
-      appliedDate: '2023-10-20',
-      resume: 'sarah_johnson_resume.pdf',
-      coverLetter: true,
-      skills: ['JavaScript', 'React', 'Python'],
-      match: 92,
-      notes: 'Strong portfolio, previous internship experience',
-      email: 'sarah.johnson@email.com',
-      phone: '(555) 123-4567',
-      university: 'University of Technology',
-      gpa: '3.8',
-      year: 'Senior'
-    },
-    {
-      id: 2,
-      name: 'Michael Chen',
-      position: 'Software Developer Intern',
-      status: 'reviewed',
-      appliedDate: '2023-10-19',
-      resume: 'michael_chen_resume.pdf',
-      coverLetter: true,
-      skills: ['Java', 'Spring Boot', 'SQL'],
-      match: 87,
-      notes: 'Good academic record, needs technical interview',
-      email: 'michael.chen@email.com',
-      phone: '(555) 234-5678',
-      university: 'State University',
-      gpa: '3.6',
-      year: 'Junior'
-    },
-    {
-      id: 3,
-      name: 'Emma Rodriguez',
-      position: 'Research Assistant - Biology',
-      status: 'interview',
-      appliedDate: '2023-10-18',
-      resume: 'emma_rodriguez_resume.pdf',
-      coverLetter: false,
-      skills: ['Lab Techniques', 'Data Analysis', 'PCR'],
-      match: 95,
-      notes: 'Perfect match, has previous research experience',
-      email: 'emma.rodriguez@email.com',
-      phone: '(555) 345-6789',
-      university: 'Research Institute',
-      gpa: '3.9',
-      year: 'Graduate'
-    },
-    {
-      id: 4,
-      name: 'James Wilson',
-      position: 'Campus Tour Guide',
-      status: 'offer',
-      appliedDate: '2023-10-17',
-      resume: 'james_wilson_resume.pdf',
-      coverLetter: true,
-      skills: ['Public Speaking', 'Leadership', 'Communication'],
-      match: 89,
-      notes: 'Excellent communication skills, offered position',
-      email: 'james.wilson@email.com',
-      phone: '(555) 456-7890',
-      university: 'Community College',
-      gpa: '3.7',
-      year: 'Sophomore'
-    },
-    {
-      id: 5,
-      name: 'Lisa Park',
-      position: 'Research Assistant - Biology',
-      status: 'rejected',
-      appliedDate: '2023-10-16',
-      resume: 'lisa_park_resume.pdf',
-      coverLetter: true,
-      skills: ['Chemistry', 'Lab Safety', 'Research'],
-      match: 78,
-      notes: 'Good candidate but lacks specific lab experience',
-      email: 'lisa.park@email.com',
-      phone: '(555) 567-8901',
-      university: 'Tech University',
-      gpa: '3.5',
-      year: 'Junior'
+  const [applicants, setApplicants] = useState([]);
+
+  // Fetch HM's jobs
+  const fetchJobs = async () => {
+    try {
+      const response = await makeAuthenticatedRequest('http://localhost:5001/api/job/my-jobs', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          const jobsList = [
+            { id: 'all', title: 'All Positions' },
+            ...result.data.map(job => ({
+              id: job._id,
+              title: job.title,
+              department: job.department
+            }))
+          ];
+          setJobs(jobsList);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching jobs:', err);
     }
-  ]);
+  };
+
+  // Update application status
+  const updateApplicationStatus = async (applicationId, newStatus, notes = '') => {
+    try {
+      const response = await makeAuthenticatedRequest(`http://localhost:5001/api/job-applications/${applicationId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          notes: notes
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          // Update the local state
+          setApplicants(prevApplicants => 
+            prevApplicants.map(applicant => 
+              applicant.id === applicationId 
+                ? { ...applicant, status: newStatus, notes: notes }
+                : applicant
+            )
+          );
+          console.log('Application status updated successfully');
+        } else {
+          console.error('Failed to update application status:', result.message);
+        }
+      } else {
+        console.error('Failed to update application status');
+      }
+    } catch (err) {
+      console.error('Error updating application status:', err);
+    }
+  };
+
+  // Handle opening profile popup
+  const handleViewProfile = (applicant) => {
+    setSelectedApplicant(applicant);
+    setIsProfilePopupOpen(true);
+  };
+
+  // Handle closing profile popup
+  const handleCloseProfile = () => {
+    setIsProfilePopupOpen(false);
+    setSelectedApplicant(null);
+  };
+
+  // Handle opening cover letter popup
+  const handleViewCoverLetter = (applicant) => {
+    setSelectedApplicant(applicant);
+    setIsCoverLetterPopupOpen(true);
+  };
+
+  // Handle closing cover letter popup
+  const handleCloseCoverLetter = () => {
+    setIsCoverLetterPopupOpen(false);
+    setSelectedApplicant(null);
+  };
+
+  // Fetch applicants data on component mount
+  useEffect(() => {
+    const fetchApplicants = async () => {
+      if (!token || !hm) {
+        console.log('HM_HeroApplicants: No token or HM data available');
+        console.log('Token available:', !!token);
+        console.log('HM data available:', !!hm);
+        setError('Please log in to view applicants');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch jobs first
+        await fetchJobs();
+        
+        console.log('HM_HeroApplicants: Fetching applicants for HM:', hm.hm_email);
+        console.log('HM_HeroApplicants: Token available:', !!token);
+        console.log('HM_HeroApplicants: Making request to: http://localhost:5001/api/job-applications/hm-applicants');
+
+        const response = await makeAuthenticatedRequest('http://localhost:5001/api/job-applications/hm-applicants', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('HM_HeroApplicants: Response status:', response.status);
+        const result = await response.json();
+        console.log('HM_HeroApplicants: Response result:', result);
+        
+        // Debug: Log the first application to see the data structure
+        if (result.data && result.data.length > 0) {
+          console.log('HM_HeroApplicants: First application data structure:', result.data[0]);
+          console.log('HM_HeroApplicants: StudentId data:', result.data[0].studentId);
+        }
+        
+        if (response.ok && result.success) {
+          // Check if there are any applications
+          if (result.data && result.data.length > 0) {
+            // Transform the data to match the expected format
+            const transformedApplicants = result.data.map(app => ({
+              id: app._id,
+              name: app.studentName,
+              email: app.studentEmail,
+              phone: app.studentPhone || 'N/A',
+              position: app.jobId?.title || 'Unknown Position',
+              department: app.jobId?.department || 'Unknown Department',
+              appliedDate: new Date(app.appliedAt).toLocaleDateString(),
+              status: app.status,
+              location: app.jobId?.location || 'Remote',
+              resume: app.resume,
+              coverLetter: app.coverLetter,
+              notes: app.notes,
+              reviewedAt: app.reviewedAt,
+              reviewedBy: app.reviewedBy,
+              // Student profile details - from populated studentId
+              studentName: app.studentName,
+              studentEmail: app.studentEmail,
+              studentPhone: app.studentPhone,
+              studentHomeAddress: app.studentId?.s_homeaddress || '123 Main Street, Colombo, Sri Lanka',
+              studentUni: app.studentId?.s_uni || 'University of Colombo',
+              studentFaculty: app.studentId?.s_faculty || 'Faculty of Science',
+              studentStudyProgram: app.studentId?.s_studyprogram || 'Computer Science',
+              studentFirstName: app.studentId?.s_fname || app.studentName?.split(' ')[0] || 'John',
+              studentLastName: app.studentId?.s_lname || app.studentName?.split(' ')[1] || 'Doe',
+              studentGender: app.studentId?.s_gender || 'Male',
+              studentDob: app.studentId?.s_dob || '2000-01-01',
+              studentStatus: app.studentId?.s_status || 'Verified'
+            }));
+            
+            setApplicants(transformedApplicants);
+            console.log('HM_HeroApplicants: Successfully loaded', transformedApplicants.length, 'applicants');
+          } else {
+            // No applications found
+            console.log('No applications found for this hiring manager');
+            setApplicants([]);
+          }
+        } else {
+          setError(result.message || 'Failed to fetch applicants');
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error('HM_HeroApplicants: Error fetching applicants:', err);
+        setError(err.message || 'Failed to fetch applicants');
+        setLoading(false);
+      }
+    };
+
+    fetchApplicants();
+  }, [token, hm, makeAuthenticatedRequest]);
 
   const getStatusConfig = (status) => {
     const configs = {
-      new: { 
+      pending: { 
         color: 'bg-blue-100 text-blue-800 border-blue-200', 
-        icon: <AlertCircle className="w-4 h-4" />,
-        text: 'New'
+        icon: <Clock className="w-4 h-4" />,
+        text: 'Pending'
       },
-      reviewed: { 
-        color: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
-        icon: <Eye className="w-4 h-4" />,
-        text: 'Reviewed'
-      },
-      interview: { 
+      shortlisted: { 
         color: 'bg-purple-100 text-purple-800 border-purple-200', 
-        icon: <Calendar className="w-4 h-4" />,
-        text: 'Interview'
+        icon: <Star className="w-4 h-4" />,
+        text: 'Shortlisted'
       },
-      offer: { 
+      hired: { 
         color: 'bg-green-100 text-green-800 border-green-200', 
         icon: <CheckCircle className="w-4 h-4" />,
-        text: 'Offer'
+        text: 'Approved'
       },
       rejected: { 
         color: 'bg-red-100 text-red-800 border-red-200', 
@@ -152,15 +253,9 @@ function HM_HeroApplicants() {
         text: 'Rejected'
       }
     };
-    return configs[status] || configs.new;
+    return configs[status] || configs.pending;
   };
 
-  const getMatchColor = (match) => {
-    if (match >= 90) return 'text-green-600 bg-green-100';
-    if (match >= 80) return 'text-yellow-600 bg-yellow-100';
-    if (match >= 70) return 'text-orange-600 bg-orange-100';
-    return 'text-red-600 bg-red-100';
-  };
 
   const filteredApplicants = applicants.filter(applicant => {
     const matchesJob = selectedJob === 'all' || applicant.position === jobs.find(j => j.id === selectedJob)?.title;
@@ -168,16 +263,15 @@ function HM_HeroApplicants() {
     const matchesSearch = searchTerm === '' || 
       applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       applicant.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      applicant.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+      applicant.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesJob && matchesStatus && matchesSearch;
   });
 
   const statusCounts = {
-    new: applicants.filter(a => a.status === 'new').length,
-    reviewed: applicants.filter(a => a.status === 'reviewed').length,
-    interview: applicants.filter(a => a.status === 'interview').length,
-    offer: applicants.filter(a => a.status === 'offer').length,
+    pending: applicants.filter(a => a.status === 'pending').length,
+    shortlisted: applicants.filter(a => a.status === 'shortlisted').length,
+    hired: applicants.filter(a => a.status === 'hired').length,
     rejected: applicants.filter(a => a.status === 'rejected').length
   };
 
@@ -213,9 +307,6 @@ function HM_HeroApplicants() {
                     {statusConfig.icon}
                     {statusConfig.text}
                   </span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getMatchColor(applicant.match)}`}>
-                    {applicant.match}% Match
-                  </span>
                 </div>
               </div>
 
@@ -230,26 +321,11 @@ function HM_HeroApplicants() {
                   <span className="text-gray-600">{applicant.phone}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4 text-gray-500" />
-                  <span className="text-gray-600">GPA: {applicant.gpa}</span>
-                </div>
-                <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-gray-500" />
                   <span className="text-gray-600">Applied: {applicant.appliedDate}</span>
                 </div>
               </div>
 
-              {/* Skills */}
-              <div className="mb-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Skills</h4>
-                <div className="flex flex-wrap gap-2">
-                  {applicant.skills.map((skill, idx) => (
-                    <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
 
               {/* Notes */}
               {applicant.notes && (
@@ -263,32 +339,48 @@ function HM_HeroApplicants() {
             {/* Right Column - Actions */}
             <div className="lg:w-48 flex flex-col gap-3">
               <div className="flex flex-col gap-2">
-                <button className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => handleViewProfile(applicant)}
+                  className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                >
                   <Eye className="w-4 h-4" />
                   View Profile
                 </button>
-                <button className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => {
+                    if (applicant.resume) {
+                      const resumeUrl = `http://localhost:5001/uploads/${applicant.resume}`;
+                      window.open(resumeUrl, '_blank');
+                    }
+                  }}
+                  className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                >
                   <Download className="w-4 h-4" />
                   Download Resume
                 </button>
-                {applicant.coverLetter && (
-                  <button className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => handleViewCoverLetter(applicant)}
+                  className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                >
                     <FileText className="w-4 h-4" />
                     Cover Letter
                   </button>
-                )}
               </div>
 
               <div className="border-t border-gray-200 pt-3">
                 <div className="flex gap-2">
                   <button 
+                    onClick={() => updateApplicationStatus(applicant.id, 'hired', 'Application accepted')}
                     className="flex-1 py-2 px-3 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-1"
                     style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}
                   >
                     <CheckCircle className="w-4 h-4" />
                     Accept
                   </button>
-                  <button className="flex-1 py-2 px-3 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-1">
+                  <button 
+                    onClick={() => updateApplicationStatus(applicant.id, 'rejected', 'Application rejected')}
+                    className="flex-1 py-2 px-3 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-1"
+                  >
                     <XCircle className="w-4 h-4" />
                     Reject
                   </button>
@@ -300,6 +392,48 @@ function HM_HeroApplicants() {
       </motion.div>
     );
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-gray-600 text-lg">Loading applicants...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Error Loading Applicants</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 text-white rounded-xl font-semibold transition-all duration-200"
+                style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
@@ -333,16 +467,15 @@ function HM_HeroApplicants() {
 
         {/* Stats Overview */}
         <motion.div 
-          className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           {[
-            { key: 'new', label: 'New', count: statusCounts.new, color: 'bg-blue-500' },
-            { key: 'reviewed', label: 'Reviewed', count: statusCounts.reviewed, color: 'bg-yellow-500' },
-            { key: 'interview', label: 'Interview', count: statusCounts.interview, color: 'bg-purple-500' },
-            { key: 'offer', label: 'Offer', count: statusCounts.offer, color: 'bg-green-500' },
+            { key: 'pending', label: 'Pending', count: statusCounts.pending, color: 'bg-blue-500' },
+            { key: 'shortlisted', label: 'Shortlisted', count: statusCounts.shortlisted, color: 'bg-purple-500' },
+            { key: 'hired', label: 'Approved', count: statusCounts.hired, color: 'bg-green-500' },
             { key: 'rejected', label: 'Rejected', count: statusCounts.rejected, color: 'bg-red-500' }
           ].map((stat) => (
             <div key={stat.key} className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 text-center">
@@ -393,10 +526,9 @@ function HM_HeroApplicants() {
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
             >
               <option value="all">All Status</option>
-              <option value="new">New</option>
-              <option value="reviewed">Reviewed</option>
-              <option value="interview">Interview</option>
-              <option value="offer">Offer</option>
+              <option value="pending">Pending</option>
+              <option value="shortlisted">Shortlisted</option>
+              <option value="hired">Approved</option>
               <option value="rejected">Rejected</option>
             </select>
           </div>
@@ -412,14 +544,46 @@ function HM_HeroApplicants() {
           {filteredApplicants.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl shadow-lg border border-gray-100">
               <Users className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-2xl font-bold text-gray-700 mb-2">No applicants found</h3>
-              <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
+              <h3 className="text-2xl font-bold text-gray-700 mb-2">
+                {applicants.length === 0 ? 'No Applicants Yet' : 'No applicants found'}
+              </h3>
+              <p className="text-gray-500 mb-6">
+                {applicants.length === 0 
+                  ? 'You haven\'t received any job applications yet. Start by posting your first job to attract qualified candidates.'
+                  : 'Try adjusting your search or filter criteria.'
+                }
+              </p>
+              {applicants.length === 0 && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => window.location.href = '/addnewjob'}
+                  className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <Target className="w-5 h-5" />
+                  Post Your First Job
+                </motion.button>
+              )}
             </div>
           ) : (
             filteredApplicants.map(renderApplicantCard)
           )}
         </motion.div>
       </div>
+      
+      {/* Profile Popup */}
+      <ApplicantProfilePopup
+        isOpen={isProfilePopupOpen}
+        onClose={handleCloseProfile}
+        applicant={selectedApplicant}
+      />
+      
+      {/* Cover Letter Popup */}
+      <CoverLetterPopup
+        isOpen={isCoverLetterPopupOpen}
+        onClose={handleCloseCoverLetter}
+        applicant={selectedApplicant}
+      />
     </div>
   );
 }

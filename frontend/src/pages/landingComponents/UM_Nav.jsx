@@ -40,9 +40,9 @@ const UM_Nav = () => {
           >
             <Link to="/" className="flex items-center">
               <img 
-                src="/Logo.png" 
+                src="/src/pages/StudentUI/Accommodation/assets/unimatelogo.png" 
                 alt="UniMate Logo" 
-                className="h-8 w-auto lg:h-10"
+                className="h-7 w-auto lg:h-8"
               />
             </Link>
           </motion.div>

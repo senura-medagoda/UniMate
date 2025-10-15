@@ -91,17 +91,6 @@ const ProductCard = ({ product, onCardClick }) => {
             <span className="text-4xl">🍽️</span>
           </div>
           
-          {/* Rating Badge - Top Right */}
-          <div className="absolute top-3 right-3 bg-yellow-400 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-            <span className="text-white">★</span>
-            <span className="font-bold">{product.rating?.toFixed(2) || '4.25'}</span>
-          </div>
-          
-          {/* Like Badge - Bottom Right */}
-          <div className="absolute bottom-3 right-3 bg-black text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-            <span className="text-white">♥</span>
-            <span className="font-bold">{product.likes || '12'}</span>
-          </div>
         </div>
 
         {/* Content Section */}
@@ -158,7 +147,7 @@ const ProductCard = ({ product, onCardClick }) => {
 
 // Main ShopCards Component
 const ShopCards = ({ product }) => {
-  const { menuItems, fetchMenuItems, isLoading, addToCart, cartItems, currency } = useAppContext();
+  const { menuItems, fetchMenuItems, isLoading, addToCart, updateCartItems, cartItems, currency } = useAppContext();
   const scrollContainerRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -200,10 +189,11 @@ const ShopCards = ({ product }) => {
     
     setIsAddingToCart(true);
     try {
-      // Add multiple items to cart based on quantity
-      for (let i = 0; i < quantity; i++) {
-        await addToCart(selectedProduct._id);
-      }
+      // Use updateCartItems to set the exact quantity instead of calling addToCart multiple times
+      const currentQuantity = cartItems[selectedProduct._id] || 0;
+      const newQuantity = currentQuantity + quantity;
+      
+      updateCartItems(selectedProduct._id, newQuantity);
       handleClosePopup();
     } catch (error) {
       console.error('Error adding to cart:', error);

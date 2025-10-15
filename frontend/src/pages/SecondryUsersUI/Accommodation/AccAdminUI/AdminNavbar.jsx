@@ -12,21 +12,6 @@ const AdminNavbar = () => {
               <img src={uniLogo} alt="UniMate" className="h-7 w-auto" />
             </Link>
           </div>
-          
-          <div className="flex items-center space-x-6">
-            <Link
-              to="/admin/accommodation"
-              className="text-gray-700 hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              Accommodation
-            </Link>
-            <Link
-              to="/"
-              className="text-gray-700 hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              Back to Home
-            </Link>
-          </div>
         </div>
       </div>
     </nav>

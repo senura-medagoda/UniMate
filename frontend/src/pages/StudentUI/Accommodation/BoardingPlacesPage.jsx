@@ -4,6 +4,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { getImageUrl, getFirstImage } from '../../../utils/imageUtils';
 import AccommodationNavbar from './components/AccommodationNavbar';
+import StudentImageGallery from './components/StudentImageGallery';
 import BookingModal from './components/BookingModal';
 
 const BoardingPlacesPage = ({ user, setUser }) => {
@@ -14,7 +15,11 @@ const BoardingPlacesPage = ({ user, setUser }) => {
   const [maxPrice, setMaxPrice] = useState(50000);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [bookmarkedPlaces, setBookmarkedPlaces] = useState(new Set());
+  const [showImageGallery, setShowImageGallery] = useState(false);
+  const [favoritePlaces, setFavoritePlaces] = useState(new Set());
+  
+  // Debug: Log initial state
+  console.log('Initial favoritePlaces state:', favoritePlaces, 'size:', favoritePlaces.size);
   const [sortBy, setSortBy] = useState('newest');
 
   // Debug: Check user data
@@ -24,12 +29,18 @@ const BoardingPlacesPage = ({ user, setUser }) => {
 
   useEffect(() => {
     fetchBoardingPlaces();
-    loadBookmarks();
+    loadFavorites();
   }, []);
 
-  // Debug: Log user data when it changes
+  // Ensure favorites are loaded when user changes
   useEffect(() => {
     console.log('BoardingPlacesPage - User data changed:', user);
+    if (user && (user.id || user._id)) {
+      loadFavorites();
+    } else {
+      // Clear favorites if no user
+      setFavoritePlaces(new Set());
+    }
   }, [user]);
 
   const fetchBoardingPlaces = async () => {
@@ -49,27 +60,97 @@ const BoardingPlacesPage = ({ user, setUser }) => {
     }
   };
 
-  const loadBookmarks = () => {
-    const bookmarks = JSON.parse(localStorage.getItem('bookmarkedPlaces') || '[]');
-    setBookmarkedPlaces(new Set(bookmarks));
+  const loadFavorites = () => {
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      console.log('No user ID found for loading favorites');
+      setFavoritePlaces(new Set());
+      return;
+    }
+    
+    // Load favorites from localStorage
+    const favorites = JSON.parse(localStorage.getItem(`favorites_${userId}`) || '[]');
+    console.log('Loading favorites for user:', userId, 'favorites:', favorites, 'length:', favorites.length);
+    setFavoritePlaces(new Set(favorites));
   };
 
-  const toggleBookmark = (placeId) => {
-    const newBookmarks = new Set(bookmarkedPlaces);
-    if (newBookmarks.has(placeId)) {
-      newBookmarks.delete(placeId);
-      toast.success('Removed from bookmarks');
-    } else {
-      newBookmarks.add(placeId);
-      toast.success('Added to bookmarks');
+  const clearAllFavorites = () => {
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error('Please log in to manage favorites');
+      return;
     }
-    setBookmarkedPlaces(newBookmarks);
-    localStorage.setItem('bookmarkedPlaces', JSON.stringify([...newBookmarks]));
+    
+    console.log('Clearing all favorites for user:', userId);
+    console.log('Before clearing - favoritePlaces:', [...favoritePlaces], 'size:', favoritePlaces.size);
+    
+    // Clear all favorites-related localStorage keys
+    const keysToRemove = Object.keys(localStorage).filter(key => key.startsWith('favorites_'));
+    console.log('Keys to remove:', keysToRemove);
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    localStorage.removeItem(`favorites_${userId}`);
+    setFavoritePlaces(new Set());
+    console.log('After clearing - favoritePlaces should be empty');
+    toast.success('All favorites cleared');
+  };
+
+  const debugFavorites = () => {
+    const userId = user?.id || user?._id;
+    console.log('=== DEBUG FAVORITES ===');
+    console.log('User ID:', userId);
+    console.log('Current favoritePlaces Set:', [...favoritePlaces]);
+    console.log('Current favoritePlaces size:', favoritePlaces.size);
+    console.log('localStorage favorites:', localStorage.getItem(`favorites_${userId}`));
+    console.log('All localStorage keys:', Object.keys(localStorage));
+    console.log('All localStorage values:', Object.values(localStorage));
+    
+    // Check for any favorites-related keys
+    const favoritesKeys = Object.keys(localStorage).filter(key => key.includes('favorite'));
+    console.log('Favorites-related keys:', favoritesKeys);
+    favoritesKeys.forEach(key => {
+      console.log(`Key: ${key}, Value:`, localStorage.getItem(key));
+    });
+    
+    console.log('========================');
+  };
+
+  const toggleFavorite = (placeId) => {
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error('Please log in to manage favorites');
+      return;
+    }
+
+    const newFavorites = new Set(favoritePlaces);
+    console.log('Before toggle - placeId:', placeId, 'current favorites:', [...favoritePlaces], 'newFavorites:', [...newFavorites]);
+    
+    if (newFavorites.has(placeId)) {
+      newFavorites.delete(placeId);
+      toast.success('Removed from favorites');
+    } else {
+      newFavorites.add(placeId);
+      toast.success('Added to favorites');
+    }
+    
+    console.log('After toggle - newFavorites:', [...newFavorites], 'size:', newFavorites.size);
+    setFavoritePlaces(newFavorites);
+    localStorage.setItem(`favorites_${userId}`, JSON.stringify([...newFavorites]));
   };
 
   const handleBookNow = (place) => {
     setSelectedPlace(place);
     setShowBookingModal(true);
+  };
+
+  const handleImageGallery = (place) => {
+    setSelectedPlace(place);
+    setShowImageGallery(true);
+  };
+
+  const handleCloseImageGallery = () => {
+    setShowImageGallery(false);
+    setSelectedPlace(null);
   };
 
   const handleBookingSuccess = () => {
@@ -118,16 +199,35 @@ const BoardingPlacesPage = ({ user, setUser }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AccommodationNavbar />
+      <AccommodationNavbar user={user} setUser={setUser} />
       
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="text-center">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="text-center lg:text-left">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Find Your Perfect Boarding Place</h1>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto lg:mx-0">
               Discover comfortable and affordable accommodation options near your university
             </p>
+            </div>
+            
+            {/* Favorites Button */}
+            <div className="flex justify-center lg:justify-end gap-4">
+              <Link
+                to="/student/accommodation/favorites"
+                className="group text-gray-700 hover:text-red-500 px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-red-50 flex items-center gap-2"
+              >
+                <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+                <span>My Favorites</span>
+                <div className="bg-red-100 text-red-600 rounded-full px-2 py-1 text-xs font-bold">
+                  {favoritePlaces?.size || 0}
+                </div>
+              </Link>
+              
+            </div>
           </div>
         </div>
       </div>
@@ -223,22 +323,43 @@ const BoardingPlacesPage = ({ user, setUser }) => {
                       />
                       <div className="absolute top-4 right-4 flex gap-2">
                         <button
-                          onClick={() => toggleBookmark(place._id)}
-                          className={`p-2 rounded-lg shadow-md transition-all duration-200 ${
-                            bookmarkedPlaces.has(place._id)
-                              ? 'bg-orange-500 text-white'
-                              : 'bg-white/90 hover:bg-white text-gray-700 hover:text-orange-600'
-                          }`}
-                          title={bookmarkedPlaces.has(place._id) ? "Remove from bookmarks" : "Add to bookmarks"}
+                          onClick={() => handleImageGallery(place)}
+                          className="bg-white/90 hover:bg-white text-gray-700 hover:text-blue-600 p-2 rounded-lg shadow-md transition-all duration-200"
+                          title="View All Images"
                         >
-                          <svg className="w-5 h-5" fill={bookmarkedPlaces.has(place._id) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => toggleFavorite(place._id)}
+                          className={`p-2 rounded-lg shadow-md transition-all duration-200 ${
+                            favoritePlaces.has(place._id)
+                              ? 'bg-red-500 text-white hover:bg-red-600'
+                              : 'bg-white/90 hover:bg-white text-gray-700 hover:text-red-500'
+                          }`}
+                          title={favoritePlaces.has(place._id) ? "Remove from favorites" : "Add to favorites"}
+                        >
+                          <svg className="w-5 h-5" fill={favoritePlaces.has(place._id) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                           </svg>
                         </button>
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
                         <p className="text-white font-bold text-2xl">Rs. {place.price}</p>
                         <p className="text-white text-sm opacity-90">per month</p>
+                          </div>
+                          {place.images && place.images.length > 0 && (
+                            <div className="flex items-center gap-1 bg-black/50 text-white px-2 py-1 rounded-full text-sm">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <span>{place.images.length}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
@@ -329,6 +450,14 @@ const BoardingPlacesPage = ({ user, setUser }) => {
           user={user}
           onClose={() => setShowBookingModal(false)}
           onSuccess={handleBookingSuccess}
+        />
+      )}
+
+      {/* Student Image Gallery Modal */}
+      {showImageGallery && selectedPlace && (
+        <StudentImageGallery
+          place={selectedPlace}
+          onClose={handleCloseImageGallery}
         />
       )}
     </div>

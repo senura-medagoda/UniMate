@@ -96,23 +96,18 @@ const MenuManagement = () => {
     isSpicy: false,
     preparationTime: 15,
     calories: '',
-    allergens: [],
-    ingredients: [],
     image: '',
     images: []
   });
   
   const [selectedImage, setSelectedImage] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
 
   const categories = [
     'Burgers', 'Pizza', 'Salads', 'Pasta', 'Desserts', 
     'Beverages', 'Appetizers', 'Main Course', 'Sides', 'Drinks'
   ];
 
-  const allergens = [
-    'dairy', 'eggs', 'fish', 'shellfish', 'tree_nuts', 
-    'peanuts', 'wheat', 'soy'
-  ];
 
   useEffect(() => {
     fetchMenuItems();
@@ -229,8 +224,56 @@ const MenuManagement = () => {
     }));
   };
 
+  // Form validation function
+  const validateForm = () => {
+    const errors = {};
+    
+    // Required field validations
+    if (!formData.name.trim()) {
+      errors.name = 'Menu item name is required';
+    } else if (formData.name.trim().length < 3) {
+      errors.name = 'Menu item name must be at least 3 characters';
+    }
+    
+    if (!formData.description.trim()) {
+      errors.description = 'Description is required';
+    } else if (formData.description.trim().length < 10) {
+      errors.description = 'Description must be at least 10 characters';
+    }
+    
+    if (!formData.price || formData.price === '') {
+      errors.price = 'Price is required';
+    } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) <= 0) {
+      errors.price = 'Price must be a valid positive number';
+    }
+    
+    if (!formData.category) {
+      errors.category = 'Category is required';
+    }
+    
+    // Optional field validations
+    if (formData.calories && formData.calories !== '') {
+      if (isNaN(parseFloat(formData.calories)) || parseFloat(formData.calories) < 0) {
+        errors.calories = 'Calories must be a valid positive number';
+      }
+    }
+    
+    if (formData.preparationTime && (isNaN(parseInt(formData.preparationTime)) || parseInt(formData.preparationTime) < 1)) {
+      errors.preparationTime = 'Preparation time must be a valid positive number';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      toastError('Please fix the form errors before submitting');
+      return;
+    }
     
          try {
        setSubmitting(true);
@@ -270,13 +313,6 @@ const MenuManagement = () => {
       formDataToSend.append('isGlutenFree', formData.isGlutenFree ? 'true' : 'false');
       formDataToSend.append('isSpicy', formData.isSpicy ? 'true' : 'false');
       
-      // Handle array fields
-      if (formData.allergens && formData.allergens.length > 0) {
-        formDataToSend.append('allergens', JSON.stringify(formData.allergens));
-      }
-      if (formData.ingredients && formData.ingredients.length > 0) {
-        formDataToSend.append('ingredients', JSON.stringify(formData.ingredients));
-      }
       
       // Handle existing images for updates
       if (editingItem && !selectedImage) {
@@ -519,14 +555,13 @@ const MenuManagement = () => {
       isSpicy: false,
       preparationTime: 15,
       calories: '',
-      allergens: [],
-      ingredients: [],
       image: '',
       images: []
     });
     setSelectedImage(null);
     setEditingItem(null);
     setShowAddForm(false);
+    setFormErrors({});
   };
 
   const editItem = (item) => {
@@ -544,11 +579,10 @@ const MenuManagement = () => {
       isSpicy: item.isSpicy,
       preparationTime: item.preparationTime,
       calories: item.calories?.toString() || '',
-      allergens: item.allergens || [],
-      ingredients: item.ingredients || [],
       image: item.image || '',
       images: item.images || []
     });
+    setFormErrors({});
     setEditingItem({
       ...item,
       // Preserve the original image data for existing images handling
@@ -710,8 +744,14 @@ const MenuManagement = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      formErrors.name ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter menu item name"
                   />
+                  {formErrors.name && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -723,13 +763,18 @@ const MenuManagement = () => {
                     value={formData.category}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      formErrors.category ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   >
                     <option value="">Select Category</option>
                     {categories.map(category => (
                       <option key={category} value={category}>{category}</option>
                     ))}
                   </select>
+                  {formErrors.category && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.category}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -744,8 +789,14 @@ const MenuManagement = () => {
                     required
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      formErrors.price ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter price"
                   />
+                  {formErrors.price && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.price}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -759,8 +810,14 @@ const MenuManagement = () => {
                     onChange={handleInputChange}
                     min="1"
                     max="120"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      formErrors.preparationTime ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter preparation time in minutes"
                   />
+                  {formErrors.preparationTime && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.preparationTime}</p>
+                  )}
                 </div>
               </div>
               
@@ -774,8 +831,14 @@ const MenuManagement = () => {
                   onChange={handleInputChange}
                   required
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                    formErrors.description ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter detailed description of the menu item"
                 />
+                {formErrors.description && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.description}</p>
+                )}
               </div>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -824,87 +887,6 @@ const MenuManagement = () => {
                 </label>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ingredients
-                  </label>
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Add ingredient"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleArrayInput('ingredients', e.target.value);
-                            e.target.value = '';
-                          }
-                        }}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {formData.ingredients.map((ingredient, index) => (
-                        <span
-                          key={index}
-                          className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-sm flex items-center gap-1"
-                        >
-                          {ingredient}
-                          <button
-                            type="button"
-                            onClick={() => removeArrayItem('ingredients', index)}
-                            className="text-orange-600 hover:text-orange-800"
-                          >
-                            ✕
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Allergens
-                  </label>
-                  <div className="space-y-2">
-                    <select
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          handleArrayInput('allergens', e.target.value);
-                          e.target.value = '';
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    >
-                      <option value="">Select allergen</option>
-                      {allergens.map(allergen => (
-                        <option key={allergen} value={allergen}>
-                          {allergen.charAt(0).toUpperCase() + allergen.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="flex flex-wrap gap-2">
-                      {formData.allergens.map((allergen, index) => (
-                        <span
-                          key={index}
-                          className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm flex items-center gap-1"
-                        >
-                          {allergen}
-                          <button
-                            type="button"
-                            onClick={() => removeArrayItem('allergens', index)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            ✕
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                                 </div>
-               </div>
                
             
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

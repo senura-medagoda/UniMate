@@ -152,6 +152,27 @@ const shopSchema = new mongoose.Schema({
     tags: [{
         type: String,
         trim: true
+    }],
+    adminRatings: [{
+        adminId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FoodAdmin',
+            required: true
+        },
+        rating: {
+            type: Number,
+            required: true,
+            min: 1,
+            max: 5
+        },
+        comment: {
+            type: String,
+            default: ''
+        },
+        ratedAt: {
+            type: Date,
+            default: Date.now
+        }
     }]
 }, {
     timestamps: true,

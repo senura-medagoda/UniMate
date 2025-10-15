@@ -7,8 +7,36 @@ const Shops = () => {
   const { shops, navigate } = useAppContext();
   const routerNavigate = useNavigate();
 
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    
+    // If it's already a full URL (Cloudinary or other), return as is
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // If it starts with /uploads, add the base URL
+    if (imagePath.startsWith('/uploads')) {
+      return `http://localhost:5001${imagePath}`;
+    }
+    
+    // If it's just a filename, add the uploads path
+    return `http://localhost:5001/uploads/${imagePath}`;
+  };
+
   useEffect(() => {
-    console.log('Shops:', shops);
+    console.log('Shops data:', shops);
+    if (shops && shops.length > 0) {
+      console.log('First shop data:', shops[0]);
+      console.log('First shop logo:', shops[0].logo);
+      console.log('First shop images:', shops[0].images);
+      if (shops[0].logo) {
+        console.log('Generated logo URL:', getImageUrl(shops[0].logo));
+      }
+      if (shops[0].images && shops[0].images.length > 0) {
+        console.log('Generated first image URL:', getImageUrl(shops[0].images[0]));
+      }
+    }
   }, [shops]);
 
   const handleViewAllShops = () => {
@@ -39,15 +67,21 @@ const Shops = () => {
               >
                 {/* Shop Image/Logo */}
                 <div className="h-48 bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
-                  {shop.logo ? (
+                  {shop.logo || (shop.images && shop.images.length > 0) ? (
                     <img 
-                      src={shop.logo} 
+                      src={getImageUrl(shop.logo || shop.images[0])} 
                       alt={shop.businessName}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        const fallback = e.target.nextElementSibling;
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
                     />
-                  ) : (
+                  ) : null}
+                  <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center" style={{ display: shop.logo || (shop.images && shop.images.length > 0) ? 'none' : 'flex' }}>
                     <span className="text-6xl">🏪</span>
-                  )}
+                  </div>
                 </div>
 
                 {/* Shop Info */}

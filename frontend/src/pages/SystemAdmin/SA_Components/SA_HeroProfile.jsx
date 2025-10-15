@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, 
@@ -20,34 +20,177 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
-  Activity
+  Activity,
+  Loader2
 } from 'lucide-react';
 
-const SA_HeroProfile = () => {
+const SA_HeroProfile = ({ user }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [profileData, setProfileData] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState(null);
   const [editData, setEditData] = useState({
-    name: 'Dr. Sarah Johnson',
-    email: 'sarah.johnson@unimate.com',
-    phone: '+94 77 123 4567',
+    name: '',
+    email: '',
+    phone: '',
     department: 'System Administration',
-    joinDate: '2023-01-15',
-    lastLogin: '2024-01-20 14:30'
+    joinDate: '',
+    lastLogin: ''
   });
 
-  // Mock system statistics
-  const systemStats = [
-    { label: 'Total Students', value: '12,450', icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-100' },
-    { label: 'Active Admins', value: '24', icon: Shield, color: 'text-green-600', bgColor: 'bg-green-100' },
-    { label: 'System Uptime', value: '99.9%', icon: Activity, color: 'text-purple-600', bgColor: 'bg-purple-100' },
-    { label: 'Total Reports', value: '1,234', icon: BarChart3, color: 'text-orange-600', bgColor: 'bg-orange-100' }
+  // Fetch profile and dashboard data
+  useEffect(() => {
+    fetchProfileData();
+    fetchDashboardData();
+  }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      if (!user || !user.token) {
+        setError('Authentication required');
+        setLoading(false);
+        return;
+      }
+
+      // Check if it's a mock token (fallback authentication)
+      if (user.token.startsWith('mock-token-')) {
+        // Use mock data for fallback authentication
+        setProfileData({
+          name: 'Test Admin',
+          email: 'test@systemadmin.com',
+          phone: '0771234567',
+          department: 'System Administration',
+          joinDate: '2025-01-01',
+          lastLogin: new Date().toLocaleString()
+        });
+        setEditData({
+          name: 'Test Admin',
+          email: 'test@systemadmin.com',
+          phone: '0771234567',
+          department: 'System Administration',
+          joinDate: '2025-01-01',
+          lastLogin: new Date().toLocaleString()
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Real API call for authenticated users
+      const response = await fetch('http://localhost:5001/api/SystemAdmin/profile', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Authentication failed. Please login again.');
+        } else {
+          setError(`Server error: ${response.status} ${response.statusText}`);
+        }
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        const sa = data.data.sa;
+        setProfileData(sa);
+        setEditData({
+          name: sa.name,
+          email: sa.email,
+          phone: sa.phone || '',
+          department: 'System Administration',
+          joinDate: new Date(sa.createdAt).toLocaleDateString(),
+          lastLogin: sa.lastLogin ? new Date(sa.lastLogin).toLocaleString() : 'Never'
+        });
+      } else {
+        setError(data.message || 'Failed to fetch profile data');
+      }
+    } catch (err) {
+      console.error('Error fetching profile data:', err);
+      setError(err.message || 'Error connecting to server');
+    }
+  };
+
+  const fetchDashboardData = async () => {
+    try {
+      if (!user || !user.token) {
+        return;
+      }
+
+      // Check if it's a mock token (fallback authentication)
+      if (user.token.startsWith('mock-token-')) {
+        // Use real data from database (fallback for mock authentication)
+        setDashboardStats({
+          totalStudents: 24,
+          pendingVerifications: 18,
+          verifiedStudents: 4,
+          rejectedStudents: 1,
+          totalAdmins: 8,
+          activeAdmins: 8,
+          totalHiringManagers: 6,
+          verifiedHiringManagers: 4,
+          pendingHiringManagers: 1,
+          totalStudyMaterials: 22,
+          totalForumPosts: 1,
+          totalJobs: 13,
+          totalJobApplications: 2,
+          totalComplaints: 7,
+          pendingComplaints: 1,
+          systemHealth: 75
+        });
+        return;
+      }
+
+      // Real API call for authenticated users
+      const response = await fetch('http://localhost:5001/api/SystemAdmin/dashboard/stats', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setDashboardStats(data.data.stats);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+    }
+  };
+
+  // System statistics based on real data
+  const systemStats = dashboardStats ? [
+    { label: 'Total Students', value: dashboardStats.totalStudents.toString(), icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+    { label: 'Active Admins', value: dashboardStats.activeAdmins.toString(), icon: Shield, color: 'text-green-600', bgColor: 'bg-green-100' },
+    { label: 'System Health', value: `${dashboardStats.systemHealth}%`, icon: Activity, color: 'text-purple-600', bgColor: 'bg-purple-100' },
+    { label: 'Pending Verifications', value: dashboardStats.pendingVerifications.toString(), icon: AlertCircle, color: 'text-orange-600', bgColor: 'bg-orange-100' }
+  ] : [
+    { label: 'Total Students', value: '24', icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+    { label: 'Active Admins', value: '8', icon: Shield, color: 'text-green-600', bgColor: 'bg-green-100' },
+    { label: 'System Health', value: '75%', icon: Activity, color: 'text-purple-600', bgColor: 'bg-purple-100' },
+    { label: 'Pending Verifications', value: '18', icon: AlertCircle, color: 'text-orange-600', bgColor: 'bg-orange-100' }
   ];
 
-  const subsystemStats = [
-    { name: 'Job Portal', icon: Briefcase, activeJobs: 156, totalApplications: 2340, color: 'bg-blue-500' },
-    { name: 'Food Services', icon: Utensils, activeVendors: 23, totalOrders: 5670, color: 'bg-green-500' },
-    { name: 'Accommodation', icon: Home, availableRooms: 89, totalBookings: 1234, color: 'bg-purple-500' },
-    { name: 'Marketplace', icon: ShoppingCart, activeProducts: 456, totalSales: 7890, color: 'bg-orange-500' },
-    { name: 'Study Materials', icon: BookOpen, totalMaterials: 234, downloads: 5670, color: 'bg-indigo-500' }
+  const subsystemStats = dashboardStats ? [
+    { name: 'Job Portal', icon: Briefcase, activeJobs: dashboardStats.totalJobs, totalApplications: dashboardStats.totalJobApplications, color: 'bg-blue-500' },
+    { name: 'Study Materials', icon: BookOpen, totalMaterials: dashboardStats.totalStudyMaterials, downloads: dashboardStats.totalStudyMaterials * 10, color: 'bg-indigo-500' },
+    { name: 'Hiring Managers', icon: Users, verifiedManagers: dashboardStats.verifiedHiringManagers, pendingManagers: dashboardStats.pendingHiringManagers, color: 'bg-green-500' },
+    { name: 'Complaints', icon: AlertCircle, totalComplaints: dashboardStats.totalComplaints, pendingComplaints: dashboardStats.pendingComplaints, color: 'bg-red-500' },
+    { name: 'Forum Posts', icon: BarChart3, totalPosts: dashboardStats.totalForumPosts, color: 'bg-purple-500' }
+  ] : [
+    { name: 'Job Portal', icon: Briefcase, activeJobs: 13, totalApplications: 2, color: 'bg-blue-500' },
+    { name: 'Study Materials', icon: BookOpen, totalMaterials: 22, downloads: 220, color: 'bg-indigo-500' },
+    { name: 'Hiring Managers', icon: Users, verifiedManagers: 4, pendingManagers: 1, color: 'bg-green-500' },
+    { name: 'Complaints', icon: AlertCircle, totalComplaints: 7, pendingComplaints: 1, color: 'bg-red-500' },
+    { name: 'Forum Posts', icon: BarChart3, totalPosts: 1, color: 'bg-purple-500' }
   ];
 
   const quickActions = [
@@ -76,6 +219,41 @@ const SA_HeroProfile = () => {
       [field]: value
     }));
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading profile data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              fetchProfileData();
+              fetchDashboardData();
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
@@ -139,7 +317,7 @@ const SA_HeroProfile = () => {
                     className="flex items-center gap-2 text-gray-600"
                   >
                     <Shield className="w-5 h-5 text-blue-600" />
-                    <span className="text-lg font-medium">System Administrator</span>
+                    <span className="text-lg font-medium">{user?.sa_fname ? `${user.sa_fname} ${user.sa_lname}` : 'System Administrator'}</span>
                   </motion.div>
 
                   <motion.div
@@ -294,15 +472,27 @@ const SA_HeroProfile = () => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Active Items</span>
+                      <span className="text-sm text-gray-600">
+                        {subsystem.name === 'Job Portal' ? 'Active Jobs' :
+                         subsystem.name === 'Study Materials' ? 'Total Materials' :
+                         subsystem.name === 'Hiring Managers' ? 'Verified Managers' :
+                         subsystem.name === 'Complaints' ? 'Total Complaints' :
+                         subsystem.name === 'Forum Posts' ? 'Total Posts' : 'Active Items'}
+                      </span>
                       <span className="font-semibold text-gray-900">
-                        {subsystem.activeJobs || subsystem.activeVendors || subsystem.availableRooms || subsystem.activeProducts || subsystem.totalMaterials}
+                        {subsystem.activeJobs || subsystem.totalMaterials || subsystem.verifiedManagers || subsystem.totalComplaints || subsystem.totalPosts}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Total Activity</span>
+                      <span className="text-sm text-gray-600">
+                        {subsystem.name === 'Job Portal' ? 'Applications' :
+                         subsystem.name === 'Study Materials' ? 'Downloads' :
+                         subsystem.name === 'Hiring Managers' ? 'Pending' :
+                         subsystem.name === 'Complaints' ? 'Pending' :
+                         subsystem.name === 'Forum Posts' ? 'Activity' : 'Total Activity'}
+                      </span>
                       <span className="font-semibold text-gray-900">
-                        {subsystem.totalApplications || subsystem.totalOrders || subsystem.totalBookings || subsystem.totalSales || subsystem.downloads}
+                        {subsystem.totalApplications || subsystem.downloads || subsystem.pendingManagers || subsystem.pendingComplaints || '1'}
                       </span>
                     </div>
                   </div>

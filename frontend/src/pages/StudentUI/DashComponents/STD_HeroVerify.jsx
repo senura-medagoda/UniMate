@@ -176,17 +176,17 @@ const STD_HeroVerify = ({ user, setUser }) => {
   const isFormValid = () => {
     // Check if all required fields are filled
     const allFieldsFilled = (
-      formData.s_fname &&
-      formData.s_lname &&
-      formData.s_uni &&
-      formData.s_faculty &&
-      formData.s_studyprogram &&
-      formData.s_uniID &&
-      formData.s_NIC &&
-      formData.s_gender &&
-      formData.s_phone &&
-      formData.s_dob &&
-      formData.s_homeaddress &&
+      formData.s_fname.trim() &&
+      formData.s_lname.trim() &&
+      formData.s_uni.trim() &&
+      formData.s_faculty.trim() &&
+      formData.s_studyprogram.trim() &&
+      formData.s_uniID.trim() &&
+      formData.s_NIC.trim() &&
+      formData.s_gender.trim() &&
+      formData.s_phone.trim() &&
+      formData.s_dob.trim() &&
+      formData.s_homeaddress.trim() &&
       universityIdFile
     )
 
@@ -215,7 +215,7 @@ const STD_HeroVerify = ({ user, setUser }) => {
     const newErrors = {}
     if (!formData.s_fname) newErrors.s_fname = 'First name is required'
     if (!formData.s_lname) newErrors.s_lname = 'Last name is required'
-    if (!formData.s_uni) newErrors.s_uni = 'University is required'
+    if (!formData.s_uni.trim()) newErrors.s_uni = 'University is required'
     if (!formData.s_faculty) newErrors.s_faculty = 'Faculty is required'
     if (!formData.s_studyprogram) newErrors.s_studyprogram = 'Study program is required'
     if (!formData.s_uniID) newErrors.s_uniID = 'University ID is required'
@@ -303,21 +303,6 @@ const STD_HeroVerify = ({ user, setUser }) => {
     setIsSubmitting(false)
   }
 
-  const universities = [
-    'University of Colombo',
-    'University of Peradeniya',
-    'University of Moratuwa',
-    'University of Kelaniya',
-    'University of Sri Jayewardenepura',
-    'University of Ruhuna',
-    'University of Jaffna',
-    'University of Rajarata',
-    'University of Sabaragamuwa',
-    'University of Wayamba',
-    'University of Uva Wellassa',
-    'University of the Visual & Performing Arts',
-    'Open University of Sri Lanka'
-  ]
 
   const faculties = [
     'Faculty of Engineering',
@@ -601,19 +586,16 @@ const STD_HeroVerify = ({ user, setUser }) => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       University *
                     </label>
-                    <select
+                    <input
+                      type="text"
                       name="s_uni"
                       value={formData.s_uni}
                       onChange={handleInputChange}
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 ${
                         errors.s_uni ? 'border-red-300' : 'border-gray-300'
                       }`}
-                    >
-                      <option value="">Select your university</option>
-                      {universities.map((uni) => (
-                        <option key={uni} value={uni}>{uni}</option>
-                      ))}
-                    </select>
+                      placeholder="Enter your university name"
+                    />
                     {errors.s_uni && (
                       <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                         <AlertCircle className="w-4 h-4" />

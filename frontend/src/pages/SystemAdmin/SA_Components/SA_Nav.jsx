@@ -3,18 +3,23 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, X, User, LogOut, Settings, Shield, Users, BarChart3, GraduationCap } from 'lucide-react';
 
-function SA_Nav() {
+function SA_Nav({ user, setUser }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     // Clear localStorage
-    localStorage.removeItem('systemAdminToken');
-    localStorage.removeItem('systemAdminData');
+    localStorage.removeItem('saToken');
+    localStorage.removeItem('saData');
+    
+    // Clear user state
+    if (setUser) {
+      setUser(null);
+    }
     
     // Navigate to main login page
-    navigate('/login', { replace: true });
+    navigate('/sa-login', { replace: true });
   };
 
   const navItems = [
@@ -50,10 +55,6 @@ function SA_Nav() {
                 alt="UniMate Logo" 
                 className="h-8 w-auto lg:h-10"
               />
-              <div className="ml-3 hidden sm:block">
-                <div className="text-lg font-bold text-gray-900">System Admin</div>
-                <div className="text-xs text-gray-500">User Management</div>
-              </div>
             </Link>
           </motion.div>
 
@@ -96,7 +97,10 @@ function SA_Nav() {
               <div className="dropdown dropdown-end">
                 <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
                   <div className="w-10 rounded-full">
-                    <img src="https://placehold.co/400x400?text=SA" alt="System Admin" />
+                    <img 
+                      src="https://placehold.co/400x400?text=SA" 
+                      alt={user ? `${user.sa_fname} ${user.sa_lname}` : 'System Admin'} 
+                    />
                   </div>
                 </label>
                 <ul tabIndex={0} className="mt-3 p-2 shadow menu menu-compact dropdown-content bg-white rounded-box w-52 border border-gray-200">

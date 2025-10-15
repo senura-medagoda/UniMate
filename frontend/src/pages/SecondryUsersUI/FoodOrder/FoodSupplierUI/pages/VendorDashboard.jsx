@@ -322,32 +322,6 @@ const VendorDashboard = () => {
     }
   ];
 
-  const recentActivity = [
-    {
-      type: "order",
-      message: "New order #1234 received",
-      time: "2 minutes ago",
-      icon: "📦"
-    },
-    {
-      type: "review",
-      message: "New 5-star review received",
-      time: "15 minutes ago",
-      icon: "⭐"
-    },
-    {
-      type: "menu",
-      message: "Menu item 'Butter Chicken' updated",
-      time: "1 hour ago",
-      icon: "🍽️"
-    },
-    {
-      type: "order",
-      message: "Order #1230 completed",
-      time: "2 hours ago",
-      icon: "✅"
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -572,21 +546,6 @@ const VendorDashboard = () => {
               </div>
             </div>
 
-        
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <div className="text-lg">{activity.icon}</div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{activity.message}</p>
-                      <p className="text-xs text-gray-500">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
         

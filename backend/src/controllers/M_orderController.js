@@ -1,5 +1,8 @@
 import orderModel from "../models/M_orderModel.js";
 import userModel from "../models/M_userModel.js";
+import Stripe from 'stripe';
+
+const stripe = new Stripe('sk_test_51SFuVzH8LIDXZA2zO075kGZlR57uYrHnFYUcHJdejzLVMcD5yOTESlw9OUi47c0CF1mx8JJ6z4U0QLvdSt2J7Ee400VYE0hkMD');
 
 // ==============================
 // Place Order (Cash on Delivery)
@@ -198,6 +201,108 @@ const updateOrderLocation = async (req, res) => {
   }
 };
 
+// ==============================
+// Create Stripe Checkout Session
+// ==============================
+const createStripeCheckout = async (req, res) => {
+  try {
+    const { userId, items, amount, address, lat, lng } = req.body;
+    
+    if (!userId || !items?.length || !amount || !address) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    // Check if total amount meets Stripe's minimum requirement (50 cents USD)
+    const totalAmountUSD = Number(amount) * 0.003; // Approximate LKR to USD conversion
+    if (totalAmountUSD < 0.50) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Order amount too small for online payment. Minimum amount required: LKR ${Math.ceil(0.50 / 0.003)}` 
+      });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: items.map((item) => ({
+        price_data: {
+          currency: 'usd', // Use USD for Stripe compatibility
+          product_data: { 
+            name: item.name,
+            description: item.description || `Size: ${item.size || 'N/A'}`
+          },
+          unit_amount: Math.round(Number(item.price) * 0.003 * 100), // Convert LKR to USD cents
+        },
+        quantity: item.quantity,
+      })),
+      success_url: 'http://localhost:5173/M_payment-success?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: 'http://localhost:5173/M_placeorder',
+      metadata: {
+        userId,
+        address: JSON.stringify(address),
+        totalAmount: String(amount),
+        lat: lat || '',
+        lng: lng || '',
+        items: JSON.stringify(items.map(({ _id, quantity, size }) => ({ _id, quantity, size }))),
+      },
+    });
+
+    return res.status(200).json({ success: true, sessionId: session.id, url: session.url });
+  } catch (err) {
+    console.error('createStripeCheckout error', err);
+    return res.status(500).json({ success: false, message: 'Stripe error' });
+  }
+};
+
+// ==============================
+// Confirm Stripe Order
+// ==============================
+const confirmStripeOrder = async (req, res) => {
+  try {
+    const { sessionId, userId, items, amount, address, lat, lng } = req.body;
+    
+    if (!sessionId) return res.status(400).json({ success: false, message: 'sessionId required' });
+
+    // Check if order already exists for this session to prevent duplicates
+    const existingOrder = await orderModel.findOne({ stripeSessionId: sessionId });
+    if (existingOrder) {
+      return res.status(200).json({ success: true, order: existingOrder, message: 'Order already exists' });
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (session.payment_status !== 'paid') {
+      return res.status(400).json({ success: false, message: 'Payment not completed' });
+    }
+
+    const orderData = {
+      userId,
+      items,
+      address,
+      amount,
+      paymentMethod: "Online",
+      payment: true,
+      date: Date.now(),
+      location: {
+        lat: lat ?? null,
+        lng: lng ?? null,
+        updatedAt: new Date(),
+      },
+      stripeSessionId: sessionId,
+    };
+
+    const newOrder = new orderModel(orderData);
+    await newOrder.save();
+
+    // Clear user cart after successful payment
+    await userModel.findByIdAndUpdate(userId, { cartData: {} });
+
+    return res.status(201).json({ success: true, order: newOrder });
+  } catch (err) {
+    console.error('confirmStripeOrder error', err);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 export {
   placeOrder,
   allOrders,
@@ -206,4 +311,6 @@ export {
   analyticsReport,
   deleteOrder,
   updateOrderLocation,
+  createStripeCheckout,
+  confirmStripeOrder,
 };

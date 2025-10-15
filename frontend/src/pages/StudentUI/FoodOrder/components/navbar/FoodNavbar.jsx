@@ -57,7 +57,7 @@ const Navbar = () => {
     }`}>
       {/* Logo */}
       <NavLink to="/std-dash" className="flex-shrink-0">
-        <img className="h-8 sm:h-9 md:h-10 lg:h-11 transition-all duration-300" src={assets.logo} alt="logo" />
+        <img className="h-7 sm:h-9 md:h-10 lg:h-8 transition-all duration-300" src={assets.logo} alt="logo" />
       </NavLink>
 
       {/* Desktop Menu - Centered */}
@@ -203,7 +203,7 @@ const Navbar = () => {
                 <NavLink to="/std-profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
                   Profile
                 </NavLink>
-                <NavLink to="/orders" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                <NavLink to="/student/my-orders" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
                   My Orders
                 </NavLink>
                 <button

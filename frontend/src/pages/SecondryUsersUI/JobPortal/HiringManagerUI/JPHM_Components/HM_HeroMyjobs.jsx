@@ -1,283 +1,249 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion'
+import { useHMAuth } from '@/context/HMAuthContext';
 import { 
   Plus, 
-  Eye, 
-  Edit, 
-  Users, 
-  Calendar, 
+  Briefcase, 
   MapPin, 
-  DollarSign,
+  DollarSign, 
+  Calendar,
   Clock,
   CheckCircle,
-  AlertCircle,
   XCircle,
-  Search,
+  Archive,
+  Eye,
+  Edit,
+  Trash2,
   Filter,
-  ArrowRight,
-  Briefcase,
-  TrendingUp
-} from 'lucide-react';
+  Search,
+  AlertCircle,
+  UserCheck,
+  Building2,
+  Users,
+  TrendingUp,
+  BarChart3
+} from 'lucide-react'
+import JobViewPopup from './JobViewPopup';
+import JobEditPopup from './JobEditPopup';
+import DeleteConfirmationPopup from './DeleteConfirmationPopup';
 
-function HM_HeroMyjobs() {
-  const [activeTab, setActiveTab] = useState('current');
+function HM_HeroMyjobs({ user }) {
+  const navigate = useNavigate();
+  const { hm, token, makeAuthenticatedRequest } = useHMAuth();
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Popup states
+  const [viewPopup, setViewPopup] = useState({ isOpen: false, job: null });
+  const [editPopup, setEditPopup] = useState({ isOpen: false, job: null });
+  const [deletePopup, setDeletePopup] = useState({ isOpen: false, job: null });
 
-  // dummy data -- Temp
-  const [jobs] = useState({
-    current: [
-      {
-        id: 1,
-        title: 'Software Developer Intern',
-        department: 'Computer Science',
-        applications: 24,
-        views: 156,
-        datePosted: '2023-10-15',
-        status: 'active',
-        deadline: '2023-11-15',
-        location: 'Main Campus',
-        salary: '$20/hr',
-        type: 'Internship'
-      },
-      {
-        id: 2,
-        title: 'Research Assistant - Biology',
-        department: 'Biology Department',
-        applications: 18,
-        views: 132,
-        datePosted: '2023-10-10',
-        status: 'active',
-        deadline: '2023-11-10',
-        location: 'Science Building',
-        salary: '$18/hr',
-        type: 'Research'
-      },
-      {
-        id: 3,
-        title: 'Campus Tour Guide',
-        department: 'Admissions Office',
-        applications: 32,
-        views: 245,
-        datePosted: '2023-10-05',
-        status: 'active',
-        deadline: '2023-11-05',
-        location: 'Main Campus',
-        salary: '$15/hr',
-        type: 'Part-Time'
-      }
-    ],
-    pending: [
-      {
-        id: 4,
-        title: 'IT Support Specialist',
-        department: 'IT Services',
-        applications: 0,
-        views: 42,
-        datePosted: '2023-10-20',
-        status: 'pending',
-        deadline: '2023-11-20',
-        location: 'Tech Building',
-        salary: '$22/hr',
-        type: 'Full-Time'
-      },
-      {
-        id: 5,
-        title: 'Social Media Coordinator',
-        department: 'Marketing',
-        applications: 0,
-        views: 28,
-        datePosted: '2023-10-18',
-        status: 'pending',
-        deadline: '2023-11-18',
-        location: 'Remote',
-        salary: '$16/hr',
-        type: 'Part-Time'
-      }
-    ],
-    previous: [
-      {
-        id: 6,
-        title: 'Library Assistant',
-        department: 'Library Services',
-        applications: 15,
-        views: 89,
-        datePosted: '2023-09-15',
-        status: 'closed',
-        deadline: '2023-10-15',
-        location: 'Main Library',
-        salary: '$14/hr',
-        type: 'Work-Study',
-        hired: '2'
-      },
-      {
-        id: 7,
-        title: 'Lab Technician',
-        department: 'Chemistry',
-        applications: 22,
-        views: 156,
-        datePosted: '2023-09-01',
-        status: 'closed',
-        deadline: '2023-10-01',
-        location: 'Chemistry Lab',
-        salary: '$19/hr',
-        type: 'Research',
-        hired: '1'
-      }
-    ]
-  });
+  // Job categories - using useMemo to keep stable reference
+  const categories = React.useMemo(() => [
+    { id: 'all', label: 'All Jobs', icon: Briefcase, count: 0 },
+    { id: 'pending', label: 'Pending', icon: Clock, count: 0 },
+    { id: 'live', label: 'Live', icon: CheckCircle, count: 0 },
+    { id: 'rejected', label: 'Rejected', icon: XCircle, count: 0 },
+    { id: 'archived', label: 'Archived', icon: Archive, count: 0 }
+  ], []);
 
-  const handleNewJob = () => {
-    // In a real app, this would navigate to a job creation form
-    console.log('Creating new job...');
+  // Fetch jobs from API
+  const fetchJobs = async () => {
+    if (!token || !hm) {
+      setError('Please log in to view your jobs');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await makeAuthenticatedRequest('http://localhost:5001/api/job/my-jobs', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setJobs(result.data || []);
+      } else {
+        throw new Error(result.message || 'Failed to fetch jobs');
+      }
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      setError(error.message || 'Failed to load jobs');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      active: { 
-        color: 'bg-green-100 text-green-800 border-green-200', 
-        icon: <CheckCircle className="w-4 h-4" />,
-        text: 'Active'
-      },
-      pending: { 
-        color: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
-        icon: <Clock className="w-4 h-4" />,
-        text: 'Pending'
-      },
-      closed: { 
-        color: 'bg-gray-100 text-gray-800 border-gray-200', 
-        icon: <XCircle className="w-4 h-4" />,
-        text: 'Closed'
-      }
-    };
+  useEffect(() => {
+    fetchJobs();
+  }, [token, hm]);
 
-    const config = statusConfig[status] || statusConfig.closed;
-    
-    return (
-      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${config.color}`}>
-        {config.icon}
-        {config.text}
-      </span>
+  // Filter jobs based on category and search term
+  const filteredJobs = jobs.filter(job => {
+    const matchesCategory = activeCategory === 'all' || job.status === activeCategory;
+    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         job.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         job.location.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  // Calculate category counts based on current jobs
+  const categoryCounts = React.useMemo(() => {
+    return {
+      all: jobs.length,
+      pending: jobs.filter(job => job.status === 'pending').length,
+      live: jobs.filter(job => job.status === 'live').length,
+      rejected: jobs.filter(job => job.status === 'rejected').length,
+      archived: jobs.filter(job => job.status === 'archived').length
+    };
+  }, [jobs]);
+
+  // Get status color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'live':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'rejected':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'archived':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      default:
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+    }
+  };
+
+  // Get status icon
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="w-4 h-4" />;
+      case 'live':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'rejected':
+        return <XCircle className="w-4 h-4" />;
+      case 'archived':
+        return <Archive className="w-4 h-4" />;
+      default:
+        return <Briefcase className="w-4 h-4" />;
+    }
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Handle job actions
+  const handleJobAction = (job, action) => {
+    switch (action) {
+      case 'view':
+        setViewPopup({ isOpen: true, job });
+        break;
+      case 'edit':
+        setEditPopup({ isOpen: true, job });
+        break;
+      case 'delete':
+        setDeletePopup({ isOpen: true, job });
+        break;
+      default:
+        console.log(`Unknown action: ${action}`);
+    }
+  };
+
+  // Handle popup close
+  const handleClosePopup = (popupType) => {
+    switch (popupType) {
+      case 'view':
+        setViewPopup({ isOpen: false, job: null });
+        break;
+      case 'edit':
+        setEditPopup({ isOpen: false, job: null });
+        break;
+      case 'delete':
+        setDeletePopup({ isOpen: false, job: null });
+        break;
+    }
+  };
+
+  // Handle job update
+  const handleJobUpdate = (updatedJob) => {
+    setJobs(prevJobs => 
+      prevJobs.map(job => 
+        job._id === updatedJob._id ? updatedJob : job
+      )
     );
   };
 
-  const getJobTypeColor = (type) => {
-    const typeColors = {
-      'Internship': 'bg-blue-100 text-blue-800',
-      'Research': 'bg-purple-100 text-purple-800',
-      'Part-Time': 'bg-green-100 text-green-800',
-      'Full-Time': 'bg-orange-100 text-orange-800',
-      'Work-Study': 'bg-indigo-100 text-indigo-800'
-    };
-    return typeColors[type] || 'bg-gray-100 text-gray-800';
+  // Handle job deletion
+  const handleJobDelete = () => {
+    setJobs(prevJobs => 
+      prevJobs.filter(job => job._id !== deletePopup.job._id)
+    );
   };
 
-  const renderJobCard = (job) => (
-    <motion.div 
-      key={job.id} 
-      className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden"
-      whileHover={{ y: -2 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-xl font-bold text-gray-900">{job.title}</h3>
-              {getStatusBadge(job.status)}
-            </div>
-            <p className="text-gray-600 mb-2">{job.department}</p>
-            <span className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium ${getJobTypeColor(job.type)}`}>
-              {job.type}
-            </span>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-gray-500" />
-            <span className="font-semibold text-gray-900">{job.applications}</span>
-            <span className="text-gray-600">Applications</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Eye className="w-4 h-4 text-gray-500" />
-            <span className="font-semibold text-gray-900">{job.views}</span>
-            <span className="text-gray-600">Views</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-600">{job.location}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-600">{job.salary}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-600">Posted: {job.datePosted}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-600">Deadline: {job.deadline}</span>
-          </div>
-          {job.hired && (
-            <div className="col-span-2 flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span className="font-semibold text-green-600">{job.hired}</span>
-              <span className="text-gray-600">Candidates Hired</span>
-            </div>
-          )}
-        </div>
-        
-        <div className="flex gap-3">
-          <button className="flex-1 py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
-            <Eye className="w-4 h-4" />
-            View Details
-          </button>
-          <button 
-            className="flex-1 py-2 px-4 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
-            style={{ 
-              background: job.status === 'active' 
-                ? 'linear-gradient(to right, #fc944c, #f97316)' 
-                : job.status === 'pending' 
-                ? 'linear-gradient(to right, #f59e0b, #d97706)'
-                : 'linear-gradient(to right, #6b7280, #4b5563)'
-            }}
+  // If HM is not verified, show waiting message
+  if (hm && hm.hm_status === 'Unverified') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header Section */}
+          <motion.div 
+            className="mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            {job.status === 'active' ? (
-              <>
-                <Edit className="w-4 h-4" />
-                Manage
-              </>
-            ) : job.status === 'pending' ? (
-              <>
-                <Edit className="w-4 h-4" />
-                Edit
-              </>
-            ) : (
-              <>
-                <ArrowRight className="w-4 h-4" />
-                Reopen
-              </>
-            )}
-          </button>
+            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900">
+              My <span className="text-transparent bg-clip-text" style={{ background: 'linear-gradient(to right, #fc944c, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Job Listings</span>
+            </h1>
+            <p className="text-lg text-gray-600 mt-2">Manage your job postings</p>
+          </motion.div>
+
+          {/* Verification Pending Message */}
+          <motion.div 
+            className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <UserCheck className="w-12 h-12 text-yellow-600" />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Account Verification Pending</h2>
+            <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
+              Your account is currently under review. Once verified by our admin team, you'll be able to view and manage your job listings.
+            </p>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 max-w-md mx-auto">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <Clock className="w-6 h-6 text-yellow-600" />
+                <span className="font-semibold text-yellow-800">Verification Status: Unverified</span>
+              </div>
+              <p className="text-yellow-700 text-sm">
+                Please wait for admin approval. You'll receive an email notification once your account is verified.
+              </p>
+            </div>
+          </motion.div>
         </div>
       </div>
-    </motion.div>
-  );
-
-  const filteredJobs = jobs[activeTab].filter(job =>
-    job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.department.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const tabCounts = {
-    current: jobs.current.length,
-    pending: jobs.pending.length,
-    previous: jobs.previous.length
-  };
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
@@ -285,131 +251,303 @@ function HM_HeroMyjobs() {
         
         {/* Header Section */}
         <motion.div 
-          className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8"
+          className="flex items-center justify-between mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="mb-6 lg:mb-0">
-            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+          <div>
+            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900">
               My <span className="text-transparent bg-clip-text" style={{ background: 'linear-gradient(to right, #fc944c, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Job Listings</span>
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl">
-              Manage your current, pending, and previous job postings. Track applications and optimize your recruitment process.
-            </p>
+            <p className="text-lg text-gray-600 mt-2">Manage your job postings and track applications</p>
           </div>
+          
           <motion.button
-            onClick={handleNewJob}
-            className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
+            onClick={() => navigate('/addnewjob')}
+            className="px-6 py-3 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+            style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             <Plus className="w-5 h-5" />
-            <Link to="/addnewjob" className="flex items-center gap-2">
-              Add New Job
-            </Link>
+            Create New Job
           </motion.button>
         </motion.div>
 
-        {/* Search and Filter */}
+        {/* Stats Cards */}
         <motion.div 
-          className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8"
+          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search jobs by title or department..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
-              />
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Jobs</p>
+                <p className="text-3xl font-bold text-gray-900">{categoryCounts.all}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-6 h-6 text-blue-600" />
+              </div>
             </div>
-            <button className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center gap-2">
-              <Filter className="w-4 h-4" />
-              Filter
-            </button>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Live Jobs</p>
+                <p className="text-3xl font-bold text-green-600">{categoryCounts.live}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-3xl font-bold text-yellow-600">{categoryCounts.pending}</p>
+              </div>
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <Clock className="w-6 h-6 text-yellow-600" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Archived</p>
+                <p className="text-3xl font-bold text-gray-600">{categoryCounts.archived}</p>
+              </div>
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Archive className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
           </div>
         </motion.div>
 
-        {/* Tabs Navigation */}
+        {/* Search and Filter Section */}
         <motion.div 
-          className="flex flex-wrap gap-2 mb-8"
+          className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          {[
-            { key: 'current', label: 'Current Jobs', icon: <Briefcase className="w-4 h-4" /> },
-            { key: 'pending', label: 'Pending', icon: <Clock className="w-4 h-4" /> },
-            { key: 'previous', label: 'Previous', icon: <TrendingUp className="w-4 h-4" /> }
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
-                activeTab === tab.key
-                  ? 'text-white shadow-lg'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-              style={{
-                background: activeTab === tab.key 
-                  ? 'linear-gradient(to right, #fc944c, #f97316)' 
-                  : 'transparent'
-              }}
-            >
-              {tab.icon}
-              {tab.label}
-              <span className={`px-2 py-1 rounded-full text-xs ${
-                activeTab === tab.key 
-                  ? 'bg-white/20 text-white' 
-                  : 'bg-gray-100 text-gray-600'
-              }`}>
-                {tabCounts[tab.key]}
-              </span>
-            </button>
-          ))}
+          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+            {/* Search Bar */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search jobs by title, department, or location..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+              />
+            </div>
+
+            {/* Category Filter */}
+            <div className="flex gap-2 flex-wrap">
+              {categories.map((category) => {
+                const Icon = category.icon;
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => setActiveCategory(category.id)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
+                      activeCategory === category.id
+                        ? 'text-white'
+                        : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
+                    }`}
+                    style={{
+                      background: activeCategory === category.id 
+                        ? 'linear-gradient(to right, #fc944c, #f97316)' 
+                        : undefined
+                    }}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {category.label}
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      activeCategory === category.id 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      {categoryCounts[category.id] || 0}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </motion.div>
 
-        {/* Content Section */}
+        {/* Jobs List */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
         >
-          {filteredJobs.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {filteredJobs.map(renderJobCard)}
+          {loading ? (
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-12 text-center">
+              <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading your job listings...</p>
             </div>
-          ) : (
-            <div className="text-center py-16 bg-white rounded-2xl shadow-lg border border-gray-100">
-              <Briefcase className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-2xl font-bold text-gray-700 mb-2">
-                {activeTab === 'current' && 'No active job listings'}
-                {activeTab === 'pending' && 'No pending job listings'}
-                {activeTab === 'previous' && 'No previous job listings'}
+          ) : error ? (
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-12 text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Error Loading Jobs</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <button
+                onClick={fetchJobs}
+                className="px-6 py-3 text-white rounded-xl font-semibold transition-all duration-200"
+                style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}
+              >
+                Try Again
+              </button>
+            </div>
+          ) : filteredJobs.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-12 text-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Briefcase className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {activeCategory === 'all' ? 'No Jobs Found' : `No ${activeCategory} Jobs`}
               </h3>
-              <p className="text-gray-500 mb-6">
-                {activeTab === 'current' && 'Get started by creating your first job posting'}
-                {activeTab === 'pending' && 'All your job postings have been approved'}
-                {activeTab === 'previous' && 'No completed job postings yet'}
+              <p className="text-gray-600 mb-6">
+                {activeCategory === 'all' 
+                  ? "You haven't created any job listings yet. Create your first job posting to get started."
+                  : `You don't have any ${activeCategory} jobs at the moment.`
+                }
               </p>
-              {activeTab === 'current' && (
-                <button 
-                  onClick={handleNewJob}
-                  className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center gap-2 mx-auto"
+              {activeCategory === 'all' && (
+                <button
+                  onClick={() => navigate('/addnewjob')}
+                  className="px-6 py-3 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 mx-auto"
+                  style={{ background: 'linear-gradient(to right, #fc944c, #f97316)' }}
                 >
                   <Plus className="w-5 h-5" />
-                  Create New Job
+                  Create Your First Job
                 </button>
               )}
             </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredJobs.map((job, index) => (
+                <motion.div
+                  key={job._id}
+                  className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-200 flex flex-col h-full"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                >
+                  {/* Job Header */}
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{job.title}</h3>
+                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                          <Building2 className="w-4 h-4" />
+                          <span className="text-sm">{job.department}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <MapPin className="w-4 h-4" />
+                          <span className="text-sm">{job.location}</span>
+                        </div>
+                      </div>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(job.status)}`}>
+                        {getStatusIcon(job.status)}
+                        <span className="ml-1 capitalize">{job.status}</span>
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <DollarSign className="w-4 h-4" />
+                        <span>{job.compensation || 'Not specified'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Calendar className="w-4 h-4" />
+                        <span>{formatDate(job.deadline)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Job Description */}
+                  <div className="p-6 flex-1 flex flex-col">
+                    <p className="text-gray-600 text-sm line-clamp-3 mb-4 flex-1">
+                      {job.description}
+                    </p>
+                    
+                    <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                      <span>Posted: {formatDate(job.createdAt)}</span>
+                      <span>Type: {job.jobtype}</span>
+                    </div>
+
+                    {/* Action Buttons - Always at bottom */}
+                    <div className="flex gap-2 mt-auto">
+                      <button
+                        onClick={() => handleJobAction(job, 'view')}
+                        className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center gap-2 text-sm font-medium"
+                      >
+                        <Eye className="w-4 h-4" />
+                        View
+                      </button>
+                      <button
+                        onClick={() => job.status !== 'rejected' && handleJobAction(job, 'edit')}
+                        disabled={job.status === 'rejected'}
+                        className={`flex-1 px-3 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 text-sm font-medium ${
+                          job.status === 'rejected'
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                        }`}
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleJobAction(job, 'delete')}
+                        className="flex-1 px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200 flex items-center justify-center gap-2 text-sm font-medium"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           )}
         </motion.div>
+
+        {/* Popup Components */}
+        <JobViewPopup
+          job={viewPopup.job}
+          isOpen={viewPopup.isOpen}
+          onClose={() => handleClosePopup('view')}
+        />
+
+        <JobEditPopup
+          job={editPopup.job}
+          isOpen={editPopup.isOpen}
+          onClose={() => handleClosePopup('edit')}
+          onSave={handleJobUpdate}
+          makeAuthenticatedRequest={makeAuthenticatedRequest}
+        />
+
+        <DeleteConfirmationPopup
+          job={deletePopup.job}
+          isOpen={deletePopup.isOpen}
+          onClose={() => handleClosePopup('delete')}
+          onConfirm={handleJobDelete}
+          makeAuthenticatedRequest={makeAuthenticatedRequest}
+        />
       </div>
     </div>
   );

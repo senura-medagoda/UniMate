@@ -296,7 +296,7 @@ export const deleteComment = async (req, res) => {
       return res.status(403).json({ message: "Not authorized to delete this comment" });
     }
     
-    comment.remove();
+    post.comments.pull(commentId);
     post.commentCount = Math.max(0, post.commentCount - 1);
     await post.save();
     res.json(post);

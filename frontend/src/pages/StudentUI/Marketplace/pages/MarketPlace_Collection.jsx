@@ -12,7 +12,7 @@ import M_ResellItem from '../components/M_ResellItem';
 const MarketPlace_Collection = ({ user, setUser }) => {
   
 
-  const {products,search,showSearch} =useContext(ShopContext);
+  const {products,search,showSearch,navigate} =useContext(ShopContext);
   const [showFilter, setShowFilter] = useState(false);
   const [filterProducts, setShowFilterProducts] = useState([]);
   const [showResellForm, setShowResellForm] = useState(false);
@@ -211,6 +211,12 @@ const MarketPlace_Collection = ({ user, setUser }) => {
 
   const handleResellSuccess = () => {
     fetchResellItems(); // Refresh the list after successful submission
+    // Show success message and suggest checking My Requests
+    setTimeout(() => {
+      if (window.confirm('Request submitted successfully! Would you like to check your requests?')) {
+        navigate('/M_my-requests');
+      }
+    }, 1000);
   };
 
 

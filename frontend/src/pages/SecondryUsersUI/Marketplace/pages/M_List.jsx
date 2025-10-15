@@ -269,18 +269,16 @@ const M_List = () => {
   });
 
   return (
-  <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50 flex flex-col">
+  <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
     {/* Navbar at the very top */}
     <Admin_Navbar />
 
-    <div className="flex flex-1">
-      {/* Sidebar on the left */}
-      <div className="w-64 bg-white shadow-lg border-r border-gray-100">
-        <M_SIdebar />
-      </div>
+    <div className="flex">
+      {/* Fixed Sidebar */}
+      <M_SIdebar />
 
-      {/* Main Content */}
-      <div className="flex-1 p-8">
+      {/* Main Content with left margin for fixed sidebar */}
+      <div className="flex-1 lg:ml-64 p-8">
         <h1 className="text-3xl font-bold text-orange-600 mb-8">
           Product Management
         </h1>

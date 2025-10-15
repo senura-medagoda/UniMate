@@ -2,18 +2,16 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, X, User, LogOut, Settings } from 'lucide-react';
+import { useHMAuth } from '@/context/HMAuthContext';
 
 function JPHM_Nav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { hm, logout } = useHMAuth();
 
   const handleLogout = () => {
-    // Clear localStorage
-    localStorage.removeItem('hmToken');
-    localStorage.removeItem('hmData');
-    
-    // Navigate to main login page
+    logout();
     navigate('/login', { replace: true });
   };
 
@@ -89,8 +87,10 @@ function JPHM_Nav() {
             >
               <div className="dropdown dropdown-end">
                 <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
-                  <div className="w-10 rounded-full">
-                    <img src="https://placehold.co/400x400?text=U" alt="User" />
+                  <div className="w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                    <span className="text-orange-600 font-semibold text-sm">
+                      {hm?.name ? hm.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'HM'}
+                    </span>
                   </div>
                 </label>
                 <ul tabIndex={0} className="mt-3 p-2 shadow menu menu-compact dropdown-content bg-white rounded-box w-52 border border-gray-200">

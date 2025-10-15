@@ -7,6 +7,16 @@ const MyUploadsPage = ({ user, setUser }) => {
     const [loading, setLoading] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
     const [editingMaterial, setEditingMaterial] = useState(null);
+    const [editFormData, setEditFormData] = useState({
+        title: '',
+        description: '',
+        campus: '',
+        course: '',
+        year: '',
+        semester: '',
+        subject: '',
+        keywords: ''
+    });
     const [analytics, setAnalytics] = useState({
         totalUploads: 0,
         totalLikes: 0,
@@ -19,11 +29,25 @@ const MyUploadsPage = ({ user, setUser }) => {
     const fetchMyUploads = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5001/api/study-materials/all');
-            const data = await response.json();
-            // Filter for current user's uploads
-            const userEmail = user?.email || user?.s_email || 'unknown';
-            const myUploads = data.filter(material => material.uploadedBy === userEmail);
+            const token = localStorage.getItem('studentToken');
+            if (!token) {
+                console.error('No authentication token found');
+                setLoading(false);
+                return;
+            }
+
+            const response = await fetch('http://localhost:5001/api/study-materials/my-uploads', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch uploads');
+            }
+            
+            const myUploads = await response.json();
             setMaterials(myUploads);
             
             // Calculate analytics
@@ -72,7 +96,107 @@ const MyUploadsPage = ({ user, setUser }) => {
     };
 
     const handleEdit = (material) => {
+        // Set the material being edited and populate form data
         setEditingMaterial(material);
+        setEditFormData({
+            title: material.title || '',
+            description: material.description || '',
+            campus: material.campus || '',
+            course: material.course || '',
+            year: material.year || '',
+            semester: material.semester || '',
+            subject: material.subject || '',
+            keywords: material.keywords ? material.keywords.join(', ') : ''
+        });
+    };
+
+    const handleEditFormChange = (e) => {
+        const { name, value } = e.target;
+        setEditFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editingMaterial) return;
+
+        try {
+            const token = localStorage.getItem('studentToken');
+            if (!token) {
+                alert('Authentication required');
+                return;
+            }
+
+            const response = await fetch(`http://localhost:5001/api/study-materials/${editingMaterial._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(editFormData)
+            });
+
+            if (response.ok) {
+                alert('Material updated successfully!');
+                setEditingMaterial(null);
+                fetchMyUploads(); // Refresh the list
+            } else {
+                alert('Failed to update material');
+            }
+        } catch (error) {
+            console.error('Error updating material:', error);
+            alert('Error updating material');
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingMaterial(null);
+        setEditFormData({
+            title: '',
+            description: '',
+            campus: '',
+            course: '',
+            year: '',
+            semester: '',
+            subject: '',
+            keywords: ''
+        });
+    };
+
+    const handleDownload = async (material) => {
+        try {
+            // If there are multiple files, download the first one
+            const fileUrl = material.fileUrl || (material.fileUrls && material.fileUrls[0]);
+            
+            if (!fileUrl) {
+                alert('No file available for download');
+                return;
+            }
+
+            // Create a temporary link to download the file
+            const link = document.createElement('a');
+            link.href = `http://localhost:5001${fileUrl}`;
+            link.download = material.title || 'study-material';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Track download in backend
+            const token = localStorage.getItem('studentToken');
+            if (token) {
+                await fetch(`http://localhost:5001/api/study-materials/${material._id}/download`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            // Download functionality works, no need to show alert
+        }
     };
 
     const formatDate = (dateString) => {
@@ -259,13 +383,11 @@ const MyUploadsPage = ({ user, setUser }) => {
                                             Delete
                                         </button>
                                         
-                                        <button className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-medium hover:bg-green-600 transition-all duration-200 hover:shadow-lg">
-                                            <FaEye />
-                                            View
-                                        </button>
-                                        
-                                        {material.fileUrl && (
-                                            <button className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-xl text-sm font-medium hover:bg-purple-600 transition-all duration-200 hover:shadow-lg">
+                                        {(material.fileUrl || (material.fileUrls && material.fileUrls.length > 0)) && (
+                                            <button 
+                                                onClick={() => handleDownload(material)}
+                                                className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-xl text-sm font-medium hover:bg-purple-600 transition-all duration-200 hover:shadow-lg"
+                                            >
                                                 <FaDownload />
                                                 Download
                                             </button>
@@ -277,7 +399,170 @@ const MyUploadsPage = ({ user, setUser }) => {
                     </div>
                 )}
             </div>
-        </div></>
+        </div>
+
+        {/* Edit Modal */}
+        {editingMaterial && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-gray-900">Edit Material</h2>
+                            <button
+                                onClick={handleCancelEdit}
+                                className="text-gray-400 hover:text-gray-600 text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <form className="space-y-4">
+                            {/* Title */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Title *
+                                </label>
+                                <input
+                                    type="text"
+                                    name="title"
+                                    value={editFormData.title}
+                                    onChange={handleEditFormChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                    required
+                                />
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Description *
+                                </label>
+                                <textarea
+                                    name="description"
+                                    value={editFormData.description}
+                                    onChange={handleEditFormChange}
+                                    rows="3"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                    required
+                                />
+                            </div>
+
+                            {/* Academic Info Grid */}
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Campus */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Campus *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="campus"
+                                        value={editFormData.campus}
+                                        onChange={handleEditFormChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Course */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Course *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="course"
+                                        value={editFormData.course}
+                                        onChange={handleEditFormChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Year */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Year *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="year"
+                                        value={editFormData.year}
+                                        onChange={handleEditFormChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Semester */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Semester *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="semester"
+                                        value={editFormData.semester}
+                                        onChange={handleEditFormChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Subject */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Subject *
+                                </label>
+                                <input
+                                    type="text"
+                                    name="subject"
+                                    value={editFormData.subject}
+                                    onChange={handleEditFormChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                    required
+                                />
+                            </div>
+
+                            {/* Keywords */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Keywords
+                                </label>
+                                <input
+                                    type="text"
+                                    name="keywords"
+                                    value={editFormData.keywords}
+                                    onChange={handleEditFormChange}
+                                    placeholder="e.g. calculus, algebra, programming (comma separated)"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                />
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={handleSaveEdit}
+                                    className="flex-1 bg-orange-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-orange-700 transition-colors duration-200"
+                                >
+                                    Save Changes
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleCancelEdit}
+                                    className="flex-1 bg-gray-500 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-600 transition-colors duration-200"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
     );
 };
 

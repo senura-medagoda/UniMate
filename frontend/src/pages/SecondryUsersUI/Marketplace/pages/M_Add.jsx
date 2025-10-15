@@ -87,6 +87,13 @@ const M_Add = () => {
   const onSubmitHandler = async (e) => {
     e.preventDefault();
 
+    // Validate price
+    const priceValue = parseFloat(price);
+    if (!price || isNaN(priceValue) || priceValue <= 0) {
+      toast.error("❌ Price must be greater than 0!");
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("name", name);
@@ -135,10 +142,11 @@ const M_Add = () => {
       <Admin_Navbar />
       <ToastContainer position="top-right" autoClose={2000} />
       <div className="flex">
-        <div className="w-55 bg-white shadow-sm border-r border-gray-200">
-          <M_SIdebar />
-        </div>
-        <div className="flex-1 p-6">
+        {/* Fixed Sidebar */}
+        <M_SIdebar />
+        
+        {/* Main Content with left margin for fixed sidebar */}
+        <div className="flex-1 lg:ml-64 p-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-6">
               Add Product
@@ -235,6 +243,8 @@ const M_Add = () => {
                     className="w-full px-3 py-2 max-w-[500px] border-2 border-orange-200"
                     type="number"
                     placeholder="25"
+                    min="0.01"
+                    step="0.01"
                     required
                   />
                 </div>

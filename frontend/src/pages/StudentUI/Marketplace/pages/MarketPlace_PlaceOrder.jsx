@@ -8,7 +8,7 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 
 const MarketPlace_PlaceOrder = ({ user, setUser }) => {
-  const { navigate, token, cartItems, setCartItem, getCartAmount, delivery_fee, products } = useContext(ShopContext)
+  const { navigate, token, cartItems, clearCart, getCartAmount, delivery_fee, products } = useContext(ShopContext)
 
   const [method, setMethod] = useState('cod')
 
@@ -25,15 +25,128 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
     phone: '',
   })
 
+  // Add validation state
+  const [errors, setErrors] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   //  single handler used by ALL inputs
   const onChangeHandler = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }))
+    }
+  }
+
+  // Validation functions
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  const validatePhone = (phone) => {
+    const phoneRegex = /^[0-9]{10}$/
+    return phoneRegex.test(phone.replace(/\s/g, ''))
+  }
+
+  const validateZipcode = (zipcode) => {
+    const zipRegex = /^[0-9]{5,6}$/
+    return zipRegex.test(zipcode)
+  }
+
+  const validateForm = () => {
+    const newErrors = {}
+
+    // First Name validation
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required'
+    } else if (formData.firstName.trim().length < 2) {
+      newErrors.firstName = 'First name must be at least 2 characters'
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.firstName.trim())) {
+      newErrors.firstName = 'First name can only contain letters and spaces'
+    }
+
+    // Last Name validation
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required'
+    } else if (formData.lastName.trim().length < 2) {
+      newErrors.lastName = 'Last name must be at least 2 characters'
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.lastName.trim())) {
+      newErrors.lastName = 'Last name can only contain letters and spaces'
+    }
+
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required'
+    } else if (!validateEmail(formData.email.trim())) {
+      newErrors.email = 'Please enter a valid email address'
+    }
+
+    // Street validation
+    if (!formData.street.trim()) {
+      newErrors.street = 'Street address is required'
+    } else if (formData.street.trim().length < 5) {
+      newErrors.street = 'Street address must be at least 5 characters'
+    }
+
+    // City validation
+    if (!formData.city.trim()) {
+      newErrors.city = 'City is required'
+    } else if (formData.city.trim().length < 2) {
+      newErrors.city = 'City must be at least 2 characters'
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.city.trim())) {
+      newErrors.city = 'City can only contain letters and spaces'
+    }
+
+    // State validation
+    if (!formData.state.trim()) {
+      newErrors.state = 'State is required'
+    } else if (formData.state.trim().length < 2) {
+      newErrors.state = 'State must be at least 2 characters'
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.state.trim())) {
+      newErrors.state = 'State can only contain letters and spaces'
+    }
+
+    // Zipcode validation
+    if (!formData.zipcode.trim()) {
+      newErrors.zipcode = 'Zipcode is required'
+    } else if (!validateZipcode(formData.zipcode.trim())) {
+      newErrors.zipcode = 'Please enter a valid 5-6 digit zipcode'
+    }
+
+    // District validation
+    if (!formData.district.trim()) {
+      newErrors.district = 'District is required'
+    } else if (formData.district.trim().length < 2) {
+      newErrors.district = 'District must be at least 2 characters'
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.district.trim())) {
+      newErrors.district = 'District can only contain letters and spaces'
+    }
+
+    // Phone validation
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required'
+    } else if (!validatePhone(formData.phone.trim())) {
+      newErrors.phone = 'Please enter a valid 10-digit phone number'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
   //  submit theform
   const onSubmit = async (e) => {
     e.preventDefault()
+
+    // Validate form before submission
+    if (!validateForm()) {
+      toast.error('Please fix the validation errors before submitting.')
+      return
+    }
+
+    setIsSubmitting(true)
 
     try {
 
@@ -54,23 +167,20 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
         }
       }
       let orderData = {
+        userId: user?.id || user?._id,
         address: formData,
         items: orderItems,
         amount: getCartAmount() + delivery_fee
-
       }
 
       switch (method) {
         //api calls for COD orders
-
         case 'cod':
               const studentToken = localStorage.getItem('studentToken');
               try {
                 const response= await axios.post('http://localhost:5001/api/order/M_place',orderData,{headers:{token: studentToken}})
                 if (response.data.success) {
-                  setCartItem({})
-                  // Clear cart from localStorage when order is successful
-                  localStorage.removeItem('marketplaceCart')
+                  clearCart() // This clears both context and localStorage
                   navigate('/M_orders')
                   
                 }else{
@@ -79,6 +189,27 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
               } catch (error) {
                 console.error('Order API error:', error);
                 toast.error(`❌ Order API not available. Please try again later.`);
+              }
+          break;
+
+        //api calls for Stripe payments
+        case 'stripe':
+              const stripeToken = localStorage.getItem('studentToken');
+              try {
+                // Store order data for payment confirmation
+                console.log('Storing order data:', orderData);
+                localStorage.setItem('stripeOrderData', JSON.stringify(orderData));
+                
+                const response = await axios.post('http://localhost:5001/api/order/M_stripe-checkout', orderData, {headers: {token: stripeToken}});
+                if (response.data.success) {
+                  // Redirect to Stripe checkout
+                  window.location.href = response.data.url;
+                } else {
+                  toast.error(`❌ Stripe checkout failed: ${response.data.message}`);
+                }
+              } catch (error) {
+                console.error('Stripe checkout error:', error);
+                toast.error(`❌ Stripe checkout not available. Please try again later.`);
               }
           break;
 
@@ -91,6 +222,8 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
     } catch (error) {
       console.log(error)
       toast.error(`❌ Network error: ${error.message}. Please try again.`)
+    } finally {
+      setIsSubmitting(false)
     }
 
     navigate('/M_orders')
@@ -161,8 +294,15 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
                         type='text'
                         placeholder='Enter first name'
                         required
-                        className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
+                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:outline-none transition-all duration-200 ${
+                          errors.firstName 
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-200' 
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-200'
+                        }`}
                       />
+                      {errors.firstName && (
+                        <p className='text-red-500 text-xs mt-1'>{errors.firstName}</p>
+                      )}
                     </div>
                     <div className='space-y-2'>
                       <label className='text-sm font-medium text-gray-700' htmlFor='lastName'>Last Name</label>
@@ -174,8 +314,15 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
                         type='text'
                         placeholder='Enter last name'
                         required
-                        className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
+                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:outline-none transition-all duration-200 ${
+                          errors.lastName 
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-200' 
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-200'
+                        }`}
                       />
+                      {errors.lastName && (
+                        <p className='text-red-500 text-xs mt-1'>{errors.lastName}</p>
+                      )}
                     </div>
                   </div>
 
@@ -190,8 +337,15 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
                       type='email'
                       placeholder='Enter email address'
                       required
-                      className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
+                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:outline-none transition-all duration-200 ${
+                        errors.email 
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-200' 
+                          : 'border-gray-200 focus:border-orange-500 focus:ring-orange-200'
+                      }`}
                     />
+                    {errors.email && (
+                      <p className='text-red-500 text-xs mt-1'>{errors.email}</p>
+                    )}
                   </div>
 
                   {/* Street */}
@@ -205,8 +359,15 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
                       type='text'
                       placeholder='Enter street address'
                       required
-                      className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
+                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:outline-none transition-all duration-200 ${
+                        errors.street 
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-200' 
+                          : 'border-gray-200 focus:border-orange-500 focus:ring-orange-200'
+                      }`}
                     />
+                    {errors.street && (
+                      <p className='text-red-500 text-xs mt-1'>{errors.street}</p>
+                    )}
                   </div>
 
                   {/* City / State */}
@@ -221,8 +382,15 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
                         type='text'
                         placeholder='Enter city'
                         required
-                        className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
+                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:outline-none transition-all duration-200 ${
+                          errors.city 
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-200' 
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-200'
+                        }`}
                       />
+                      {errors.city && (
+                        <p className='text-red-500 text-xs mt-1'>{errors.city}</p>
+                      )}
                     </div>
                     <div className='space-y-2'>
                       <label className='text-sm font-medium text-gray-700' htmlFor='state'>State</label>
@@ -234,8 +402,15 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
                         type='text'
                         placeholder='Enter state'
                         required
-                        className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
+                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:outline-none transition-all duration-200 ${
+                          errors.state 
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-200' 
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-200'
+                        }`}
                       />
+                      {errors.state && (
+                        <p className='text-red-500 text-xs mt-1'>{errors.state}</p>
+                      )}
                     </div>
                   </div>
 
@@ -251,8 +426,15 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
                         type='text'
                         placeholder='Enter zipcode'
                         required
-                        className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
+                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:outline-none transition-all duration-200 ${
+                          errors.zipcode 
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-200' 
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-200'
+                        }`}
                       />
+                      {errors.zipcode && (
+                        <p className='text-red-500 text-xs mt-1'>{errors.zipcode}</p>
+                      )}
                     </div>
                     <div className='space-y-2'>
                       <label className='text-sm font-medium text-gray-700' htmlFor='district'>District</label>
@@ -264,8 +446,15 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
                         type='text'
                         placeholder='Enter district'
                         required
-                        className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
+                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:outline-none transition-all duration-200 ${
+                          errors.district 
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-200' 
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-200'
+                        }`}
                       />
+                      {errors.district && (
+                        <p className='text-red-500 text-xs mt-1'>{errors.district}</p>
+                      )}
                     </div>
                   </div>
 
@@ -278,10 +467,17 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
                       value={formData.phone}
                       onChange={onChangeHandler}
                       type='tel'
-                      placeholder='Enter phone number'
+                      placeholder='Enter 10-digit phone number'
                       required
-                      className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all duration-200'
+                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:outline-none transition-all duration-200 ${
+                        errors.phone 
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-200' 
+                          : 'border-gray-200 focus:border-orange-500 focus:ring-orange-200'
+                      }`}
                     />
+                    {errors.phone && (
+                      <p className='text-red-500 text-xs mt-1'>{errors.phone}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -334,25 +530,6 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
                       <span className='text-sm font-medium text-gray-700 flex-grow'>Credit/Debit Card</span>
                     </label>
 
-                    <label
-                      className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-sm ${method === 'razorpay' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                    >
-                      <input
-                        type='radio'
-                        name='paymentMethod'
-                        value='razorpay'
-                        checked={method === 'razorpay'}
-                        onChange={() => setMethod('razorpay')}
-                        className='sr-only'
-                      />
-                      <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center ${method === 'razorpay' ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
-                        }`}>
-                        {method === 'razorpay' && <div className='w-2 h-2 bg-white rounded-full' />}
-                      </div>
-                      <img className='h-6' src={assets.razorpay_logo} alt='Razorpay' />
-                      <span className='text-sm font-medium text-gray-700 flex-grow'>UPI/Wallet</span>
-                    </label>
 
                     <label
                       className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-sm ${method === 'cod' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
@@ -384,12 +561,29 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
                 <div className='mt-8'>
                   <button
                     type='submit'
-                    className='w-full bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-semibold py-4 px-6 rounded-xl hover:shadow-lg hover:shadow-orange-200 transition-all duration-200 transform hover:-translate-y-0.5 flex items-center justify-center gap-2'
+                    disabled={isSubmitting}
+                    className={`w-full font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${
+                      isSubmitting 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white hover:shadow-lg hover:shadow-orange-200 transform hover:-translate-y-0.5'
+                    }`}
                   >
-                    <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
-                    </svg>
-                    PLACE ORDER
+                    {isSubmitting ? (
+                      <>
+                        <svg className='animate-spin w-5 h-5' fill='none' viewBox='0 0 24 24'>
+                          <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4'></circle>
+                          <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'></path>
+                        </svg>
+                        PROCESSING...
+                      </>
+                    ) : (
+                      <>
+                        <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
+                        </svg>
+                        PLACE ORDER
+                      </>
+                    )}
                   </button>
 
                   <div className='mt-4 flex items-center justify-center gap-4 text-xs text-gray-500'>

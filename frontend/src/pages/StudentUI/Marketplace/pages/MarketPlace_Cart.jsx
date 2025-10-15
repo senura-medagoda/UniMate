@@ -7,9 +7,14 @@ import MarketPlace_Navbar from '../components/MarketPlace_Navbar'
 import M_Footer from '../components/M_Footer';
 
 const MarketPlace_Cart = ({ user, setUser }) => {
-  const {products, currency, cartItems, updateQuantity, navigate, token, addToCart} = useContext(ShopContext);
+  const {products, currency, cartItems, updateQuantity, navigate, token, addToCart, refreshCart} = useContext(ShopContext);
   const [cartData, setCartData] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Force refresh cart state when component mounts
+    refreshCart();
+  }, []);
 
   useEffect(() => {
     console.log('Cart Items:', cartItems);

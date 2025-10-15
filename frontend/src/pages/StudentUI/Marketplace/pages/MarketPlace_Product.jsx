@@ -8,7 +8,7 @@ import MarketPlace_Navbar from '../components/MarketPlace_Navbar';
 const MarketPlace_Product = ({ user, setUser }) => {
 
   const {productId} =useParams();
-  const {products,currency,addToCart}= useContext(ShopContext);
+  const {products,currency,addToCart,addToFavorites,removeFromFavorites,isFavorite}= useContext(ShopContext);
   const [productData,setProductData] =useState(false);
 
   const [image,setImage]=useState('');
@@ -87,17 +87,30 @@ const MarketPlace_Product = ({ user, setUser }) => {
             </div>
 
           </div>
-          <button 
-            onClick={()=>addToCart(productData._id,size)} 
-            disabled={!productData.stock || productData.stock <= 0}
-            className={`px-8 py-3 text-sm ${
-              !productData.stock || productData.stock <= 0 
-                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                : 'bg-orange-400 text-white active:bg-gray-700'
-            }`}
-          >
-            {!productData.stock || productData.stock <= 0 ? 'OUT OF STOCK' : 'ADD TO CART'}
-          </button>
+          <div className='flex gap-4'>
+            <button 
+              onClick={()=>addToCart(productData._id,size)} 
+              disabled={!productData.stock || productData.stock <= 0}
+              className={`px-8 py-3 text-sm ${
+                !productData.stock || productData.stock <= 0 
+                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                  : 'bg-orange-400 text-white active:bg-gray-700'
+              }`}
+            >
+              {!productData.stock || productData.stock <= 0 ? 'OUT OF STOCK' : 'ADD TO CART'}
+            </button>
+            
+            <button 
+              onClick={() => isFavorite(productData._id) ? removeFromFavorites(productData._id) : addToFavorites(productData._id)}
+              className={`px-6 py-3 text-sm border-2 transition-all duration-300 ${
+                isFavorite(productData._id)
+                  ? 'border-red-500 bg-red-50 text-red-600 hover:bg-red-100'
+                  : 'border-gray-300 bg-white text-gray-600 hover:border-red-500 hover:text-red-600'
+              }`}
+            >
+              {isFavorite(productData._id) ? '❤️ Favorited' : '🤍 Add to Favorites'}
+            </button>
+          </div>
          <hr className='mt-8 sm:w-4/5'/>
          <div className='text-sm text-gray-500 mt-5 flex flex-col gap-1'>
           <p>100% Original product. </p>

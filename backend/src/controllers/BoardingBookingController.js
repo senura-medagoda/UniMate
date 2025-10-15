@@ -147,8 +147,8 @@ export const updateBookingStatus = async (req, res) => {
     
     const updateData = { status };
     
-    if (status === 'confirmed') {
-      updateData.confirmedDate = new Date();
+    if (status === 'completed') {
+      updateData.completedDate = new Date();
     } else if (status === 'cancelled') {
       updateData.cancelledDate = new Date();
       updateData.cancellationReason = req.body.cancellationReason || '';

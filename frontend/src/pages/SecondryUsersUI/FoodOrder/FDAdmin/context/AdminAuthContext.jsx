@@ -101,9 +101,22 @@ export const AdminAuthProvider = ({ children }) => {
   };
 
   const hasPermission = (permission) => {
-    if (!admin) return false;
-    if (admin.role === 'super_admin') return true;
-    return admin.permissions && admin.permissions.includes(permission);
+    console.log('hasPermission called with:', permission);
+    console.log('admin:', admin);
+    console.log('admin.role:', admin?.role);
+    console.log('admin.permissions:', admin?.permissions);
+    
+    if (!admin) {
+      console.log('hasPermission - no admin, returning false');
+      return false;
+    }
+    if (admin.role === 'super_admin') {
+      console.log('hasPermission - super_admin, returning true');
+      return true;
+    }
+    const hasPerm = admin.permissions && admin.permissions.includes(permission);
+    console.log('hasPermission - checking permissions, result:', hasPerm);
+    return hasPerm;
   };
 
   const value = {

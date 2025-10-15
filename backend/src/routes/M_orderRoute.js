@@ -1,6 +1,6 @@
 import express from 'express'
 import {
-  placeOrder,  allOrders,userOrder, updateStatus,analyticsReport,  deleteOrder, updateOrderLocation
+  placeOrder,  allOrders,userOrder, updateStatus,analyticsReport,  deleteOrder, updateOrderLocation, createStripeCheckout, confirmStripeOrder
 } from '../controllers/M_orderController.js';
 
 import adminAuth from '../middleware/M_adminAuth.js'
@@ -16,6 +16,8 @@ orderRouter.post("/M_analytics", adminAuth, analyticsReport);
 //payment functions
 
 orderRouter.post('/M_place',authUser,placeOrder)
+orderRouter.post('/M_stripe-checkout',authUser,createStripeCheckout)
+orderRouter.post('/M_stripe-confirm',authUser,confirmStripeOrder)
 orderRouter.post("/M_delete", adminAuth, deleteOrder);
 orderRouter.post('/M_updateLocation', updateOrderLocation);
 

@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useSAAuth } from '@/context/SAAuthContext'
 import { 
   Shield, 
   Lock, 
@@ -18,13 +19,39 @@ import {
 
 const SA_LoginHero = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { login, fallbackLogin, loading, isAuthenticated } = useSAAuth()
   const [formData, setFormData] = useState({
+    email: '',
     adminId: '',
     password: ''
   })
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isRedirecting, setIsRedirecting] = useState(false)
+
+  // Check if already logged in
+  useEffect(() => {
+    if (isAuthenticated() && !isRedirecting) {
+      console.log('SA already logged in, redirecting to dashboard');
+      setIsRedirecting(true);
+      const from = location.state?.from?.pathname || '/systemadmin-dash';
+      navigate(from, { replace: true });
+    }
+  }, [navigate, location, isRedirecting]);
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-red-50 to-pink-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -41,14 +68,47 @@ const SA_LoginHero = () => {
     setError('')
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // For demo purposes, accept any credentials
-      if (formData.adminId && formData.password) {
-        navigate('/systemadmin-dash')
+      // Try real authentication first
+      if (formData.email && formData.password) {
+        try {
+          const success = await login(formData.email, formData.password)
+          if (success) {
+            setIsRedirecting(true);
+            const from = location.state?.from?.pathname || '/systemadmin-dash'
+            navigate(from, { replace: true })
+            return
+          }
+        } catch (err) {
+          console.log('Real auth failed:', err.message)
+          // Only try fallback if it's a network error or server error, not invalid credentials
+          if (err.message.includes('Network') || err.message.includes('server') || err.message.includes('timeout')) {
+            console.log('Network/server error, trying fallback...')
+          } else {
+            // For invalid credentials, show error and don't try fallback
+            setError(err.message || 'Invalid credentials. Please check your email and password.')
+            setIsLoading(false)
+            return
+          }
+        }
+      }
+
+      // Fallback to original mock authentication for backward compatibility (only for network issues)
+      if (formData.email && formData.password) {
+        console.log('Using fallback authentication...')
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        
+        // Use fallback login to create mock user
+        const success = await fallbackLogin(formData.email)
+        
+        if (success) {
+          // Navigate to dashboard
+          setIsRedirecting(true);
+          const from = location.state?.from?.pathname || '/systemadmin-dash'
+          navigate(from, { replace: true })
+        }
       } else {
-        setError('Please enter both Admin ID and Password')
+        setError('Please enter both email and password')
       }
     } catch (err) {
       setError('Login failed. Please check your credentials.')
@@ -167,19 +227,19 @@ const SA_LoginHero = () => {
 
               {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Admin ID Field */}
+                {/* Email/Admin ID Field */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    System Admin ID
+                    Email or Admin ID
                   </label>
                   <div className="relative">
                     <input 
                       type="text" 
-                      name="adminId"
-                      value={formData.adminId}
+                      name="email"
+                      value={formData.email}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
-                      placeholder="Enter your admin ID"
+                      placeholder="Enter your email or admin ID"
                       required
                     />
                     <User className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />

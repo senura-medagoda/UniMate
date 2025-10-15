@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
-import { useToast } from '@/context/ToastContext';
+import { useHMAuth } from '@/context/HMAuthContext';
 
 const HM_Login = () => {
   const [formData, setFormData] = useState({
@@ -9,20 +8,19 @@ const HM_Login = () => {
     password: ''
   });
   const [rememberMe, setRememberMe] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-  const { success: toastSuccess, error: toastError } = useToast();
+  const { login, loading, isAuthenticated } = useHMAuth();
 
   // Check if already logged in
   useEffect(() => {
-    const token = localStorage.getItem('hmToken');
-    if (token) {
+    if (isAuthenticated()) {
       console.log('Hiring Manager already logged in, redirecting to dashboard');
       const from = location.state?.from?.pathname || '/hmdash';
       navigate(from, { replace: true });
     }
-  }, [navigate, location]);
+  }, [navigate, location, isAuthenticated]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -30,42 +28,33 @@ const HM_Login = () => {
       ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing
+    if (error) {
+      setError('');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
     if (!formData.email || !formData.password) {
-      toastError('Please fill in all fields');
+      setError('Please fill in all fields');
       return;
     }
 
-    setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5001/api/hm/login', {
-        hm_email: formData.email,
-        hm_password: formData.password
-      });
-
-      if (response.data.success) {
-        const { hm, token } = response.data.data;
-        
-        // Save to localStorage
-        localStorage.setItem('hmToken', token);
-        localStorage.setItem('hmData', JSON.stringify(hm));
-        
-        toastSuccess('Login successful!');
-        
+      const success = await login(formData.email, formData.password);
+      
+      if (success) {
         const from = location.state?.from?.pathname || '/hmdash';
         navigate(from, { replace: true });
       } else {
-        toastError(response.data.message || 'Login failed');
+        setError('Login failed. Please check your credentials and try again.');
       }
     } catch (error) {
-      console.error('Hiring Manager login error:', error);
-      toastError(error.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
-      setLoading(false);
+      console.error('Login error:', error);
+      setError('An error occurred during login. Please try again.');
     }
   };
 
@@ -95,6 +84,13 @@ const HM_Login = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Hiring Manager Login</h1>
             <p className="text-gray-600">Welcome back! Please sign in to your account</p>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">

@@ -61,7 +61,7 @@ const STD_Footer = () => {
           <div className="lg:col-span-1">
             <Link to="/std-dash" className="flex items-center mb-4 group">
               <img 
-                src="/Logo.png" 
+                src="/src/pages/StudentUI/Accommodation/assets/unimatelogo.png" 
                 alt="UniMate Logo" 
                 className="h-10 w-auto group-hover:scale-105 transition-transform duration-200"
               />

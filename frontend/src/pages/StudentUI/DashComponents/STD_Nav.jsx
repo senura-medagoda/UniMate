@@ -56,9 +56,9 @@ function STD_Nav({ user, setUser }) {
           <div className="flex-shrink-0">
             <Link to="/std-dash" className="flex items-center group">
               <img 
-                src="/Logo.png" 
+                src="/src/pages/StudentUI/Accommodation/assets/unimatelogo.png" 
                 alt="UniMate Logo" 
-                className="h-8 w-auto lg:h-10 group-hover:scale-105 transition-transform duration-200"
+                className="h-7 w-auto lg:h-8 group-hover:scale-105 transition-transform duration-200"
               />
              
             </Link>

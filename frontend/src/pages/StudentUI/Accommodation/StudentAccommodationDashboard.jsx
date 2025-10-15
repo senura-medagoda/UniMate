@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import AccommodationNavbar from './components/AccommodationNavbar';
+import STD_Footer from '../DashComponents/STD_Footer';
 
 const StudentAccommodationDashboard = ({ user, setUser }) => {
   return (
-    <div className="min-h-screen relative">
+    <div className="relative">
       {/* Full Page Background */}
       <div 
         className="fixed inset-0 bg-cover bg-center bg-no-repeat bg-fixed"
@@ -21,7 +22,7 @@ const StudentAccommodationDashboard = ({ user, setUser }) => {
       </div>
       
       {/* Hero Section */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center">
+      <div className="relative z-10 flex items-center justify-center py-20">
         <div className="text-center text-white max-w-5xl mx-auto px-4 sm:px-6 py-20">
           
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 sm:mb-8 leading-tight">
@@ -146,7 +147,7 @@ const StudentAccommodationDashboard = ({ user, setUser }) => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-6xl mx-auto">
             <Link
               to="/student/accommodation/boarding-places"
               className="group bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 border border-orange-100"
@@ -178,6 +179,21 @@ const StudentAccommodationDashboard = ({ user, setUser }) => {
             </Link>
 
             <Link
+              to="/student/accommodation/favorites"
+              className="group bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 border border-orange-100"
+            >
+              <div className="text-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Favorites</h3>
+                <p className="text-gray-600 text-sm sm:text-base leading-relaxed">Your saved places</p>
+              </div>
+            </Link>
+
+            <Link
               to="/student/accommodation/services"
               className="group bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 border border-orange-100"
             >
@@ -196,57 +212,9 @@ const StudentAccommodationDashboard = ({ user, setUser }) => {
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <img 
-                  src="/src/pages/StudentUI/Accommodation/assets/unimatelogo.png" 
-                  alt="UniMate Logo" 
-                  className="h-12 w-auto"
-                  onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/120x40?text=UniMate";
-                  }}
-                />
-              </div>
-              <p className="text-gray-400">
-                Your trusted partner for student accommodation and services.
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-4">Quick Links</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link to="/student/accommodation/boarding-places" className="hover:text-orange-400 transition-colors">Boarding Places</Link></li>
-                <li><Link to="/student/accommodation/my-bookings" className="hover:text-orange-400 transition-colors">My Bookings</Link></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-orange-400 transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-orange-400 transition-colors">Contact Us</a></li>
-                <li><a href="#" className="hover:text-orange-400 transition-colors">FAQ</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-4">Contact Info</h3>
-              <div className="space-y-2 text-gray-400">
-                <p>📧 support@unimate.com</p>
-                <p>📞 +1 (555) 123-4567</p>
-                <p>📍 University District, Campus City</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 UniMate. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <div className="relative z-10">
+        <STD_Footer />
+      </div>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+// SM - Study Material Model
 const studyMaterialSchema = new mongoose.Schema(
   {
     title: { 
@@ -46,6 +47,10 @@ const studyMaterialSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    fileUrls: [{
+      type: String,
+      trim: true
+    }],
     uploadedBy: { 
       type: String,
       required: [true, "Uploader ID is required"],
@@ -117,9 +122,29 @@ const studyMaterialSchema = new mongoose.Schema(
   }
 );
 
+// Virtual for average rating calculation
+studyMaterialSchema.virtual('averageRating').get(function() {
+  if (this.reviewedBy && this.reviewedBy.length > 0) {
+    const totalRating = this.reviewedBy.reduce((sum, review) => sum + review.rating, 0);
+    return totalRating / this.reviewedBy.length;
+  }
+  return 0;
+});
+
+// Pre-save middleware to update rating field with average
+studyMaterialSchema.pre('save', function(next) {
+  if (this.reviewedBy && this.reviewedBy.length > 0) {
+    const totalRating = this.reviewedBy.reduce((sum, review) => sum + review.rating, 0);
+    this.rating = totalRating / this.reviewedBy.length;
+  } else {
+    this.rating = 0;
+  }
+  next();
+});
+
 // Index for better search performance
 studyMaterialSchema.index({ title: 'text', description: 'text', keywords: 'text' });
 studyMaterialSchema.index({ campus: 1, course: 1, year: 1, semester: 1 });
-studyMaterialSchema.index({ likeCount: -1, reviewCount: -1 }); // For sorting by popularity
+studyMaterialSchema.index({ rating: -1, reviewCount: -1 }); // For sorting by rating
 
 export const StudyMaterial = mongoose.model("StudyMaterial", studyMaterialSchema);

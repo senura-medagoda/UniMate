@@ -19,13 +19,69 @@ const CreateBoardingPlace = () => {
     contactNumber: "",
   });
 
+  const [errors, setErrors] = useState({});
+
   // Removed Additional Services feature
 
-  const [image, setImage] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState("");
+  const [images, setImages] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Price validation
+    if (!formData.price || formData.price === "") {
+      newErrors.price = "Price is required";
+    } else if (isNaN(formData.price) || parseFloat(formData.price) <= 0) {
+      newErrors.price = "Price must be a positive number greater than 0";
+    }
+
+    // Contact number validation
+    if (!formData.contactNumber || formData.contactNumber === "") {
+      newErrors.contactNumber = "Contact number is required";
+    } else if (!/^\d{10}$/.test(formData.contactNumber.replace(/\s/g, ""))) {
+      newErrors.contactNumber = "Contact number must be exactly 10 digits";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
+    }
+
+    // Special handling for price - only allow positive numbers
+    if (name === "price") {
+      const numericValue = value.replace(/[^0-9.]/g, "");
+      if (numericValue === "" || (parseFloat(numericValue) > 0)) {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: numericValue,
+        }));
+      }
+      return;
+    }
+
+    // Special handling for contact number - only allow digits
+    if (name === "contactNumber") {
+      const numericValue = value.replace(/[^0-9]/g, "");
+      if (numericValue.length <= 10) {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: numericValue,
+        }));
+      }
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -33,9 +89,19 @@ const CreateBoardingPlace = () => {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImage(file);
-    setPreviewUrl(URL.createObjectURL(file));
+    const files = Array.from(e.target.files);
+    const newImages = [...images, ...files];
+    setImages(newImages);
+    
+    const newPreviewUrls = files.map(file => URL.createObjectURL(file));
+    setPreviewUrls([...previewUrls, ...newPreviewUrls]);
+  };
+
+  const removeImage = (index) => {
+    const newImages = images.filter((_, i) => i !== index);
+    const newPreviewUrls = previewUrls.filter((_, i) => i !== index);
+    setImages(newImages);
+    setPreviewUrls(newPreviewUrls);
   };
 
   // Removed handlers for Additional Services
@@ -48,11 +114,18 @@ const CreateBoardingPlace = () => {
       return;
     }
 
+    // Validate form before submission
+    if (!validateForm()) {
+      toast.error("Please fix the validation errors before submitting.");
+      return;
+    }
+
     try {
-      let imageUrl = "";
-      if (image) {
-        toast.loading("Uploading image...");
-        imageUrl = await uploadImageToCloudinary(image);
+      let imageUrls = [];
+      if (images.length > 0) {
+        toast.loading(`Uploading ${images.length} image(s)...`);
+        const uploadPromises = images.map(image => uploadImageToCloudinary(image));
+        imageUrls = await Promise.all(uploadPromises);
         toast.dismiss();
       }
 
@@ -60,7 +133,7 @@ const CreateBoardingPlace = () => {
         ...formData,
         price: parseFloat(formData.price),
         amenities: formData.amenities.split(",").map((item) => item.trim()),
-        images: imageUrl ? [imageUrl] : [],
+        images: imageUrls,
         // additionalServices removed
         createdBy: "owner",
       };
@@ -83,8 +156,9 @@ const CreateBoardingPlace = () => {
         availableFrom: "",
         contactNumber: "",
       });
-      setImage(null);
-      setPreviewUrl("");
+      setImages([]);
+      setPreviewUrls([]);
+      setErrors({});
 
       // Set session storage flag as backup
       sessionStorage.setItem('refreshDashboard', 'true');
@@ -149,14 +223,19 @@ const CreateBoardingPlace = () => {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Price (Rs.)</label>
                 <input 
-                  type="number" 
+                  type="text" 
                   name="price" 
-                  placeholder="Enter price" 
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200" 
+                  placeholder="Enter price (e.g., 15000)" 
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 ${
+                    errors.price ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   onChange={handleChange} 
                   value={formData.price} 
                   required 
                 />
+                {errors.price && (
+                  <p className="text-red-500 text-sm mt-1">{errors.price}</p>
+                )}
               </div>
             </div>
             
@@ -190,26 +269,57 @@ const CreateBoardingPlace = () => {
                 <input 
                   type="text" 
                   name="contactNumber" 
-                  placeholder="Enter contact number" 
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200" 
+                  placeholder="Enter 10-digit contact number" 
+                  maxLength="10"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 ${
+                    errors.contactNumber ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   onChange={handleChange} 
                   value={formData.contactNumber} 
                   required 
                 />
+                {errors.contactNumber && (
+                  <p className="text-red-500 text-sm mt-1">{errors.contactNumber}</p>
+                )}
               </div>
             </div>
             
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Property Image</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Property Images</label>
               <input 
                 type="file" 
                 onChange={handleImageChange} 
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100" 
                 accept="image/*" 
+                multiple
               />
-              {previewUrl && (
+              <p className="text-sm text-gray-500 mt-1">You can select multiple images at once</p>
+              
+              {previewUrls.length > 0 && (
                 <div className="mt-4">
-                  <img src={previewUrl} alt="Preview" className="w-full h-64 object-cover rounded-lg shadow-md" />
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {previewUrls.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <img 
+                          src={url} 
+                          alt={`Preview ${index + 1}`} 
+                          className="w-full h-32 object-cover rounded-lg shadow-md" 
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {previewUrls.length} image(s) selected
+                  </p>
                 </div>
               )}
             </div>

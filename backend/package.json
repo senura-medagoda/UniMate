@@ -19,11 +19,14 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.18.2",
+    "html-pdf-node": "^1.0.8",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.3",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.6",
+    "puppeteer": "^24.24.0",
+    "stripe": "^19.1.0",
     "validator": "^13.15.15"
   },
   "devDependencies": {

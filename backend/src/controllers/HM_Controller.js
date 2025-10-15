@@ -14,12 +14,32 @@ export const registerHM = async (req, res) => {
             hm_email,
             hm_password,
             hm_company,
+            hm_company_address,
             hm_workID,
             hm_NIC,
             hm_phone,
             department,
             position
         } = req.body;
+
+        // Get uploaded proof document file
+        const proofDocumentFile = req.file;
+
+        // Validate required fields
+        if (!hm_fname || !hm_lname || !hm_email || !hm_password || !hm_company || !hm_company_address || !hm_workID || !hm_phone) {
+            return res.status(400).json({
+                success: false,
+                message: 'All required fields must be provided'
+            });
+        }
+
+        // Validate proof document
+        if (!proofDocumentFile) {
+            return res.status(400).json({
+                success: false,
+                message: 'Proof document (Service letter) is required'
+            });
+        }
 
         // Check if hiring manager already exists
         const existingHM = await HiringManager.findOne({
@@ -45,11 +65,14 @@ export const registerHM = async (req, res) => {
             hm_email,
             hm_password,
             hm_company,
+            hm_company_address,
             hm_workID,
             hm_NIC,
             hm_phone,
             department,
-            position
+            position,
+            proof_document: proofDocumentFile.filename,
+            proof_document_original_name: proofDocumentFile.originalname
         });
 
         await newHM.save();
@@ -83,6 +106,26 @@ export const registerHM = async (req, res) => {
 
     } catch (error) {
         console.error('Registration error:', error);
+        
+        // Handle validation errors
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: validationErrors
+            });
+        }
+        
+        // Handle duplicate key errors
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            return res.status(409).json({
+                success: false,
+                message: `${field} already exists`
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: 'Registration failed',
@@ -152,6 +195,8 @@ export const loginHM = async (req, res) => {
                 token,
                 hm: {
                     id: hm._id,
+                    firstName: hm.hm_fname,
+                    lastName: hm.hm_lname,
                     name: `${hm.hm_fname} ${hm.hm_lname}`,
                     email: hm.hm_email,
                     company: hm.hm_company,
@@ -167,6 +212,278 @@ export const loginHM = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Login failed',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+};
+
+// Helper function to archive expired jobs
+async function archiveExpiredJobs() {
+    try {
+        const Job = (await import('../models/Job.js')).default;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Start of today
+        
+        const result = await Job.updateMany(
+            { 
+                deadline: { $lt: today },
+                status: { $in: ['pending', 'live'] }
+            },
+            { 
+                status: 'archived' 
+            }
+        );
+        
+        if (result.modifiedCount > 0) {
+            console.log(`Archived ${result.modifiedCount} expired jobs`);
+        }
+        
+        return result.modifiedCount;
+    } catch (error) {
+        console.error('Error archiving expired jobs:', error);
+        return 0;
+    }
+}
+
+// Get Hiring Manager dashboard statistics
+export const getHMDashboardStats = async (req, res) => {
+    try {
+        const hmId = req.hmId; // From authentication middleware
+        const hmEmail = req.hm.hm_email;
+
+        // Import models
+        const Job = (await import('../models/Job.js')).default;
+        const JobApplication = (await import('../models/JobApplication.js')).default;
+        
+        // First, archive any expired jobs
+        await archiveExpiredJobs();
+        
+        // Get job statistics for this hiring manager
+        const totalJobs = await Job.countDocuments({ postedby: hmEmail });
+        const activeJobs = await Job.countDocuments({ postedby: hmEmail, status: 'live' });
+        const pendingJobs = await Job.countDocuments({ postedby: hmEmail, status: 'pending' });
+        
+        // Get all jobs posted by this hiring manager to calculate applicant stats
+        const hmJobs = await Job.find({ postedby: hmEmail }).select('_id');
+        const jobIds = hmJobs.map(job => job._id);
+        
+        // Get applicant statistics
+        const totalApplicants = await JobApplication.countDocuments({ 
+            jobId: { $in: jobIds } 
+        });
+        
+        // Get new applicants from the last 7 days
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const newApplicants = await JobApplication.countDocuments({ 
+            jobId: { $in: jobIds },
+            appliedAt: { $gte: oneWeekAgo }
+        });
+        
+        // Get recent jobs (last 5)
+        const recentJobs = await Job.find({ postedby: hmEmail })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .select('title status createdAt deadline');
+
+        // Get recent applications (last 5)
+        const recentApplications = await JobApplication.find({ 
+            jobId: { $in: jobIds } 
+        })
+        .populate('jobId', 'title')
+        .sort({ appliedAt: -1 })
+        .limit(5)
+        .select('studentName studentEmail appliedAt status jobId');
+
+        const stats = {
+            totalJobs,
+            activeJobs,
+            pendingJobs,
+            totalApplicants,
+            newApplicants,
+            recentJobs,
+            recentApplications
+        };
+
+        res.status(200).json({
+            success: true,
+            message: 'Dashboard statistics retrieved successfully',
+            data: stats
+        });
+
+    } catch (error) {
+        console.error('Get HM dashboard stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve dashboard statistics',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+};
+
+// Get current Hiring Manager profile (authenticated user)
+export const getCurrentHMProfile = async (req, res) => {
+    try {
+        const hmId = req.hmId; // From authentication middleware
+
+        const hm = await HiringManager.findById(hmId).select('-hm_password');
+        if (!hm) {
+            return res.status(404).json({
+                success: false,
+                message: 'Hiring Manager not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile retrieved successfully',
+            data: {
+                hm: {
+                    id: hm._id,
+                    firstName: hm.hm_fname,
+                    lastName: hm.hm_lname,
+                    email: hm.hm_email,
+                    company: hm.hm_company,
+                    workID: hm.hm_workID,
+                    nic: hm.hm_NIC,
+                    phone: hm.hm_phone,
+                    status: hm.hm_status,
+                    department: hm.department,
+                    position: hm.position,
+                    bio: hm.bio,
+                    linkedin: hm.linkedin,
+                    profilePicture: hm.profilePicture,
+                    lastLogin: hm.lastLogin,
+                    loginCount: hm.loginCount,
+                    createdAt: hm.createdAt,
+                    updatedAt: hm.updatedAt
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Get current HM profile error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve profile',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+};
+
+// Update current Hiring Manager profile (authenticated user)
+export const updateCurrentHMProfile = async (req, res) => {
+    try {
+        const hmId = req.hmId; // From authentication middleware
+        const { bio, linkedin } = req.body;
+
+        // Only allow updating bio and linkedin fields
+        const updateData = {};
+        if (bio !== undefined) updateData.bio = bio;
+        if (linkedin !== undefined) updateData.linkedin = linkedin;
+
+        // Check if hiring manager exists
+        const existingHM = await HiringManager.findById(hmId);
+        if (!existingHM) {
+            return res.status(404).json({
+                success: false,
+                message: 'Hiring Manager not found'
+            });
+        }
+
+        // Update the hiring manager
+        const updatedHM = await HiringManager.findByIdAndUpdate(
+            hmId,
+            { $set: updateData },
+            { new: true, runValidators: true }
+        ).select('-hm_password');
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully',
+            data: {
+                hm: {
+                    id: updatedHM._id,
+                    firstName: updatedHM.hm_fname,
+                    lastName: updatedHM.hm_lname,
+                    email: updatedHM.hm_email,
+                    company: updatedHM.hm_company,
+                    workID: updatedHM.hm_workID,
+                    nic: updatedHM.hm_NIC,
+                    phone: updatedHM.hm_phone,
+                    status: updatedHM.hm_status,
+                    department: updatedHM.department,
+                    position: updatedHM.position,
+                    bio: updatedHM.bio,
+                    linkedin: updatedHM.linkedin,
+                    profilePicture: updatedHM.profilePicture,
+                    lastLogin: updatedHM.lastLogin,
+                    loginCount: updatedHM.loginCount,
+                    updatedAt: updatedHM.updatedAt
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Update current HM profile error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update profile',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+};
+
+// Get Hiring Manager profile statistics
+export const getHMProfileStats = async (req, res) => {
+    try {
+        const hmId = req.hmId; // From authentication middleware
+        const hmEmail = req.hm.hm_email;
+
+        // Import models
+        const Job = (await import('../models/Job.js')).default;
+        const JobApplication = (await import('../models/JobApplication.js')).default;
+        
+        // Get job statistics for this hiring manager
+        const totalJobs = await Job.countDocuments({ postedby: hmEmail });
+        const activeJobs = await Job.countDocuments({ postedby: hmEmail, status: 'live' });
+        
+        // Get all jobs posted by this hiring manager to calculate applicant stats
+        const hmJobs = await Job.find({ postedby: hmEmail }).select('_id');
+        const jobIds = hmJobs.map(job => job._id);
+        
+        // Get applicant statistics
+        const totalApplicants = await JobApplication.countDocuments({ 
+            jobId: { $in: jobIds } 
+        });
+        
+        // Get hired/approved applicants
+        const hiredApplicants = await JobApplication.countDocuments({ 
+            jobId: { $in: jobIds },
+            status: 'hired'
+        });
+        
+        // Calculate hiring rate
+        const hiringRate = totalApplicants > 0 ? Math.round((hiredApplicants / totalApplicants) * 100) : 0;
+
+        const stats = {
+            jobsPosted: totalJobs,
+            applicantsReviewed: totalApplicants,
+            hiringRate: `${hiringRate}%`,
+            activePositions: activeJobs
+        };
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile statistics retrieved successfully',
+            data: stats
+        });
+
+    } catch (error) {
+        console.error('Get HM profile stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve profile statistics',
             error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
         });
     }
@@ -416,3 +733,77 @@ export const changePassword = async (req, res) => {
         });
     }
 };
+
+// JP Admin functions for HM management
+export const getAllHMsForAdmin = async (req, res) => {
+    try {
+        console.log("Getting all hiring managers for JP Admin...");
+        
+        // Get all hiring managers
+        const hms = await HiringManager.find({})
+            .select('-hm_password') // Exclude password
+            .sort({ createdAt: -1 }); // Sort by newest first
+        
+        console.log(`Found ${hms.length} hiring managers for JP Admin`);
+        
+        res.status(200).json({
+            success: true,
+            data: hms,
+            count: hms.length
+        });
+    } catch (error) {
+        console.error("Error in getAllHMsForAdmin controller", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+};
+
+export const updateHMStatus = async (req, res) => {
+    try {
+        const { hmId } = req.params;
+        const { status } = req.body;
+        
+        console.log(`Updating HM ${hmId} status to ${status}`);
+        
+        // Validate status
+        const validStatuses = ['Unverified', 'Verified', 'Rejected', 'Suspended', 'Banned'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid status. Must be one of: Unverified, Verified, Rejected, Suspended, Banned'
+            });
+        }
+        
+        const hm = await HiringManager.findByIdAndUpdate(
+            hmId,
+            { hm_status: status },
+            { new: true, runValidators: true }
+        ).select('-hm_password');
+        
+        if (!hm) {
+            return res.status(404).json({
+                success: false,
+                message: 'Hiring Manager not found'
+            });
+        }
+        
+        console.log(`HM ${hmId} status updated to ${status}`);
+        
+        res.status(200).json({
+            success: true,
+            message: `Hiring Manager status updated to ${status}`,
+            data: hm
+        });
+    } catch (error) {
+        console.error("Error in updateHMStatus controller", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+};
+

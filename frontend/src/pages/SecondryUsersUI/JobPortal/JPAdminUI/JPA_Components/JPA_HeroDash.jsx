@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Briefcase, 
@@ -14,16 +14,29 @@ import {
   Activity,
   Zap,
   Eye,
-  Settings
+  Settings,
+  Loader2
 } from 'lucide-react';
+import { useJPAuth } from '@/context/JPAuthContext';
 
 const JPA_HeroDash = () => {
-  const stats = {
-    pendingJobs: 12,
-    totalManagers: 45,
-    totalJobs: 234,
-    pendingVerifications: 8
-  };
+  const { jpAdmin, makeAuthenticatedRequest } = useJPAuth();
+  const [stats, setStats] = useState({
+    pendingJobs: 0,
+    totalManagers: 0,
+    totalJobs: 0,
+    pendingVerifications: 0,
+    liveJobs: 0,
+    rejectedJobs: 0,
+    archivedJobs: 0,
+    verifiedManagers: 0,
+    rejectedManagers: 0,
+    totalApplications: 0,
+    recentApplications: 0
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const quickActions = [
     {
@@ -60,44 +73,32 @@ const JPA_HeroDash = () => {
     }
   ];
 
-  const recentActivity = [
-    {
-      id: 1,
-      action: 'Job Approved',
-      target: 'Senior Developer at TechCorp',
-      user: 'admin@unimate.com',
-      time: '2 minutes ago',
-      icon: <CheckCircle className="w-4 h-4" />,
-      status: 'success'
-    },
-    {
-      id: 2,
-      action: 'Manager Verified',
-      target: 'Sarah Johnson (sarah@tech.io)',
-      user: 'admin@unimate.com',
-      time: '15 minutes ago',
-      icon: <Users className="w-4 h-4" />,
-      status: 'success'
-    },
-    {
-      id: 3,
-      action: 'Job Rejected',
-      target: 'Intern Position at StartupCo',
-      user: 'admin@unimate.com',
-      time: '1 hour ago',
-      icon: <AlertCircle className="w-4 h-4" />,
-      status: 'error'
-    },
-    {
-      id: 4,
-      action: 'Report Generated',
-      target: 'Monthly Jobs Report',
-      user: 'admin@unimate.com',
-      time: '3 hours ago',
-      icon: <BarChart3 className="w-4 h-4" />,
-      status: 'info'
-    }
-  ];
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await makeAuthenticatedRequest('http://localhost:5001/api/jpadmin/dashboard/stats');
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+          setStats(result.data.stats);
+          setRecentActivity(result.data.recentActivity);
+        } else {
+          setError(result.message || 'Failed to fetch dashboard data');
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError('Failed to fetch dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [makeAuthenticatedRequest]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -105,6 +106,24 @@ const JPA_HeroDash = () => {
       case 'error': return 'text-red-600'
       case 'info': return 'text-blue-600'
       default: return 'text-gray-600'
+    }
+  }
+
+  const getActivityIcon = (type, status) => {
+    switch (type) {
+      case 'job':
+        switch (status) {
+          case 'success': return <CheckCircle className="w-4 h-4" />
+          case 'error': return <AlertCircle className="w-4 h-4" />
+          default: return <FileText className="w-4 h-4" />
+        }
+      case 'manager':
+        switch (status) {
+          case 'success': return <Users className="w-4 h-4" />
+          case 'error': return <AlertCircle className="w-4 h-4" />
+          default: return <Users className="w-4 h-4" />
+        }
+      default: return <Activity className="w-4 h-4" />
     }
   }
 
@@ -121,7 +140,7 @@ const JPA_HeroDash = () => {
         >
           <div className="mb-6 lg:mb-0">
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-              Welcome back, <span className="text-transparent bg-clip-text" style={{ background: 'linear-gradient(to right, #fc944c, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Admin</span>
+              Welcome back, <span className="text-transparent bg-clip-text" style={{ background: 'linear-gradient(to right, #fc944c, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{jpAdmin?.firstName || jpAdmin?.name?.split(' ')[0] || 'Admin'}</span>
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl">
               Here's what's happening with your job portal today. Manage jobs, verify managers, and monitor system activity.
@@ -152,7 +171,9 @@ const JPA_HeroDash = () => {
               <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(252, 148, 76, 0.1)' }}>
                 <Clock className="w-6 h-6" style={{ color: '#fc944c' }} />
               </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.pendingJobs}</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats.pendingJobs}
+              </span>
             </div>
             <h3 className="text-sm font-semibold text-gray-600 mb-1">Pending Jobs</h3>
             <p className="text-xs text-gray-500">Awaiting review</p>
@@ -163,7 +184,9 @@ const JPA_HeroDash = () => {
               <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(252, 148, 76, 0.1)' }}>
                 <Users className="w-6 h-6" style={{ color: '#fc944c' }} />
               </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.totalManagers}</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats.totalManagers}
+              </span>
             </div>
             <h3 className="text-sm font-semibold text-gray-600 mb-1">Hiring Managers</h3>
             <p className="text-xs text-gray-500">Total registered</p>
@@ -174,7 +197,9 @@ const JPA_HeroDash = () => {
               <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(252, 148, 76, 0.1)' }}>
                 <Briefcase className="w-6 h-6" style={{ color: '#fc944c' }} />
               </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.totalJobs}</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats.totalJobs}
+              </span>
             </div>
             <h3 className="text-sm font-semibold text-gray-600 mb-1">Total Jobs</h3>
             <p className="text-xs text-gray-500">All time listings</p>
@@ -185,7 +210,9 @@ const JPA_HeroDash = () => {
               <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(252, 148, 76, 0.1)' }}>
                 <CheckCircle className="w-6 h-6" style={{ color: '#fc944c' }} />
               </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.pendingVerifications}</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats.pendingVerifications}
+              </span>
             </div>
             <h3 className="text-sm font-semibold text-gray-600 mb-1">Pending Verifications</h3>
             <p className="text-xs text-gray-500">Manager approvals</p>
@@ -263,33 +290,52 @@ const JPA_HeroDash = () => {
           </div>
           
           <div className="divide-y divide-gray-100">
-            {recentActivity.map((activity, index) => (
-              <motion.div 
-                key={activity.id}
-                className="p-6 hover:bg-gray-50 transition-colors duration-200"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 + index * 0.1, duration: 0.4 }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-lg bg-gray-100">
-                      {activity.icon}
+            {loading ? (
+              <div className="p-6 text-center">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-orange-600" />
+                <p className="text-gray-600">Loading recent activity...</p>
+              </div>
+            ) : error ? (
+              <div className="p-6 text-center">
+                <AlertCircle className="w-8 h-8 mx-auto mb-4 text-red-600" />
+                <p className="text-red-600 mb-2">Error loading activity</p>
+                <p className="text-gray-600 text-sm">{error}</p>
+              </div>
+            ) : recentActivity.length > 0 ? (
+              recentActivity.map((activity, index) => (
+                <motion.div 
+                  key={activity.id}
+                  className="p-6 hover:bg-gray-50 transition-colors duration-200"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.8 + index * 0.1, duration: 0.4 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded-lg bg-gray-100">
+                        {getActivityIcon(activity.type, activity.status)}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{activity.action}</h3>
+                        <p className="text-sm text-gray-600">{activity.target}</p>
+                        <p className="text-xs text-gray-500">by {activity.user}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{activity.action}</h3>
-                      <p className="text-sm text-gray-600">{activity.target}</p>
+                    <div className="text-right">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
+                        {activity.status}
+                      </span>
+                      <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
-                      {activity.status}
-                    </span>
-                    <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            ) : (
+              <div className="p-6 text-center">
+                <Activity className="w-8 h-8 mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">No recent activity</p>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

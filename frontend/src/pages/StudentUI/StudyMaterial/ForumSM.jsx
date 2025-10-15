@@ -1,3 +1,4 @@
+// SM - Study Material Forum Component
 import React, { useState, useEffect } from "react";
 import { FaPlus, FaHome, FaUser, FaSearch, FaThumbsUp, FaThumbsDown, FaComment, FaEdit, FaTrash, FaComments, FaFilter, FaBook, FaGraduationCap, FaCalendar, FaTag, FaArrowLeft, FaPaperPlane } from "react-icons/fa";
 import Navbar from "./Components/Navbar.jsx";
@@ -17,14 +18,40 @@ const ForumSMM = ({ user, setUser }) => {
     tags: ""
   });
   const [filters, setFilters] = useState({
-    campus: "",
-    course: "",
     year: "",
     semester: "",
     subject: "",
     sort: "newest"
   });
   const [searchQuery, setSearchQuery] = useState("");
+  const [expandedPosts, setExpandedPosts] = useState(new Set());
+  const [newComments, setNewComments] = useState({});
+
+  // System data states
+  const [systemData, setSystemData] = useState({
+    campuses: [],
+    courses: [],
+    years: [],
+    semesters: [],
+    subjects: []
+  });
+  const [systemDataLoading, setSystemDataLoading] = useState(false);
+
+  // Fetch system data for dropdowns
+  const fetchSystemData = async () => {
+    setSystemDataLoading(true);
+    try {
+      const response = await fetch('http://localhost:5001/api/system-data/all');
+      const data = await response.json();
+      if (data.success) {
+        setSystemData(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching system data:', error);
+    } finally {
+      setSystemDataLoading(false);
+    }
+  };
 
   // Fetch posts from API
   const fetchPosts = async () => {
@@ -34,13 +61,10 @@ const ForumSMM = ({ user, setUser }) => {
       let url = 'http://localhost:5001/api/forum/posts?';
       const params = new URLSearchParams();
       
+      // Only send backend filters, not search query (we do client-side search)
       Object.entries(filters).forEach(([key, value]) => {
         if (value) params.append(key, value);
       });
-      
-      if (searchQuery) {
-        params.append('search', searchQuery);
-      }
       
       const response = await fetch(url + params.toString());
       const data = await response.json();
@@ -99,7 +123,15 @@ const ForumSMM = ({ user, setUser }) => {
 
   useEffect(() => {
     fetchPosts();
-  }, [filters, searchQuery]);
+    fetchSystemData();
+  }, [filters]);
+
+  // Clear search when switching away from Forum Home
+  useEffect(() => {
+    if (activeTab !== "home") {
+      setSearchQuery("");
+    }
+  }, [activeTab]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -201,14 +233,120 @@ const ForumSMM = ({ user, setUser }) => {
     }
   };
 
+  // Comment handling functions
+  const toggleComments = (postId) => {
+    const newExpanded = new Set(expandedPosts);
+    if (newExpanded.has(postId)) {
+      newExpanded.delete(postId);
+    } else {
+      newExpanded.add(postId);
+    }
+    setExpandedPosts(newExpanded);
+  };
+
+  const handleAddComment = async (postId, commentText) => {
+    if (!commentText.trim()) return;
+    
+    try {
+      const response = await fetch(`http://localhost:5001/api/forum/posts/${postId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: commentText })
+      });
+      
+      if (response.ok) {
+        // Clear the comment input
+        setNewComments(prev => ({ ...prev, [postId]: '' }));
+        // Refresh posts to show new comment
+        fetchPosts();
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
+
+  const handleDeleteComment = async (postId, commentId) => {
+    if (!postId || !commentId) {
+      console.error('Missing postId or commentId:', { postId, commentId });
+      return;
+    }
+    
+    try {
+      const response = await fetch(`http://localhost:5001/api/forum/posts/${postId}/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        fetchPosts(); // Refresh posts
+      } else {
+        const errorData = await response.text();
+        console.error('Delete failed:', response.status, errorData);
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  };
+
+  const handleLikeComment = async (postId, commentId) => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/forum/posts/${postId}/comments/${commentId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: 'student123' })
+      });
+      
+      if (response.ok) {
+        fetchPosts(); // Refresh posts
+      }
+    } catch (error) {
+      console.error('Error liking comment:', error);
+    }
+  };
+
+  const handleDislikeComment = async (postId, commentId) => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/forum/posts/${postId}/comments/${commentId}/dislike`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: 'student123' })
+      });
+      
+      if (response.ok) {
+        fetchPosts(); // Refresh posts
+      }
+    } catch (error) {
+      console.error('Error disliking comment:', error);
+    }
+  };
+
   const filteredPosts = posts.filter(post => {
-    return (
-      (!filters.campus || post.campus === filters.campus) &&
-      (!filters.course || post.course === filters.course) &&
+    // Apply filter criteria
+    const matchesFilters = (
       (!filters.year || post.year === filters.year) &&
       (!filters.semester || post.semester === filters.semester) &&
       (!filters.subject || post.subject === filters.subject)
     );
+
+    // Apply search query if provided
+    if (!searchQuery.trim()) {
+      return matchesFilters;
+    }
+
+    const searchTerm = searchQuery.toLowerCase();
+    const matchesSearch = (
+      post.title.toLowerCase().includes(searchTerm) ||
+      post.description.toLowerCase().includes(searchTerm) ||
+      post.campus.toLowerCase().includes(searchTerm) ||
+      post.course.toLowerCase().includes(searchTerm) ||
+      post.year.toLowerCase().includes(searchTerm) ||
+      post.semester.toLowerCase().includes(searchTerm) ||
+      post.subject.toLowerCase().includes(searchTerm) ||
+      post.author.toLowerCase().includes(searchTerm) ||
+      (post.tags && post.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+    );
+
+    return matchesFilters && matchesSearch;
   });
 
   console.log('Rendering ForumSMM with posts:', posts.length);
@@ -277,54 +415,26 @@ const ForumSMM = ({ user, setUser }) => {
               </nav>
             </div>
 
-            {/* Search and Filters */}
-            <div className="px-8 py-6 border-b border-gray-200">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input
-                      type="text"
-                      placeholder="Search posts, topics, or discussions..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg"
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex gap-4">
-                  <div className="relative">
-                    <FaGraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <select
-                      value={filters.campus}
-                      onChange={(e) => setFilters(prev => ({ ...prev, campus: e.target.value }))}
-                      className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white min-w-[150px]"
-                    >
-                      <option value="">All Campuses</option>
-                      <option value="Malabe">Malabe</option>
-                      <option value="Kandy">Kandy</option>
-                      <option value="Matara">Matara</option>
-                      <option value="Jaffna">Jaffna</option>
-                    </select>
+            {/* Search and Filters - Only show for Forum Home */}
+            {activeTab === "home" && (
+              <div className="px-8 py-6 border-b border-gray-200">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <input
+                        type="text"
+                        placeholder="Search by title, campus, course, year, semester, subject, author, or tags..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg"
+                      />
+                    </div>
                   </div>
                   
-                  <div className="relative">
-                    <FaBook className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <select
-                      value={filters.course}
-                      onChange={(e) => setFilters(prev => ({ ...prev, course: e.target.value }))}
-                      className="pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white min-w-[150px]"
-                    >
-                      <option value="">All Courses</option>
-                      <option value="IT">IT</option>
-                      <option value="Engineering">Engineering</option>
-                      <option value="Business">Business</option>
-                    </select>
-                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Content Area */}
@@ -333,7 +443,14 @@ const ForumSMM = ({ user, setUser }) => {
             {activeTab === "home" && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-3xl font-bold text-gray-900">Recent Discussions</h2>
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900">Recent Discussions</h2>
+                    {searchQuery && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        Showing {filteredPosts.length} result{filteredPosts.length !== 1 ? 's' : ''} for "{searchQuery}"
+                      </p>
+                    )}
+                  </div>
                   <div className="flex items-center space-x-4">
                     <select
                       value={filters.sort}
@@ -399,10 +516,13 @@ const ForumSMM = ({ user, setUser }) => {
                               <FaCalendar className="mr-2 text-orange-500" />
                               {new Date(post.createdAt).toLocaleDateString()}
                             </span>
-                            <span className="flex items-center">
-                              <FaComment className="mr-2 text-orange-500" />
+                            <button
+                              onClick={() => toggleComments(post.id)}
+                              className="flex items-center text-orange-600 hover:text-orange-700 transition-colors duration-200"
+                            >
+                              <FaComment className="mr-2" />
                               {post.comments?.length || 0} comments
-                            </span>
+                            </button>
                           </div>
                           
                           <div className="flex items-center space-x-2">
@@ -422,6 +542,86 @@ const ForumSMM = ({ user, setUser }) => {
                             </button>
                           </div>
                         </div>
+
+                        {/* Comments Section */}
+                        {expandedPosts.has(post.id) && (
+                          <div className="mt-6 pt-6 border-t border-gray-200">
+                            <div className="space-y-4">
+                              {/* Existing Comments */}
+                              {post.comments && post.comments.length > 0 ? (
+                                <div className="space-y-4">
+                                  {post.comments.map((comment) => (
+                                    <div key={comment._id || comment.id} className="bg-gray-50 rounded-xl p-4">
+                                      <div className="flex justify-between items-start mb-2">
+                                        <div className="flex items-center space-x-2">
+                                          <span className="font-medium text-gray-900">{comment.userId}</span>
+                                          <span className="text-sm text-gray-500">
+                                            {new Date(comment.createdAt).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                        {comment.userId === 'student123' && (
+                                          <button
+                                            onClick={() => handleDeleteComment(post.id, comment._id || comment.id)}
+                                            className="text-red-500 hover:text-red-700 transition-colors duration-200"
+                                          >
+                                            <FaTrash className="w-4 h-4" />
+                                          </button>
+                                        )}
+                                      </div>
+                                      <p className="text-gray-700 mb-3">{comment.text}</p>
+                                      <div className="flex items-center space-x-4">
+                                        <button
+                                          onClick={() => handleLikeComment(post.id, comment._id || comment.id)}
+                                          className="flex items-center space-x-1 text-green-600 hover:text-green-700 transition-colors duration-200"
+                                        >
+                                          <FaThumbsUp className="w-4 h-4" />
+                                          <span className="text-sm">{comment.likes || 0}</span>
+                                        </button>
+                                        <button
+                                          onClick={() => handleDislikeComment(post.id, comment._id || comment.id)}
+                                          className="flex items-center space-x-1 text-red-600 hover:text-red-700 transition-colors duration-200"
+                                        >
+                                          <FaThumbsDown className="w-4 h-4" />
+                                          <span className="text-sm">{comment.dislikes || 0}</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center py-4 text-gray-500">
+                                  <FaComments className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                                  <p>No comments yet. Be the first to comment!</p>
+                                </div>
+                              )}
+
+                              {/* Add Comment Form */}
+                              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                                <div className="flex space-x-3">
+                                  <input
+                                    type="text"
+                                    placeholder="Write a comment..."
+                                    value={newComments[post.id] || ''}
+                                    onChange={(e) => setNewComments(prev => ({ ...prev, [post.id]: e.target.value }))}
+                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                    onKeyPress={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleAddComment(post.id, e.target.value);
+                                      }
+                                    }}
+                                  />
+                                  <button
+                                    onClick={() => handleAddComment(post.id, newComments[post.id] || '')}
+                                    className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors duration-200 flex items-center space-x-2"
+                                  >
+                                    <FaPaperPlane className="w-4 h-4" />
+                                    <span>Post</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -490,12 +690,14 @@ const ForumSMM = ({ user, setUser }) => {
                           onChange={(e) => setNewPost(prev => ({ ...prev, campus: e.target.value }))}
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg bg-white"
                           required
+                          disabled={systemDataLoading}
                         >
-                          <option value="">Select Campus</option>
-                          <option value="Malabe">Malabe</option>
-                          <option value="Kandy">Kandy</option>
-                          <option value="Matara">Matara</option>
-                          <option value="Jaffna">Jaffna</option>
+                          <option value="">{systemDataLoading ? "Loading..." : "Select Campus"}</option>
+                          {systemData.campuses.map((campus) => (
+                            <option key={campus._id} value={campus.name}>
+                              {campus.name}
+                            </option>
+                          ))}
                         </select>
                       </div>
 
@@ -507,14 +709,20 @@ const ForumSMM = ({ user, setUser }) => {
                             Course *
                           </label>
                         </div>
-                        <input
-                          type="text"
-                          placeholder="e.g. IT, Engineering, Business"
+                        <select
                           value={newPost.course}
                           onChange={(e) => setNewPost(prev => ({ ...prev, course: e.target.value }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg bg-white"
                           required
-                        />
+                          disabled={systemDataLoading}
+                        >
+                          <option value="">{systemDataLoading ? "Loading..." : "Select Course"}</option>
+                          {systemData.courses.map((course) => (
+                            <option key={course._id} value={course.name}>
+                              {course.name}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       {/* Year */}
@@ -530,12 +738,14 @@ const ForumSMM = ({ user, setUser }) => {
                           onChange={(e) => setNewPost(prev => ({ ...prev, year: e.target.value }))}
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg bg-white"
                           required
+                          disabled={systemDataLoading}
                         >
-                          <option value="">Select Year</option>
-                          <option value="1">Year 1</option>
-                          <option value="2">Year 2</option>
-                          <option value="3">Year 3</option>
-                          <option value="4">Year 4</option>
+                          <option value="">{systemDataLoading ? "Loading..." : "Select Year"}</option>
+                          {systemData.years.map((year) => (
+                            <option key={year._id} value={year.year}>
+                              {year.name}
+                            </option>
+                          ))}
                         </select>
                       </div>
 
@@ -552,10 +762,14 @@ const ForumSMM = ({ user, setUser }) => {
                           onChange={(e) => setNewPost(prev => ({ ...prev, semester: e.target.value }))}
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg bg-white"
                           required
+                          disabled={systemDataLoading}
                         >
-                          <option value="">Select Semester</option>
-                          <option value="1">Semester 1</option>
-                          <option value="2">Semester 2</option>
+                          <option value="">{systemDataLoading ? "Loading..." : "Select Semester"}</option>
+                          {systemData.semesters.map((semester) => (
+                            <option key={semester._id} value={semester.semester}>
+                              {semester.name}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -568,14 +782,20 @@ const ForumSMM = ({ user, setUser }) => {
                           Subject *
                         </label>
                       </div>
-                      <input
-                        type="text"
-                        placeholder="e.g. Mathematics, Physics, Programming"
+                      <select
                         value={newPost.subject}
                         onChange={(e) => setNewPost(prev => ({ ...prev, subject: e.target.value }))}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg bg-white"
                         required
-                      />
+                        disabled={systemDataLoading}
+                      >
+                        <option value="">{systemDataLoading ? "Loading..." : "Select Subject"}</option>
+                        {systemData.subjects.map((subjectOption) => (
+                          <option key={subjectOption._id} value={subjectOption.name}>
+                            {subjectOption.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     {/* Tags */}
@@ -666,10 +886,13 @@ const ForumSMM = ({ user, setUser }) => {
                               <FaCalendar className="mr-2 text-orange-500" />
                               {new Date(post.createdAt).toLocaleDateString()}
                             </span>
-                            <span className="flex items-center">
-                              <FaComment className="mr-2 text-orange-500" />
+                            <button
+                              onClick={() => toggleComments(post.id)}
+                              className="flex items-center text-orange-600 hover:text-orange-700 transition-colors duration-200"
+                            >
+                              <FaComment className="mr-2" />
                               {post.comments?.length || 0} comments
-                            </span>
+                            </button>
                           </div>
                           
                           <div className="flex items-center space-x-2">
@@ -682,6 +905,86 @@ const ForumSMM = ({ user, setUser }) => {
                             </button>
                           </div>
                         </div>
+
+                        {/* Comments Section */}
+                        {expandedPosts.has(post.id) && (
+                          <div className="mt-6 pt-6 border-t border-gray-200">
+                            <div className="space-y-4">
+                              {/* Existing Comments */}
+                              {post.comments && post.comments.length > 0 ? (
+                                <div className="space-y-4">
+                                  {post.comments.map((comment) => (
+                                    <div key={comment._id || comment.id} className="bg-gray-50 rounded-xl p-4">
+                                      <div className="flex justify-between items-start mb-2">
+                                        <div className="flex items-center space-x-2">
+                                          <span className="font-medium text-gray-900">{comment.userId}</span>
+                                          <span className="text-sm text-gray-500">
+                                            {new Date(comment.createdAt).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                        {comment.userId === 'student123' && (
+                                          <button
+                                            onClick={() => handleDeleteComment(post.id, comment._id || comment.id)}
+                                            className="text-red-500 hover:text-red-700 transition-colors duration-200"
+                                          >
+                                            <FaTrash className="w-4 h-4" />
+                                          </button>
+                                        )}
+                                      </div>
+                                      <p className="text-gray-700 mb-3">{comment.text}</p>
+                                      <div className="flex items-center space-x-4">
+                                        <button
+                                          onClick={() => handleLikeComment(post.id, comment._id || comment.id)}
+                                          className="flex items-center space-x-1 text-green-600 hover:text-green-700 transition-colors duration-200"
+                                        >
+                                          <FaThumbsUp className="w-4 h-4" />
+                                          <span className="text-sm">{comment.likes || 0}</span>
+                                        </button>
+                                        <button
+                                          onClick={() => handleDislikeComment(post.id, comment._id || comment.id)}
+                                          className="flex items-center space-x-1 text-red-600 hover:text-red-700 transition-colors duration-200"
+                                        >
+                                          <FaThumbsDown className="w-4 h-4" />
+                                          <span className="text-sm">{comment.dislikes || 0}</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center py-4 text-gray-500">
+                                  <FaComments className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                                  <p>No comments yet. Be the first to comment!</p>
+                                </div>
+                              )}
+
+                              {/* Add Comment Form */}
+                              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                                <div className="flex space-x-3">
+                                  <input
+                                    type="text"
+                                    placeholder="Write a comment..."
+                                    value={newComments[post.id] || ''}
+                                    onChange={(e) => setNewComments(prev => ({ ...prev, [post.id]: e.target.value }))}
+                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                    onKeyPress={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleAddComment(post.id, e.target.value);
+                                      }
+                                    }}
+                                  />
+                                  <button
+                                    onClick={() => handleAddComment(post.id, newComments[post.id] || '')}
+                                    className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors duration-200 flex items-center space-x-2"
+                                  >
+                                    <FaPaperPlane className="w-4 h-4" />
+                                    <span>Post</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

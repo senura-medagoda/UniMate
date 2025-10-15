@@ -237,11 +237,11 @@ const TrackOrders = () => {
     <div className="min-h-screen bg-gray-50">
       <Admin_Navbar />
       <div className="flex">
-        <div className="w-64 bg-white shadow-sm border-r border-gray-200">
-          <M_SIdebar />
-        </div>
+        {/* Fixed Sidebar */}
+        <M_SIdebar />
 
-        <div className="flex-1 p-6">
+        {/* Main Content with left margin for fixed sidebar */}
+        <div className="flex-1 lg:ml-64 p-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">

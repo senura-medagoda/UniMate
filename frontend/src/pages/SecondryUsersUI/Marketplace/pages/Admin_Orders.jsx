@@ -198,11 +198,11 @@ const Admin_Orders = () => {
     <div className="min-h-screen bg-gray-50">
       <Admin_Navbar />
       <div className="flex">
-        <div className="w-64 bg-white shadow-sm border-r border-gray-200">
-          <M_SIdebar />
-        </div>
+        {/* Fixed Sidebar */}
+        <M_SIdebar />
 
-        <div className="flex-1 p-6">
+        {/* Main Content with left margin for fixed sidebar */}
+        <div className="flex-1 lg:ml-64 p-6">
           {/* 🔥 Stats Section */}
           <Admin_Summary
             totalRevenue={stats.totalRevenue}

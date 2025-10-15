@@ -7,6 +7,13 @@ const STD_HeroProfile = ({ user }) => {
   const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [editData, setEditData] = useState({
+    s_fname: '',
+    s_lname: '',
+    s_phone: ''
+  });
+  const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   
   // Get current user email from session/localStorage
   const currentUserEmail = user?.email || user?.s_email || localStorage.getItem('studentEmail') || '';
@@ -59,12 +66,101 @@ const STD_HeroProfile = ({ user }) => {
   const userData = studentData || defaultData;
 
   const handleEditProfile = () => {
+    if (!isEditing) {
+      // Initialize edit data with current values
+      setEditData({
+        s_fname: userData.s_fname || '',
+        s_lname: userData.s_lname || '',
+        s_phone: userData.s_phone || ''
+      });
+      // Clear any previous errors or success messages
+      setError(null);
+      setSuccessMessage('');
+    }
     setIsEditing(!isEditing);
   };
 
-  const handleSaveProfile = () => {
-    // Handle save logic here
-    setIsEditing(false);
+  const handleInputChange = (field, value) => {
+    setEditData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+      setSuccessMessage('');
+
+      // Validate required fields
+      if (!editData.s_fname.trim()) {
+        setError('First name is required');
+        return;
+      }
+      if (!editData.s_lname.trim()) {
+        setError('Last name is required');
+        return;
+      }
+
+      // Validate phone number if provided (should be 10 digits)
+      if (editData.s_phone && editData.s_phone.trim() !== '') {
+        const cleanPhone = editData.s_phone.replace(/\D/g, '');
+        if (cleanPhone.length !== 10) {
+          setError('Phone number must be exactly 10 digits');
+          return;
+        }
+        if (!/^[0-9]{10}$/.test(cleanPhone)) {
+          setError('Phone number must contain only digits');
+          return;
+        }
+      }
+
+      // Get auth token from localStorage
+      const token = localStorage.getItem('studentToken');
+      if (!token) {
+        setError('Authentication token not found. Please login again.');
+        return;
+      }
+
+      // Prepare data for API call
+      const updateData = {
+        s_fname: editData.s_fname.trim(),
+        s_lname: editData.s_lname.trim(),
+        s_phone: editData.s_phone ? editData.s_phone.replace(/\D/g, '') : ''
+      };
+
+      console.log('Updating student profile with data:', updateData);
+
+      const response = await axios.put('http://localhost:5001/api/students/update', updateData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data.message === 'Student updated successfully') {
+        // Update local state with new data
+        setStudentData(response.data.student);
+        setIsEditing(false);
+        setSuccessMessage('Profile updated successfully!');
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        setError('Failed to update profile. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.response?.status === 401) {
+        setError('Authentication failed. Please login again.');
+      } else {
+        setError('Failed to update profile. Please try again.');
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleVerifyProfile = () => {
@@ -222,13 +318,28 @@ const STD_HeroProfile = ({ user }) => {
                     {isEditing && (
                       <button
                         onClick={handleSaveProfile}
-                        className="px-6 py-2 text-white rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2"
+                        disabled={saving}
+                        className={`px-6 py-2 text-white rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                          saving ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                        }`}
                         style={{backgroundColor: '#fc944c'}}
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Save Changes
+                        {saving ? (
+                          <>
+                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Save Changes
+                          </>
+                        )}
                       </button>
                     )}
                   </div>
@@ -236,6 +347,32 @@ const STD_HeroProfile = ({ user }) => {
               </div>
             </div>
           </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <span className="text-red-800 font-medium">Error</span>
+              </div>
+              <p className="text-red-700 mt-1">{error}</p>
+            </div>
+          )}
+
+          {/* Success Display */}
+          {successMessage && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-green-800 font-medium">Success</span>
+              </div>
+              <p className="text-green-700 mt-1">{successMessage}</p>
+            </div>
+          )}
 
           {/* Profile Details Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -258,9 +395,11 @@ const STD_HeroProfile = ({ user }) => {
                     {isEditing ? (
                       <input 
                         type="text" 
-                        defaultValue={userData.s_fname}
+                        value={editData.s_fname}
+                        onChange={(e) => handleInputChange('s_fname', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
                         style={{'--tw-ring-color': '#fc944c'}}
+                        placeholder="Enter first name"
                       />
                     ) : (
                       <p className="text-gray-800 font-medium">{userData.s_fname}</p>
@@ -271,9 +410,11 @@ const STD_HeroProfile = ({ user }) => {
                     {isEditing ? (
                       <input 
                         type="text" 
-                        defaultValue={userData.s_lname}
+                        value={editData.s_lname}
+                        onChange={(e) => handleInputChange('s_lname', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
                         style={{'--tw-ring-color': '#fc944c'}}
+                        placeholder="Enter last name"
                       />
                     ) : (
                       <p className="text-gray-800 font-medium">{userData.s_lname}</p>
@@ -283,16 +424,8 @@ const STD_HeroProfile = ({ user }) => {
                 
                 <div>
                   <label className="text-sm font-medium text-gray-600 mb-1 block">Email Address</label>
-                  {isEditing ? (
-                    <input 
-                      type="email" 
-                      defaultValue={userData.s_email}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                      style={{'--tw-ring-color': '#fc944c'}}
-                    />
-                  ) : (
-                    <p className="text-gray-800 font-medium">{userData.s_email}</p>
-                  )}
+                  <p className="text-gray-800 font-medium">{userData.s_email}</p>
+                  <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                 </div>
                 
                 <div>
@@ -300,9 +433,12 @@ const STD_HeroProfile = ({ user }) => {
                   {isEditing ? (
                     <input 
                       type="tel" 
-                      defaultValue={userData.s_phone || ''}
+                      value={editData.s_phone}
+                      onChange={(e) => handleInputChange('s_phone', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
                       style={{'--tw-ring-color': '#fc944c'}}
+                      placeholder="Enter 10-digit phone number"
+                      maxLength="10"
                     />
                   ) : (
                     <p className="text-gray-800 font-medium">{userData.s_phone || 'Not provided'}</p>
@@ -311,16 +447,8 @@ const STD_HeroProfile = ({ user }) => {
                 
                 <div>
                   <label className="text-sm font-medium text-gray-600 mb-1 block">NIC Number</label>
-                  {isEditing ? (
-                    <input 
-                      type="text" 
-                      defaultValue={userData.s_NIC || ''}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                      style={{'--tw-ring-color': '#fc944c'}}
-                    />
-                  ) : (
-                    <p className="text-gray-800 font-medium">{userData.s_NIC || 'Not provided'}</p>
-                  )}
+                  <p className="text-gray-800 font-medium">{userData.s_NIC || 'Not provided'}</p>
+                  <p className="text-xs text-gray-500 mt-1">NIC cannot be changed</p>
                 </div>
               </div>
             </div>
@@ -339,30 +467,14 @@ const STD_HeroProfile = ({ user }) => {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-gray-600 mb-1 block">University</label>
-                  {isEditing ? (
-                    <input 
-                      type="text" 
-                      defaultValue={userData.s_uni}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                      style={{'--tw-ring-color': '#fc944c'}}
-                    />
-                  ) : (
-                    <p className="text-gray-800 font-medium">{userData.s_uni}</p>
-                  )}
+                  <p className="text-gray-800 font-medium">{userData.s_uni}</p>
+                  <p className="text-xs text-gray-500 mt-1">University cannot be changed</p>
                 </div>
                 
                 <div>
                   <label className="text-sm font-medium text-gray-600 mb-1 block">Student ID</label>
-                  {isEditing ? (
-                    <input 
-                      type="text" 
-                      defaultValue={userData.s_uniID}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                      style={{'--tw-ring-color': '#fc944c'}}
-                    />
-                  ) : (
-                    <p className="text-gray-800 font-medium">{userData.s_uniID}</p>
-                  )}
+                  <p className="text-gray-800 font-medium">{userData.s_uniID}</p>
+                  <p className="text-xs text-gray-500 mt-1">Student ID cannot be changed</p>
                 </div>
                 
                 <div>

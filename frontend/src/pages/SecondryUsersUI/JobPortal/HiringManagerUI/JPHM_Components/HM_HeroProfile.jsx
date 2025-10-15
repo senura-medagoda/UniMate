@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useHMAuth } from '@/context/HMAuthContext'
 import { 
   Edit, 
   Save, 
@@ -7,39 +8,125 @@ import {
   User, 
   Mail, 
   Phone, 
-  MapPin, 
   Building2,
-  Globe,
   Linkedin,
   Settings,
-  Bell,
   Shield,
   Award,
   TrendingUp,
   Users,
   Briefcase,
   Target,
-  CheckCircle,
-  Calendar,
-  FileText
+  CheckCircle
 } from 'lucide-react'
 
-function HM_HeroProfile() {
+function HM_HeroProfile({ user }) {
+  const { hm, token, makeAuthenticatedRequest } = useHMAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [profileData, setProfileData] = useState({
-    name: 'Dr. Sarah Johnson',
-    title: 'Senior Hiring Manager',
-    department: 'Computer Science Department',
-    email: 'sarah.johnson@university.edu',
-    phone: '(555) 123-4567',
-    office: 'Science Building, Room 305',
-    bio: 'Experienced hiring manager with 8+ years in academic recruitment. Specialized in identifying talented students for research positions and internships.',
-    company: 'University of Technology',
-    companyWebsite: 'www.university.edu',
-    linkedin: 'linkedin.com/in/sarahjohnson',
-    notifications: true,
-    newsletter: false
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    company: '',
+    workID: '',
+    nic: '',
+    department: '',
+    position: '',
+    bio: '',
+    linkedin: '',
+    status: '',
+    lastLogin: '',
+    loginCount: 0,
+    createdAt: '',
+    updatedAt: ''
   });
+
+  const [stats, setStats] = useState({
+    jobsPosted: 0,
+    applicantsReviewed: 0,
+    hiringRate: '0%',
+    activePositions: 0
+  });
+
+  // Fetch profile statistics
+  const fetchStats = async () => {
+    try {
+      console.log('HM_HeroProfile: Fetching statistics for HM:', hm.hm_email);
+      
+      const response = await makeAuthenticatedRequest('http://localhost:5001/api/hm/profile/stats', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const result = await response.json();
+      console.log('HM_HeroProfile: Statistics response:', result);
+      
+      if (response.ok && result.success) {
+        setStats(result.data);
+        console.log('HM_HeroProfile: Successfully loaded statistics data');
+      } else {
+        console.error('HM_HeroProfile: Failed to fetch statistics:', result.message);
+      }
+    } catch (err) {
+      console.error('HM_HeroProfile: Error fetching statistics:', err);
+    }
+  };
+
+  // Fetch profile data on component mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!token || !hm) {
+        console.log('HM_HeroProfile: No token or HM data available');
+        console.log('Token available:', !!token);
+        console.log('HM data available:', !!hm);
+        setError('Please log in to view your profile');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log('HM_HeroProfile: Fetching profile for HM:', hm.hm_email);
+        console.log('HM_HeroProfile: Token available:', !!token);
+        console.log('HM_HeroProfile: Making request to: http://localhost:5001/api/hm/profile');
+
+        const response = await makeAuthenticatedRequest('http://localhost:5001/api/hm/profile', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('HM_HeroProfile: Response status:', response.status);
+        const result = await response.json();
+        console.log('HM_HeroProfile: Response result:', result);
+        
+        if (response.ok && result.success) {
+          setProfileData(result.data.hm);
+          console.log('HM_HeroProfile: Successfully loaded profile data');
+          
+          // Fetch statistics after profile data is loaded
+          await fetchStats();
+        } else {
+          setError(result.message || 'Failed to fetch profile');
+        }
+      } catch (err) {
+        console.error('HM_HeroProfile: Error fetching profile:', err);
+        setError(err.message || 'Failed to fetch profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [token, hm, makeAuthenticatedRequest]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -49,46 +136,126 @@ function HM_HeroProfile() {
     }));
   };
 
-  const handleSave = () => {
-    console.log('Saving profile:', profileData);
-    setIsEditing(false);
-    alert('Profile updated successfully!');
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log('Saving profile:', { bio: profileData.bio, linkedin: profileData.linkedin });
+
+      const response = await makeAuthenticatedRequest('http://localhost:5001/api/hm/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          bio: profileData.bio,
+          linkedin: profileData.linkedin
+        })
+      });
+
+      const result = await response.json();
+      console.log('Save profile response:', result);
+
+      if (response.ok && result.success) {
+        // Update the profile data with the response
+        setProfileData(prev => ({
+          ...prev,
+          bio: result.data.hm.bio,
+          linkedin: result.data.hm.linkedin,
+          updatedAt: result.data.hm.updatedAt
+        }));
+        setIsEditing(false);
+        alert('Profile updated successfully!');
+      } else {
+        setError(result.message || 'Failed to update profile');
+        alert('Failed to update profile: ' + (result.message || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      setError(err.message || 'Failed to update profile');
+      alert('Failed to update profile: ' + (err.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
   };
 
-  const stats = {
-    jobsPosted: 24,
-    applicantsReviewed: 347,
-    hiringRate: '68%',
-    activePositions: 5
+  // Helper functions for displaying data
+  const getDisplayValue = (value, fallback = '—') => {
+    return value && value.trim() !== '' ? value : fallback;
+  };
+
+  const getFullName = () => {
+    const firstName = getDisplayValue(profileData.firstName);
+    const lastName = getDisplayValue(profileData.lastName);
+    if (firstName === '—' && lastName === '—') return '—';
+    return `${firstName} ${lastName}`.trim();
+  };
+
+  const getInitials = () => {
+    const firstName = profileData.firstName || '';
+    const lastName = profileData.lastName || '';
+    if (!firstName && !lastName) return 'HM';
+    return `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase();
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch {
+      return '—';
+    }
+  };
+
+
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-gray-600 text-lg">Loading profile...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  const recentActivity = [
-    {
-      id: 1,
-      action: 'Posted new job',
-      details: 'Software Developer Intern',
-      time: '2 hours ago',
-      icon: <Briefcase className="w-4 h-4" />
-    },
-    {
-      id: 2,
-      action: 'Reviewed applications',
-      details: '5 new applications for Research Assistant',
-      time: '1 day ago',
-      icon: <FileText className="w-4 h-4" />
-    },
-    {
-      id: 3,
-      action: 'Hired candidate',
-      details: 'Sarah Johnson for Campus Tour Guide',
-      time: '3 days ago',
-      icon: <CheckCircle className="w-4 h-4" />
-    }
-  ];
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Profile</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
@@ -159,31 +326,31 @@ function HM_HeroProfile() {
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sticky top-6">
               <div className="flex flex-col items-center text-center">
                 <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-3xl mb-4">
-                  {profileData.name.split(' ').map(name => name[0]).join('')}
+                  {getInitials()}
                 </div>
                 
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">{profileData.name}</h2>
-                <p className="text-gray-600 mb-1">{profileData.title}</p>
-                <p className="text-gray-500 text-sm mb-6">{profileData.department}</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">{getFullName()}</h2>
+                <p className="text-gray-600 mb-1">{getDisplayValue(profileData.position, 'Hiring Manager')}</p>
+                <p className="text-gray-500 text-sm mb-6">{getDisplayValue(profileData.department)}</p>
                 
                 <div className="w-full h-px bg-gray-200 mb-6"></div>
                 
                 <div className="w-full space-y-4">
                   <div className="flex items-center gap-3 text-sm">
                     <Mail className="w-4 h-4 text-gray-500" />
-                    <span className="text-gray-600">{profileData.email}</span>
+                    <span className="text-gray-600">{getDisplayValue(profileData.email)}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <Phone className="w-4 h-4 text-gray-500" />
-                    <span className="text-gray-600">{profileData.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <MapPin className="w-4 h-4 text-gray-500" />
-                    <span className="text-gray-600">{profileData.office}</span>
+                    <span className="text-gray-600">{getDisplayValue(profileData.phone)}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <Building2 className="w-4 h-4 text-gray-500" />
-                    <span className="text-gray-600">{profileData.company}</span>
+                    <span className="text-gray-600">{getDisplayValue(profileData.company)}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm">
+                    <Shield className="w-4 h-4 text-gray-500" />
+                    <span className="text-gray-600">{getDisplayValue(profileData.workID)}</span>
                   </div>
                 </div>
               </div>
@@ -208,104 +375,58 @@ function HM_HeroProfile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Full Name</span>
+                    <span className="label-text font-semibold">First Name</span>
                   </label>
-                  {isEditing ? (
-                    <input 
-                      type="text" 
-                      name="name"
-                      value={profileData.name}
-                      onChange={handleInputChange}
-                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                    />
-                  ) : (
-                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.name}</div>
-                  )}
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{getDisplayValue(profileData.firstName)}</div>
+                </div>
+                
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-semibold">Last Name</span>
+                  </label>
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{getDisplayValue(profileData.lastName)}</div>
                 </div>
                 
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">Job Title</span>
                   </label>
-                  {isEditing ? (
-                    <input 
-                      type="text" 
-                      name="title"
-                      value={profileData.title}
-                      onChange={handleInputChange}
-                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                    />
-                  ) : (
-                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.title}</div>
-                  )}
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.position || '—'}</div>
                 </div>
                 
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">Department</span>
                   </label>
-                  {isEditing ? (
-                    <input 
-                      type="text" 
-                      name="department"
-                      value={profileData.department}
-                      onChange={handleInputChange}
-                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                    />
-                  ) : (
-                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.department}</div>
-                  )}
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{getDisplayValue(profileData.department)}</div>
                 </div>
                 
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">Email</span>
                   </label>
-                  {isEditing ? (
-                    <input 
-                      type="email" 
-                      name="email"
-                      value={profileData.email}
-                      onChange={handleInputChange}
-                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                    />
-                  ) : (
-                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.email}</div>
-                  )}
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{getDisplayValue(profileData.email)}</div>
                 </div>
                 
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">Phone</span>
                   </label>
-                  {isEditing ? (
-                    <input 
-                      type="tel" 
-                      name="phone"
-                      value={profileData.phone}
-                      onChange={handleInputChange}
-                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                    />
-                  ) : (
-                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.phone}</div>
-                  )}
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{getDisplayValue(profileData.phone)}</div>
                 </div>
                 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Office Location</span>
+                    <span className="label-text font-semibold">NIC</span>
                   </label>
-                  {isEditing ? (
-                    <input 
-                      type="text" 
-                      name="office"
-                      value={profileData.office}
-                      onChange={handleInputChange}
-                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                    />
-                  ) : (
-                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.office}</div>
-                  )}
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{getDisplayValue(profileData.nic)}</div>
+                </div>
+                
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-semibold">Work ID</span>
+                  </label>
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{getDisplayValue(profileData.workID)}</div>
                 </div>
               </div>
 
@@ -322,7 +443,7 @@ function HM_HeroProfile() {
                     placeholder="Tell us about yourself..."
                   />
                 ) : (
-                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg min-h-[6rem]">{profileData.bio}</div>
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg min-h-[6rem]">{getDisplayValue(profileData.bio, 'No bio provided')}</div>
                 )}
               </div>
             </motion.div>
@@ -344,34 +465,14 @@ function HM_HeroProfile() {
                   <label className="label">
                     <span className="label-text font-semibold">Company</span>
                   </label>
-                  {isEditing ? (
-                    <input 
-                      type="text" 
-                      name="company"
-                      value={profileData.company}
-                      onChange={handleInputChange}
-                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                    />
-                  ) : (
-                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.company}</div>
-                  )}
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{getDisplayValue(profileData.company)}</div>
                 </div>
                 
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">Website</span>
                   </label>
-                  {isEditing ? (
-                    <input 
-                      type="url" 
-                      name="companyWebsite"
-                      value={profileData.companyWebsite}
-                      onChange={handleInputChange}
-                      className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                    />
-                  ) : (
-                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.companyWebsite}</div>
-                  )}
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.companyWebsite || '—'}</div>
                 </div>
                 
                 <div className="form-control md:col-span-2">
@@ -385,10 +486,69 @@ function HM_HeroProfile() {
                       value={profileData.linkedin}
                       onChange={handleInputChange}
                       className="input input-bordered w-full focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
+                      placeholder="https://linkedin.com/in/yourprofile"
                     />
                   ) : (
-                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{profileData.linkedin}</div>
+                    <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">{getDisplayValue(profileData.linkedin, 'No LinkedIn profile provided')}</div>
                   )}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Account Information */}
+            <motion.div 
+              className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            >
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <Settings className="w-6 h-6" style={{ color: '#fc944c' }} />
+                Account Information
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-semibold">Account Status</span>
+                  </label>
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      profileData.status === 'Active' ? 'bg-green-100 text-green-800' :
+                      profileData.status === 'Unverified' ? 'bg-yellow-100 text-yellow-800' :
+                      profileData.status === 'Banned' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {getDisplayValue(profileData.status, 'Unknown')}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-semibold">Last Login</span>
+                  </label>
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">
+                    {formatDate(profileData.lastLogin)}
+                  </div>
+                </div>
+                
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-semibold">Login Count</span>
+                  </label>
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">
+                    {profileData.loginCount || 0}
+                  </div>
+                </div>
+                
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-semibold">Member Since</span>
+                  </label>
+                  <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">
+                    {formatDate(profileData.createdAt)}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -440,39 +600,6 @@ function HM_HeroProfile() {
               </div>
             </motion.div>
 
-            {/* Recent Activity */}
-            <motion.div 
-              className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.0 }}
-            >
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <Calendar className="w-6 h-6" style={{ color: '#fc944c' }} />
-                Recent Activity
-              </h2>
-              
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <motion.div 
-                    key={activity.id}
-                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.2 + index * 0.1, duration: 0.4 }}
-                  >
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white">
-                      {activity.icon}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{activity.action}</h3>
-                      <p className="text-sm text-gray-600">{activity.details}</p>
-                    </div>
-                    <div className="text-sm text-gray-500">{activity.time}</div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
           </div>
         </div>
       </div>

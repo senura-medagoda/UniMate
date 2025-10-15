@@ -1,22 +1,138 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppContextProvider, useAppContext } from '../components/context/context';
 import FoodNavbar from '../components/navbar/FoodNavbar';
 import Footer from '../components/Footer';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, CreditCard, MapPin } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, CreditCard, MapPin, Edit3, Check, X } from 'lucide-react';
 
 const CartContent = () => {
   const { cartItems, addToCart, removeFromCart, updateCartItems, currency, menuItems, placeOrder, user } = useAppContext();
   const [paymentMethod, setPaymentMethod] = useState('COD');
   const [selectedAddress, setSelectedAddress] = useState('');
   const [showAddressInput, setShowAddressInput] = useState(false);
-  const [newAddress, setNewAddress] = useState('');
+  // address form fields
+  const [addrName, setAddrName] = useState('');
+  const [addrPhone, setAddrPhone] = useState('');
+  const [addrLine1, setAddrLine1] = useState('');
+  const [addrCity, setAddrCity] = useState('');
+  
+  // validation states
+  const [validationErrors, setValidationErrors] = useState({});
+  const [isValidating, setIsValidating] = useState(false);
 
+  // Load saved address on component mount
+  useEffect(() => {
+    const savedAddress = localStorage.getItem('food_delivery_address');
+    if (savedAddress) {
+      setSelectedAddress(savedAddress);
+    }
+    
+    // Load saved address details for editing
+    const savedDetails = localStorage.getItem('food_delivery_address_details');
+    if (savedDetails) {
+      try {
+        const details = JSON.parse(savedDetails);
+        setAddrName(details.name || '');
+        setAddrPhone(details.phone || '');
+        setAddrLine1(details.address || '');
+        setAddrCity(details.city || '');
+      } catch (error) {
+        console.error('Failed to parse saved address details:', error);
+      }
+    }
+  }, []);
+
+  // Load saved address details for editing
+  const loadSavedAddressDetails = () => {
+    const savedDetails = localStorage.getItem('food_delivery_address_details');
+    if (savedDetails) {
+      try {
+        const details = JSON.parse(savedDetails);
+        setAddrName(details.name || '');
+        setAddrPhone(details.phone || '');
+        setAddrLine1(details.address || '');
+        setAddrCity(details.city || '');
+      } catch (error) {
+        console.error('Failed to parse saved address details:', error);
+      }
+    }
+  };
+
+  // Handle edit address
+  const handleEditAddress = () => {
+    loadSavedAddressDetails();
+    setShowAddressInput(true);
+  };
+
+  // Handle cancel editing
+  const handleCancelEdit = () => {
+    setShowAddressInput(false);
+    setValidationErrors({});
+    loadSavedAddressDetails(); // Reset to saved values
+  };
+
+  // Validation functions
+  const validateField = (field, value) => {
+    const errors = {};
+    
+    switch (field) {
+      case 'name':
+        if (!value.trim()) {
+          errors.name = 'Full name is required';
+        } else if (value.trim().length < 2) {
+          errors.name = 'Name must be at least 2 characters';
+        }
+        break;
+      case 'phone':
+        if (!value.trim()) {
+          errors.phone = 'Phone number is required';
+        } else if (!/^[0-9+\-\s()]{10,15}$/.test(value.trim())) {
+          errors.phone = 'Please enter a valid phone number';
+        }
+        break;
+      case 'address':
+        if (!value.trim()) {
+          errors.address = 'Address is required';
+        } else if (value.trim().length < 5) {
+          errors.address = 'Address must be at least 5 characters';
+        }
+        break;
+      case 'city':
+        if (!value.trim()) {
+          errors.city = 'City is required';
+        } else if (value.trim().length < 2) {
+          errors.city = 'City must be at least 2 characters';
+        }
+        break;
+    }
+    
+    return errors;
+  };
+
+  const validateAllFields = () => {
+    const errors = {
+      ...validateField('name', addrName),
+      ...validateField('phone', addrPhone),
+      ...validateField('address', addrLine1),
+      ...validateField('city', addrCity)
+    };
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const getCartItems = () => {
-    return Object.entries(cartItems).map(([itemId, quantity]) => {
+    console.log('getCartItems called with:');
+    console.log('cartItems:', cartItems);
+    console.log('menuItems:', menuItems);
+    
+    const items = Object.entries(cartItems).map(([itemId, quantity]) => {
       const item = menuItems.find(menuItem => menuItem._id === itemId);
+      console.log(`Processing item ${itemId}:`, { item, quantity });
       return { ...item, quantity };
     }).filter(item => item._id);
+    
+    console.log('Final cart items:', items);
+    return items;
   };
 
   const getTotalPrice = () => {
@@ -37,11 +153,37 @@ const CartContent = () => {
   };
 
   const handleAddAddress = () => {
-    if (newAddress.trim()) {
-      setSelectedAddress(newAddress);
-      setShowAddressInput(false);
-      setNewAddress('');
+    setIsValidating(true);
+    
+    // Validate all fields
+    if (!validateAllFields()) {
+      setIsValidating(false);
+      return;
     }
+    
+    const parts = [addrName, addrPhone, addrLine1, addrCity]
+      .map(p => (p || '').trim())
+      .filter(Boolean);
+    const formatted = parts.join(', ');
+    
+    setSelectedAddress(formatted);
+    // persist for future use
+    try { 
+      localStorage.setItem('food_delivery_address', formatted);
+      // Also save individual fields for editing
+      localStorage.setItem('food_delivery_address_details', JSON.stringify({
+        name: addrName.trim(),
+        phone: addrPhone.trim(),
+        address: addrLine1.trim(),
+        city: addrCity.trim()
+      }));
+    } catch (error) {
+      console.error('Failed to save address:', error);
+    }
+    
+    setShowAddressInput(false);
+    setIsValidating(false);
+    setValidationErrors({});
   };
 
   const handlePlaceOrder = async () => {
@@ -55,19 +197,33 @@ const CartContent = () => {
       return;
     }
 
+    const cartItemsList = getCartItems();
+    console.log('Cart items for order:', cartItemsList);
+    console.log('Cart items object:', cartItems);
+    console.log('Menu items:', menuItems);
+    console.log('Total price:', getTotalPrice());
+
+    if (cartItemsList.length === 0) {
+      alert('Your cart is empty. Please add some items before placing an order.');
+      return;
+    }
+
     const orderData = {
-      items: getCartItems(),
+      items: cartItemsList,
       totalAmount: getTotalPrice(),
       paymentMethod,
       deliveryAddress: selectedAddress,
       orderDate: new Date().toISOString(),
     };
 
+    console.log('Order data being sent:', orderData);
+
     const result = await placeOrder(orderData);
     
     if (result.success) {
-      // Order placed successfully, user will be redirected or shown success message
-      console.log('Order placed successfully:', result.data);
+      // success navigation handled in context for COD, Stripe redirects for Online
+    } else {
+      console.error('Order placement failed:', result.message);
     }
   };
 
@@ -256,56 +412,147 @@ const CartContent = () => {
 
                 {/* Address */}
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Address</h3>
-                  <div className="relative">
-                    <select
-                      value={selectedAddress}
-                      onChange={(e) => setSelectedAddress(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none"
-                    >
-                      <option value="">Select Address</option>
-                      <option value="home">Home Address</option>
-                      <option value="office">Office Address</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                  
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Delivery Address</h3>
                   {!showAddressInput ? (
-                    <button 
-                      onClick={() => setShowAddressInput(true)}
-                      className="text-orange-600 hover:text-orange-700 text-sm mt-2 flex items-center gap-1"
-                    >
-                      <MapPin className="w-4 h-4" />
-                      Add Address +
-                    </button>
+                    <div>
+                      {selectedAddress ? (
+                        <div className="space-y-3">
+                          <div className="p-4 border rounded-lg bg-green-50 border-green-200 text-sm text-gray-800">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="font-medium text-green-800 mb-1">Saved Address</div>
+                                <div className="text-gray-700">{selectedAddress}</div>
+                              </div>
+                              <button 
+                                onClick={handleEditAddress}
+                                className="ml-3 p-1 text-green-600 hover:text-green-700 hover:bg-green-100 rounded transition-colors"
+                                title="Edit address"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="text-xs text-green-600 flex items-center gap-1">
+                            <Check className="w-3 h-3" />
+                            Address saved - you won't need to enter it again
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-500">No address added.</div>
+                      )}
+                      <button 
+                        onClick={() => setShowAddressInput(true)}
+                        className="text-orange-600 hover:text-orange-700 text-sm mt-2 flex items-center gap-1"
+                      >
+                        <MapPin className="w-4 h-4" />
+                        {selectedAddress ? 'Change Address' : 'Add Address +'}
+                      </button>
+                    </div>
                   ) : (
-                    <div className="mt-2 space-y-2">
-                      <input
-                        type="text"
-                        value={newAddress}
-                        onChange={(e) => setNewAddress(e.target.value)}
-                        placeholder="Enter your address..."
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                        autoFocus
-                      />
+                    <div className="mt-2 space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <input
+                            type="text"
+                            value={addrName}
+                            onChange={(e) => {
+                              setAddrName(e.target.value);
+                              if (validationErrors.name) {
+                                setValidationErrors(prev => ({ ...prev, name: '' }));
+                              }
+                            }}
+                            placeholder="Full name"
+                            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm ${
+                              validationErrors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
+                          />
+                          {validationErrors.name && (
+                            <p className="text-red-500 text-xs mt-1">{validationErrors.name}</p>
+                          )}
+                        </div>
+                        <div>
+                          <input
+                            type="tel"
+                            value={addrPhone}
+                            onChange={(e) => {
+                              setAddrPhone(e.target.value);
+                              if (validationErrors.phone) {
+                                setValidationErrors(prev => ({ ...prev, phone: '' }));
+                              }
+                            }}
+                            placeholder="Phone number"
+                            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm ${
+                              validationErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
+                          />
+                          {validationErrors.phone && (
+                            <p className="text-red-500 text-xs mt-1">{validationErrors.phone}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          value={addrLine1}
+                          onChange={(e) => {
+                            setAddrLine1(e.target.value);
+                            if (validationErrors.address) {
+                              setValidationErrors(prev => ({ ...prev, address: '' }));
+                            }
+                          }}
+                          placeholder="Address line 1"
+                          className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm ${
+                            validationErrors.address ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                        />
+                        {validationErrors.address && (
+                          <p className="text-red-500 text-xs mt-1">{validationErrors.address}</p>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <input
+                            type="text"
+                            value={addrCity}
+                            onChange={(e) => {
+                              setAddrCity(e.target.value);
+                              if (validationErrors.city) {
+                                setValidationErrors(prev => ({ ...prev, city: '' }));
+                              }
+                            }}
+                            placeholder="City"
+                            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm ${
+                              validationErrors.city ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
+                          />
+                          {validationErrors.city && (
+                            <p className="text-red-500 text-xs mt-1">{validationErrors.city}</p>
+                          )}
+                        </div>
+                      </div>
                       <div className="flex gap-2">
                         <button
                           onClick={handleAddAddress}
-                          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm"
+                          disabled={isValidating}
+                          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
-                          Add
+                          {isValidating ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Validating...
+                            </>
+                          ) : (
+                            <>
+                              <Check className="w-4 h-4" />
+                              Save Address
+                            </>
+                          )}
                         </button>
                         <button
-                          onClick={() => {
-                            setShowAddressInput(false);
-                            setNewAddress('');
-                          }}
-                          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                          onClick={handleCancelEdit}
+                          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm flex items-center gap-2"
                         >
+                          <X className="w-4 h-4" />
                           Cancel
                         </button>
                       </div>

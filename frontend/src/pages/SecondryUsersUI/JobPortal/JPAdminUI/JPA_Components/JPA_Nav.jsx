@@ -2,19 +2,17 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, X, User, LogOut, Settings, Shield } from 'lucide-react';
+import { useJPAuth } from '@/context/JPAuthContext';
 
 function JPA_Nav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { jpAdmin, logout } = useJPAuth();
 
   const handleLogout = () => {
-    // Clear localStorage
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminData');
-    
-    // Navigate to main login page
-    navigate('/login', { replace: true });
+    logout();
+    navigate('/jpadmin-login', { replace: true });
   };
 
   const navItems = [
@@ -91,8 +89,10 @@ function JPA_Nav() {
             >
               <div className="dropdown dropdown-end">
                 <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
-                  <div className="w-10 rounded-full">
-                    <img src="https://placehold.co/400x400?text=A" alt="Admin" />
+                  <div className="w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <span className="text-blue-600 font-semibold text-sm">
+                      {jpAdmin?.name ? jpAdmin.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'JP'}
+                    </span>
                   </div>
                 </label>
                 <ul tabIndex={0} className="mt-3 p-2 shadow menu menu-compact dropdown-content bg-white rounded-box w-52 border border-gray-200">

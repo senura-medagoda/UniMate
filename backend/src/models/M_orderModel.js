@@ -9,6 +9,7 @@ const orderSchema = new mongoose.Schema({
   paymentMethod: { type: String, required: true },
   payment: { type: Boolean, required: true, default: false },
   date: { type: Number, required: true },
+  stripeSessionId: { type: String, sparse: true, unique: true }, // Optional field for Stripe orders, unique to prevent duplicates
   // Track location of delivery agent
   location: {
     lat: { type: Number },

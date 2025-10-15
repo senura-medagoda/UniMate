@@ -3,7 +3,7 @@ import { AppContextProvider, useAppContext } from '../components/context/context
 import FoodNavbar from '../components/navbar/FoodNavbar';
 import Footer from '../components/Footer';
 import ShopCards from '../components/ShopCards';
-import { Search, MapPin, Star, Clock, Phone, Mail, Globe, Filter, Grid, List, RefreshCw } from 'lucide-react';
+import { Search, MapPin, Star, Clock, Phone, Mail, Globe, Filter, Grid, List, RefreshCw, X, Heart, Share2, Navigation, Award, Users, Calendar } from 'lucide-react';
 
 const ShopsContent = () => {
   const { shops, menuItems, isLoading, error, fetchMenuItems } = useAppContext();
@@ -14,6 +14,7 @@ const ShopsContent = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [localLoading, setLocalLoading] = useState(false);
   const [selectedShop, setSelectedShop] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
 
   // Safety check: ensure shops is always an array
   const safeShops = Array.isArray(shops) ? shops : [];
@@ -58,9 +59,6 @@ const ShopsContent = () => {
     setFilteredShops(shopsList);
   }, [safeShops, searchTerm, selectedCuisine, sortBy]);
 
-  const getShopMenuItems = (shopId) => {
-    return menuItems.filter(item => item.shopId === shopId);
-  };
 
   const getCuisineTypes = () => {
     const types = safeShops?.map(shop => shop.cuisineType).filter(Boolean) || [];
@@ -79,6 +77,34 @@ const ShopsContent = () => {
       await fetchMenuItems();
     } finally {
       setLocalLoading(false);
+    }
+  };
+
+  const handleShopClick = (shop) => {
+    setSelectedShop(shop);
+    setShowPopup(true);
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+    setSelectedShop(null);
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: selectedShop.businessName,
+          text: `Check out ${selectedShop.businessName} - ${selectedShop.cuisineType}`,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.log('Error sharing:', error);
+      }
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard.writeText(window.location.href);
+      alert('Link copied to clipboard!');
     }
   };
 
@@ -266,17 +292,18 @@ const ShopsContent = () => {
               ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               : "space-y-4"
             }>
-              {filteredShops.map((shop, index) => (
-                <div 
-                  key={shop._id || index} 
-                  className={`transform transition-all duration-500 hover:scale-105 animate-fade-in-up ${
-                    viewMode === 'list' ? 'bg-white rounded-xl shadow-lg p-6' : 'bg-white rounded-2xl shadow-lg overflow-hidden'
-                  }`}
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                    animationFillMode: 'both'
-                  }}
-                >
+               {filteredShops.map((shop, index) => (
+                 <div 
+                   key={shop._id || index} 
+                   onClick={() => handleShopClick(shop)}
+                   className={`transform transition-all duration-500 hover:scale-105 animate-fade-in-up cursor-pointer ${
+                     viewMode === 'list' ? 'bg-white rounded-xl shadow-lg p-6' : 'bg-white rounded-2xl shadow-lg overflow-hidden'
+                   }`}
+                   style={{
+                     animationDelay: `${index * 100}ms`,
+                     animationFillMode: 'both'
+                   }}
+                 >
                   {viewMode === 'list' ? (
                     <div className="flex gap-6">
                       <div className="flex-shrink-0">
@@ -313,14 +340,6 @@ const ShopsContent = () => {
                                 </span>
                               )}
                             </div>
-                          </div>
-                          <div className="text-right ml-4">
-                            <button
-                              onClick={() => setSelectedShop(selectedShop === shop._id ? null : shop._id)}
-                              className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-                            >
-                              {selectedShop === shop._id ? 'Hide Menu' : 'View Menu'}
-                            </button>
                           </div>
                         </div>
                       </div>
@@ -367,47 +386,10 @@ const ShopsContent = () => {
                           </div>
                         )}
                         
-                        {/* View Menu Button */}
-                        <button
-                          onClick={() => setSelectedShop(selectedShop === shop._id ? null : shop._id)}
-                          className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-                        >
-                          {selectedShop === shop._id ? 'Hide Menu' : 'View Menu'}
-                        </button>
                       </div>
                     </>
                   )}
 
-                  {/* Shop Menu Items */}
-                  {selectedShop === shop._id && (
-                    <div className="border-t border-gray-100 p-6 bg-gray-50">
-                      <h4 className="text-lg font-semibold text-gray-800 mb-4">Menu Items</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {getShopMenuItems(shop._id).slice(0, 4).map((item, itemIndex) => (
-                          <div key={item._id || itemIndex} className="bg-white rounded-lg p-3 shadow-sm">
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={item.image || item.images?.[0] || 'https://via.placeholder.com/60x60/f3f4f6/9ca3af?text=🍽️'}
-                                alt={item.name}
-                                className="w-12 h-12 object-cover rounded-lg"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <h5 className="font-medium text-gray-800 truncate">{item.name}</h5>
-                                <p className="text-sm text-gray-600">Rs. {item.price}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {getShopMenuItems(shop._id).length > 4 && (
-                        <div className="text-center mt-4">
-                          <button className="text-orange-600 hover:text-orange-700 text-sm font-medium">
-                            View All {getShopMenuItems(shop._id).length} Items
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -431,26 +413,208 @@ const ShopsContent = () => {
         </div>
       </div>
 
-      <Footer />
+       <Footer />
 
-      {/* CSS for animations */}
-      <style>{`
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-fade-in-up {
-          animation: fade-in-up 0.6s ease-out;
-        }
-      `}</style>
-    </div>
+       {/* Shop Details Popup */}
+       {showPopup && selectedShop && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+           <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
+             {/* Popup Header */}
+             <div className="relative bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-3xl">
+               <button
+                 onClick={closePopup}
+                 className="absolute top-4 right-4 p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all duration-200"
+               >
+                 <X className="w-6 h-6" />
+               </button>
+               
+               <div className="flex items-start gap-6">
+                 {/* Shop Avatar */}
+                 <div className="w-20 h-20 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                   <span className="text-3xl">🏪</span>
+                 </div>
+                 
+                 {/* Shop Info */}
+                 <div className="flex-1 min-w-0">
+                   <h2 className="text-3xl font-bold mb-2">{selectedShop.businessName}</h2>
+                   <div className="flex items-center gap-4 text-orange-100 mb-3">
+                     <div className="flex items-center gap-1">
+                       <Star className="w-5 h-5 text-yellow-300 fill-current" />
+                       <span className="font-semibold">{selectedShop.averageRating || 0}</span>
+                       <span className="text-sm">({selectedShop.totalReviews || 0} reviews)</span>
+                     </div>
+                     <div className="flex items-center gap-1">
+                       <MapPin className="w-4 h-4" />
+                       <span>{selectedShop.address?.city || 'Location not specified'}</span>
+                     </div>
+                   </div>
+                   <p className="text-orange-100 text-lg">{selectedShop.cuisineType || 'Restaurant'}</p>
+                 </div>
+                 
+                 {/* Action Buttons */}
+                 <div className="flex gap-2">
+                   <button
+                     onClick={handleShare}
+                     className="p-3 bg-white bg-opacity-20 rounded-xl hover:bg-opacity-30 transition-all duration-200"
+                     title="Share"
+                   >
+                     <Share2 className="w-5 h-5" />
+                   </button>
+                   <button
+                     className="p-3 bg-white bg-opacity-20 rounded-xl hover:bg-opacity-30 transition-all duration-200"
+                     title="Add to Favorites"
+                   >
+                     <Heart className="w-5 h-5" />
+                   </button>
+                 </div>
+               </div>
+             </div>
+
+             {/* Popup Content */}
+             <div className="p-6">
+               {/* Quick Stats */}
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                 <div className="bg-orange-50 rounded-xl p-4 text-center">
+                   <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                     <Award className="w-6 h-6 text-orange-600" />
+                   </div>
+                   <p className="text-sm text-gray-600">Rating</p>
+                   <p className="font-bold text-lg text-gray-800">{selectedShop.averageRating || 0}</p>
+                 </div>
+                 
+                 <div className="bg-blue-50 rounded-xl p-4 text-center">
+                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                     <Users className="w-6 h-6 text-blue-600" />
+                   </div>
+                   <p className="text-sm text-gray-600">Reviews</p>
+                   <p className="font-bold text-lg text-gray-800">{selectedShop.totalReviews || 0}</p>
+                 </div>
+                 
+                 <div className="bg-green-50 rounded-xl p-4 text-center">
+                   <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                     <Clock className="w-6 h-6 text-green-600" />
+                   </div>
+                   <p className="text-sm text-gray-600">Open Now</p>
+                   <p className="font-bold text-lg text-gray-800">Yes</p>
+                 </div>
+                 
+                 <div className="bg-purple-50 rounded-xl p-4 text-center">
+                   <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                     <Calendar className="w-6 h-6 text-purple-600" />
+                   </div>
+                   <p className="text-sm text-gray-600">Established</p>
+                   <p className="font-bold text-lg text-gray-800">2023</p>
+                 </div>
+               </div>
+
+               {/* Contact Information */}
+               <div className="bg-gray-50 rounded-2xl p-6 mb-6">
+                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                   <Phone className="w-5 h-5 text-orange-600" />
+                   Contact Information
+                 </h3>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   {selectedShop.phone && (
+                     <div className="flex items-center gap-3 p-3 bg-white rounded-xl">
+                       <Phone className="w-5 h-5 text-orange-600" />
+                       <div>
+                         <p className="text-sm text-gray-600">Phone</p>
+                         <p className="font-semibold text-gray-800">{selectedShop.phone}</p>
+                       </div>
+                     </div>
+                   )}
+                   
+                   {selectedShop.email && (
+                     <div className="flex items-center gap-3 p-3 bg-white rounded-xl">
+                       <Mail className="w-5 h-5 text-orange-600" />
+                       <div>
+                         <p className="text-sm text-gray-600">Email</p>
+                         <p className="font-semibold text-gray-800">{selectedShop.email}</p>
+                       </div>
+                     </div>
+                   )}
+                   
+                   {selectedShop.address && (
+                     <div className="flex items-center gap-3 p-3 bg-white rounded-xl md:col-span-2">
+                       <MapPin className="w-5 h-5 text-orange-600" />
+                       <div>
+                         <p className="text-sm text-gray-600">Address</p>
+                         <p className="font-semibold text-gray-800">
+                           {selectedShop.address.street && `${selectedShop.address.street}, `}
+                           {selectedShop.address.city && `${selectedShop.address.city}, `}
+                           {selectedShop.address.state && `${selectedShop.address.state}`}
+                         </p>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+               </div>
+
+               {/* Operating Hours */}
+               <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl p-6 mb-6">
+                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                   <Clock className="w-5 h-5 text-orange-600" />
+                   Operating Hours
+                 </h3>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                   {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => (
+                     <div key={day} className="flex justify-between items-center p-3 bg-white rounded-lg">
+                       <span className="font-medium text-gray-700">{day}</span>
+                       <span className="text-orange-600 font-semibold">9:00 AM - 10:00 PM</span>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+
+               {/* Action Buttons */}
+               <div className="flex flex-col sm:flex-row gap-4">
+                 <button className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200 flex items-center justify-center gap-2">
+                   <Navigation className="w-5 h-5" />
+                   Get Directions
+                 </button>
+                 <button className="flex-1 bg-white border-2 border-orange-500 text-orange-600 py-4 px-6 rounded-xl font-semibold hover:bg-orange-50 transition-all duration-200 flex items-center justify-center gap-2">
+                   <Phone className="w-5 h-5" />
+                   Call Now
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+
+       {/* CSS for animations */}
+       <style>{`
+         @keyframes fade-in-up {
+           from {
+             opacity: 0;
+             transform: translateY(20px);
+           }
+           to {
+             opacity: 1;
+             transform: translateY(0);
+           }
+         }
+         
+         @keyframes slide-up {
+           from {
+             opacity: 0;
+             transform: translateY(50px) scale(0.95);
+           }
+           to {
+             opacity: 1;
+             transform: translateY(0) scale(1);
+           }
+         }
+         
+         .animate-fade-in-up {
+           animation: fade-in-up 0.6s ease-out;
+         }
+         
+         .animate-slide-up {
+           animation: slide-up 0.3s ease-out;
+         }
+       `}</style>
+     </div>
   );
 };
 
