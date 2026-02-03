@@ -1,128 +1,61 @@
-import { v2 as cloudinary } from 'cloudinary';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import dotenv from 'dotenv';
-
+import dotenv from "dotenv";
 dotenv.config();
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
+import multer from "multer";
+import { uploadBufferToCloudinary } from "../utils/cloudinaryUpload.js"; // adjust path if needed
+
+// ✅ Multer in-memory (Vercel-safe)
+const storage = multer.memoryStorage();
+
+const fileFilter = (req, file, cb) => {
+  const allowed = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+  if (allowed.includes(file.mimetype)) cb(null, true);
+  else cb(new Error("Only image files are allowed (jpg, jpeg, png, webp)"), false);
+};
+
+export const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter,
 });
 
-// Configure multer for temporary file storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = './uploads/temp';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-export const upload = multer({ storage });
-
-// Upload single image
+// ✅ Upload single image to Cloudinary only
 export const uploadImage = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'No image file provided' 
+      return res.status(400).json({
+        success: false,
+        message: "No image file provided",
       });
     }
 
-    // Check if Cloudinary is configured
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-      // Use local storage as fallback
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      const fileExtension = path.extname(req.file.originalname);
-      const filename = `image-${uniqueSuffix}${fileExtension}`;
-      const uploadsDir = './uploads';
-      
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
-      
-      const finalPath = path.join(uploadsDir, filename);
-      fs.renameSync(req.file.path, finalPath);
-      
-      // Clean up temp file
-      if (fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-      }
-      
-      return res.json({
-        success: true,
-        url: `/uploads/${filename}`,
-        message: 'Image uploaded locally (Cloudinary not configured)'
+    // Ensure Cloudinary env vars exist
+    if (
+      !process.env.CLOUDINARY_CLOUD_NAME ||
+      !process.env.CLOUDINARY_API_KEY ||
+      !process.env.CLOUDINARY_API_SECRET
+    ) {
+      return res.status(500).json({
+        success: false,
+        message: "Cloudinary is not configured in environment variables",
       });
     }
 
-    // Upload to Cloudinary
-    try {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        resource_type: 'image',
-        folder: 'unimate_uploads'
-      });
+    const result = await uploadBufferToCloudinary(req.file.buffer, "unimate_uploads");
 
-      // Clean up temp file
-      if (fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-      }
-
-      res.json({
-        success: true,
-        secure_url: result.secure_url,
-        url: result.secure_url,
-        message: 'Image uploaded to Cloudinary successfully'
-      });
-
-    } catch (cloudinaryError) {
-      console.error('Cloudinary upload error:', cloudinaryError);
-      
-      // Fallback to local storage
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      const fileExtension = path.extname(req.file.originalname);
-      const filename = `image-${uniqueSuffix}${fileExtension}`;
-      const uploadsDir = './uploads';
-      
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
-      
-      const finalPath = path.join(uploadsDir, filename);
-      fs.renameSync(req.file.path, finalPath);
-      
-      res.json({
-        success: true,
-        url: `/uploads/${filename}`,
-        message: 'Image uploaded locally (Cloudinary upload failed)'
-      });
-    }
-
+    return res.json({
+      success: true,
+      url: result.secure_url,
+      secure_url: result.secure_url,
+      public_id: result.public_id,
+      message: "Image uploaded to Cloudinary successfully",
+    });
   } catch (error) {
-    console.error('Upload error:', error);
-    
-    // Clean up temp file if it exists
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
-    
-    res.status(500).json({
+    console.error("Upload error:", error);
+    return res.status(500).json({
       success: false,
-      message: 'Image upload failed',
-      error: error.message
+      message: "Image upload failed",
+      error: error.message,
     });
   }
 };
-

@@ -1,30 +1,19 @@
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import multer from "multer";
 
-// Ensure uploads directory exists
-const uploadsDir = './uploads';
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Store file in memory (RAM) instead of disk (Vercel filesystem is read-only)
+const storage = multer.memoryStorage();
 
-const storage = multer.diskStorage({
-    destination: function(req, file, callback) {
-        callback(null, uploadsDir);
-    },
-    filename: function(req, file, callback) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const fileExtension = path.extname(file.originalname);
-        const filename = file.fieldname + '-' + uniqueSuffix + fileExtension;
-        callback(null, filename);
-    }
-});
+const fileFilter = (req, file, cb) => {
+  // Optional: allow only images
+  const allowed = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+  if (allowed.includes(file.mimetype)) cb(null, true);
+  else cb(new Error("Only image files are allowed (jpg, jpeg, png, webp)"), false);
+};
 
-const upload = multer({ 
-    storage: storage,
-    limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
-    }
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter,
 });
 
 export default upload;
