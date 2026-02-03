@@ -2,16 +2,16 @@
 import express from "express";
 import multer from "multer";
 import { protect } from "../middleware/authSTDMW.js";
-import { 
-  uploadMaterial, 
-  getMaterials, 
-  getMaterialById, 
-  searchMaterials, 
+import {
+  uploadMaterial,
+  getMaterials,
+  getMaterialById,
+  searchMaterials,
   getTopMaterials,
   likeMaterial,
   unlikeMaterial,
   addReview,
-  updateRating, 
+  updateRating,
   updateMaterial,
   deleteMaterial,
   trackDownload,
@@ -21,14 +21,8 @@ import {
 const router = express.Router();
 
 // Multer setup for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
+// Multer setup for file uploads
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Routes

@@ -7,26 +7,19 @@ import { hmAuth } from '../middleware/hmAuth.js';
 const router = express.Router();
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'resume-' + uniqueSuffix + '-' + file.originalname);
-  }
-});
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit
   },
   fileFilter: (req, file, cb) => {
     // Accept only PDF and Word documents
-    if (file.mimetype === 'application/pdf' || 
-        file.mimetype === 'application/msword' || 
-        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    if (file.mimetype === 'application/pdf' ||
+      file.mimetype === 'application/msword' ||
+      file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       cb(null, true);
     } else {
       cb(new Error('Only PDF and Word documents are allowed'), false);

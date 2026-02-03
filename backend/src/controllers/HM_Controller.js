@@ -1,6 +1,7 @@
 import HiringManager from '../models/HiringManager.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { uploadBufferToCloudinary } from '../utils/cloudinaryUpload.js';
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'pzUuguyJKW';
@@ -58,6 +59,19 @@ export const registerHM = async (req, res) => {
             });
         }
 
+        // Upload proof document to Cloudinary
+        let proofDocumentUrl = '';
+        try {
+            const uploadResult = await uploadBufferToCloudinary(proofDocumentFile.buffer, 'hm-proofs', 'auto');
+            proofDocumentUrl = uploadResult.secure_url;
+        } catch (uploadError) {
+            console.error('Proof document upload error:', uploadError);
+            return res.status(500).json({
+                success: false,
+                message: "Failed to upload proof document"
+            });
+        }
+
         // Create new hiring manager
         const newHM = new HiringManager({
             hm_fname,
@@ -71,7 +85,7 @@ export const registerHM = async (req, res) => {
             hm_phone,
             department,
             position,
-            proof_document: proofDocumentFile.filename,
+            proof_document: proofDocumentUrl,
             proof_document_original_name: proofDocumentFile.originalname
         });
 

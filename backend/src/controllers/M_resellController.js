@@ -1,58 +1,37 @@
-import { v2 as cloudinary } from 'cloudinary';
+import { uploadBufferToCloudinary } from "../utils/cloudinaryUpload.js";
 import resellRequestModel from '../models/M_resellRequestModel.js';
 import resellItemModel from '../models/M_resellItemModel.js';
 
 // Submit resell request
 const submitResellRequest = async (req, res) => {
     try {
-        const { 
-            userId, 
-            userName, 
-            userEmail, 
-            itemName, 
-            description, 
-            price, 
-            category, 
-            subCategory, 
-            condition, 
-            contactNumber 
+        const {
+            userId,
+            userName,
+            userEmail,
+            itemName,
+            description,
+            price,
+            category,
+            subCategory,
+            condition,
+            contactNumber
         } = req.body;
 
         // Handle image uploads if any
         let imagesUrl = [];
         if (req.files && req.files.length > 0) {
-            const imageFiles = req.files;
-            
             try {
-                // Try to upload to Cloudinary first
-                imagesUrl = await Promise.all(
-                    imageFiles.map(async (file) => {
-                        const result = await cloudinary.uploader.upload(file.path, { resource_type: 'image' });
-                        return result.secure_url;
-                    })
+                // Try to upload to Cloudinary
+                const imagePromises = req.files.map(file =>
+                    uploadBufferToCloudinary(file.buffer, 'resell-items')
                 );
-            } catch (cloudinaryError) {
-                console.log('Cloudinary upload failed, using local storage:', cloudinaryError.message);
-                
-                // Fallback to local storage
-                const fs = await import('fs');
-                const path = await import('path');
-                
-                imagesUrl = imageFiles.map((file, index) => {
-                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-                    const fileExtension = path.extname(file.originalname);
-                    const filename = `resell-${uniqueSuffix}-${index}${fileExtension}`;
-                    const uploadsDir = './uploads';
-                    
-                    if (!fs.existsSync(uploadsDir)) {
-                        fs.mkdirSync(uploadsDir, { recursive: true });
-                    }
-                    
-                    const finalPath = path.join(uploadsDir, filename);
-                    fs.renameSync(file.path, finalPath);
-                    
-                    return `http://localhost:5001/uploads/${filename}`;
-                });
+                const results = await Promise.all(imagePromises);
+                imagesUrl = results.map(result => result.secure_url);
+            } catch (error) {
+                console.log('Cloudinary upload failed:', error.message);
+                // No local fallback for serverless
+                return res.json({ success: false, message: "Image upload failed: " + error.message });
             }
         }
 
@@ -73,8 +52,8 @@ const submitResellRequest = async (req, res) => {
 
         await resellRequest.save();
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: "Resell request submitted successfully",
             requestId: resellRequest._id
         });
@@ -112,7 +91,7 @@ const getUserResellRequests = async (req, res) => {
 const approveResellRequest = async (req, res) => {
     try {
         const { requestId, adminNotes } = req.body;
-        
+
         const request = await resellRequestModel.findById(requestId);
         if (!request) {
             return res.json({ success: false, message: "Request not found" });
@@ -142,8 +121,8 @@ const approveResellRequest = async (req, res) => {
 
         await resellItem.save();
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: "Resell request approved and item listed",
             resellItemId: resellItem._id
         });
@@ -158,7 +137,7 @@ const approveResellRequest = async (req, res) => {
 const rejectResellRequest = async (req, res) => {
     try {
         const { requestId, adminNotes } = req.body;
-        
+
         const request = await resellRequestModel.findById(requestId);
         if (!request) {
             return res.json({ success: false, message: "Request not found" });
@@ -168,8 +147,8 @@ const rejectResellRequest = async (req, res) => {
         request.adminNotes = adminNotes || '';
         await request.save();
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: "Resell request rejected"
         });
 
@@ -183,7 +162,7 @@ const rejectResellRequest = async (req, res) => {
 const deleteResellRequest = async (req, res) => {
     try {
         const { requestId } = req.params;
-        
+
         const request = await resellRequestModel.findById(requestId);
         if (!request) {
             return res.json({ success: false, message: "Request not found" });
@@ -191,17 +170,17 @@ const deleteResellRequest = async (req, res) => {
 
         // Only allow deletion of rejected requests
         if (request.status !== 'rejected') {
-            return res.json({ 
-                success: false, 
-                message: "Only rejected requests can be deleted" 
+            return res.json({
+                success: false,
+                message: "Only rejected requests can be deleted"
             });
         }
 
         await resellRequestModel.findByIdAndDelete(requestId);
 
-        res.json({ 
-            success: true, 
-            message: "Resell request deleted successfully" 
+        res.json({
+            success: true,
+            message: "Resell request deleted successfully"
         });
 
     } catch (error) {
@@ -215,11 +194,11 @@ const deleteUserResellRequest = async (req, res) => {
     try {
         const { requestId } = req.params;
         const { userId } = req.body;
-        
+
         if (!userId) {
             return res.json({ success: false, message: "User ID is required" });
         }
-        
+
         const request = await resellRequestModel.findById(requestId);
         if (!request) {
             return res.json({ success: false, message: "Request not found" });
@@ -227,9 +206,9 @@ const deleteUserResellRequest = async (req, res) => {
 
         // Check if the user owns this request
         if (request.userId !== userId) {
-            return res.json({ 
-                success: false, 
-                message: "You can only delete your own requests" 
+            return res.json({
+                success: false,
+                message: "You can only delete your own requests"
             });
         }
 
@@ -238,9 +217,9 @@ const deleteUserResellRequest = async (req, res) => {
 
         await resellRequestModel.findByIdAndDelete(requestId);
 
-        res.json({ 
-            success: true, 
-            message: "Resell request deleted successfully" 
+        res.json({
+            success: true,
+            message: "Resell request deleted successfully"
         });
 
     } catch (error) {
@@ -264,9 +243,9 @@ const getAllResellItems = async (req, res) => {
 const getResellItemsByCategory = async (req, res) => {
     try {
         const { category } = req.params;
-        const items = await resellItemModel.find({ 
-            category, 
-            isSold: false 
+        const items = await resellItemModel.find({
+            category,
+            isSold: false
         }).sort({ date: -1 });
         res.json({ success: true, items });
     } catch (error) {
@@ -279,7 +258,7 @@ const getResellItemsByCategory = async (req, res) => {
 const markItemAsSold = async (req, res) => {
     try {
         const { itemId } = req.body;
-        
+
         const item = await resellItemModel.findById(itemId);
         if (!item) {
             return res.json({ success: false, message: "Item not found" });
@@ -288,8 +267,8 @@ const markItemAsSold = async (req, res) => {
         item.isSold = true;
         await item.save();
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: "Item marked as sold"
         });
 
@@ -316,8 +295,8 @@ const deleteResellItem = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Resell item not found' });
         }
 
-        return res.status(200).json({ 
-            success: true, 
+        return res.status(200).json({
+            success: true,
             message: 'Resell item deleted successfully',
             deletedItem: {
                 id: deletedItem._id,
@@ -328,19 +307,19 @@ const deleteResellItem = async (req, res) => {
 
     } catch (error) {
         console.error('Error deleting resell item:', error);
-        return res.status(500).json({ 
-            success: false, 
+        return res.status(500).json({
+            success: false,
             message: 'Failed to delete resell item',
-            error: error.message 
+            error: error.message
         });
     }
 };
 
-export { 
-    submitResellRequest, 
-    getAllResellRequests, 
+export {
+    submitResellRequest,
+    getAllResellRequests,
     getUserResellRequests,
-    approveResellRequest, 
+    approveResellRequest,
     rejectResellRequest,
     deleteResellRequest,
     deleteUserResellRequest,

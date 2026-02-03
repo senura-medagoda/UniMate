@@ -1,5 +1,6 @@
 import JobApplication from "../models/JobApplication.js";
 import Job from "../models/Job.js";
+import { uploadBufferToCloudinary } from "../utils/cloudinaryUpload.js";
 
 // Apply for a job
 export async function applyForJob(req, res) {
@@ -10,13 +11,13 @@ export async function applyForJob(req, res) {
         console.log('Student Status:', req.std.s_status);
         console.log('Request Body:', req.body);
         console.log('Request Files:', req.files);
-        
+
         const { jobId } = req.params;
         const { studentName, studentEmail, studentPhone, coverLetter } = req.body;
-        
+
         // Get student ID from the authenticated user
         const studentId = req.std._id;
-        
+
         // Get uploaded resume file
         const resumeFile = req.file;
         console.log('Resume file:', resumeFile);
@@ -66,6 +67,21 @@ export async function applyForJob(req, res) {
             });
         }
 
+        // Upload resume to Cloudinary
+        let resumeUrl = '';
+        if (resumeFile) {
+            try {
+                const uploadResult = await uploadBufferToCloudinary(resumeFile.buffer, 'resumes', 'auto');
+                resumeUrl = uploadResult.secure_url;
+            } catch (uploadError) {
+                console.error('Resume upload error:', uploadError);
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to upload resume"
+                });
+            }
+        }
+
         // Create new application
         const newApplication = new JobApplication({
             jobId,
@@ -74,7 +90,7 @@ export async function applyForJob(req, res) {
             studentEmail,
             studentPhone,
             coverLetter,
-            resume: resumeFile.filename // Store the filename of the uploaded file
+            resume: resumeUrl // Store the Cloudinary URL
         });
 
         console.log('Creating application:', newApplication);
@@ -183,8 +199,8 @@ export async function updateApplicationStatus(req, res) {
 
         const application = await JobApplication.findByIdAndUpdate(
             applicationId,
-            { 
-                status, 
+            {
+                status,
                 notes,
                 reviewedAt: new Date(),
                 reviewedBy: req.user?.email || 'Unknown'
@@ -223,7 +239,7 @@ export async function getHMApplications(req, res) {
         console.log('================================');
 
         const hmEmail = req.hm.hm_email; // Get HM email from hmAuth middleware
-        
+
         if (!hmEmail) {
             console.error('No HM email found in request');
             return res.status(400).json({
@@ -235,7 +251,7 @@ export async function getHMApplications(req, res) {
         // First, get all jobs posted by this hiring manager
         const hmJobs = await Job.find({ postedby: hmEmail }).select('_id title department');
         const jobIds = hmJobs.map(job => job._id);
-        
+
         if (jobIds.length === 0) {
             return res.status(200).json({
                 success: true,
@@ -246,15 +262,15 @@ export async function getHMApplications(req, res) {
         }
 
         // Get all applications for these jobs
-        const applications = await JobApplication.find({ 
-            jobId: { $in: jobIds } 
+        const applications = await JobApplication.find({
+            jobId: { $in: jobIds }
         })
-        .populate('jobId', 'title department location status deadline')
-        .populate('studentId', 's_fname s_lname s_email s_phone s_homeaddress s_uni s_faculty s_studyprogram s_gender s_dob s_status')
-        .sort({ appliedAt: -1 });
+            .populate('jobId', 'title department location status deadline')
+            .populate('studentId', 's_fname s_lname s_email s_phone s_homeaddress s_uni s_faculty s_studyprogram s_gender s_dob s_status')
+            .sort({ appliedAt: -1 });
 
         console.log(`Found ${applications.length} applications for HM:`, hmEmail);
-        
+
         // Debug: Log the first application to see the populated data
         if (applications.length > 0) {
             console.log('First application data:', JSON.stringify(applications[0], null, 2));

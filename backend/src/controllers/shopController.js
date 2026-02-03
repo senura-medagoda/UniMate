@@ -1,5 +1,5 @@
 import ShopModel from "../models/ShopModel.js";
-import { v2 as cloudinary } from "cloudinary";
+import { uploadBufferToCloudinary } from "../utils/cloudinaryUpload.js";
 import { createAdminNotification } from "../services/notificationService.js";
 
 //// Create Shop
@@ -20,7 +20,7 @@ export const createShop = async (req, res) => {
         }
 
         console.log('Parsed shop data:', shopData);
-        
+
         const existingShop = await ShopModel.findOne({ vendorId });
 
         if (existingShop) {
@@ -30,170 +30,40 @@ export const createShop = async (req, res) => {
             });
         }
 
-        
+
+
         if (req.files && req.files.logo && req.files.logo[0]) {
             try {
-                // Check if Cloudinary is properly configured
-                if (!process.env.CLOUDINARY_NAME || process.env.CLOUDINARY_NAME === 'demo' || 
-                    !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_SECRET_KEY) {
-                    console.warn('⚠️  Cloudinary not properly configured - skipping image upload');
-                    console.warn('CLOUDINARY_NAME:', process.env.CLOUDINARY_NAME);
-                    console.warn('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY ? 'Set' : 'Not set');
-                    console.warn('CLOUDINARY_SECRET_KEY:', process.env.CLOUDINARY_SECRET_KEY ? 'Set' : 'Not set');
-                    
-                    // Use local file storage as fallback
-                    const fs = await import('fs');
-                    const path = await import('path');
-                    
-                    // Create uploads directory if it doesn't exist
-                    const uploadsDir = './uploads';
-                    if (!fs.existsSync(uploadsDir)) {
-                        fs.mkdirSync(uploadsDir, { recursive: true });
-                    }
-                    
-                    // Generate unique filename
-                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-                    const fileExtension = path.extname(req.files.logo[0].originalname);
-                    const filename = `logo-${uniqueSuffix}${fileExtension}`;
-                    const filepath = path.join(uploadsDir, filename);
-                    
-                    // Move file to uploads directory
-                    fs.renameSync(req.files.logo[0].path, filepath);
-                    
-                    // Set the logo URL to the local file path
-                    shopData.logo = `/uploads/${filename}`;
-                    console.log('Logo saved locally:', shopData.logo);
-                    
-                    // Logo saved locally, continue with shop creation
-                    console.log('ℹ️  Shop will be created with locally stored logo image');
-                } else {
-                    console.log('Uploading logo to Cloudinary...');
-                    console.log('File path:', req.files.logo[0].path);
-                    console.log('File size:', req.files.logo[0].size);
-                    console.log('File mimetype:', req.files.logo[0].mimetype);
-
-                    const result = await cloudinary.uploader.upload(req.files.logo[0].path, {
-                        folder: 'shop-logos',
-                        width: 1200,
-                        height: 400,
-                        crop: "fill",
-                        quality: "auto"
-                    });
-                    
-                    shopData.logo = result.secure_url;
-                    console.log('Logo uploaded successfully:', result.secure_url);
-                    
-                    // Clean up the temporary file
-                    const fs = await import('fs');
-                    try {
-                        fs.unlinkSync(req.files.logo[0].path);
-                        console.log('Temporary file cleaned up');
-                    } catch (cleanupError) {
-                        console.warn('Failed to clean up temporary file:', cleanupError.message);
-                    }
-                }
+                const result = await uploadBufferToCloudinary(req.files.logo[0].buffer, 'shop-logos');
+                shopData.logo = result.secure_url;
+                console.log('Logo uploaded successfully:', result.secure_url);
             } catch (uploadError) {
                 console.error('Logo upload error:', uploadError);
-                console.error('Error details:', {
-                    message: uploadError.message,
-                    http_code: uploadError.http_code,
-                    name: uploadError.name
-                });
-                
-                // Clean up the temporary file even if upload failed
-                try {
-                    const fs = await import('fs');
-                    fs.unlinkSync(req.files.logo[0].path);
-                } catch (cleanupError) {
-                    console.warn('Failed to clean up temporary file after error:', cleanupError.message);
-                }
-                
                 return res.status(500).json({
                     success: false,
                     message: "Failed to upload logo image",
-                    error: uploadError.message || "Upload service error"
+                    error: uploadError.message
                 });
             }
         }
 
-        
+
         // Handle multiple images upload
         if (req.files && req.files.images && req.files.images.length > 0) {
             try {
-                // Check if Cloudinary is properly configured
-                if (!process.env.CLOUDINARY_NAME || process.env.CLOUDINARY_NAME === 'demo' || 
-                    !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_SECRET_KEY) {
-                    console.warn('⚠️  Cloudinary not properly configured - using local storage for images');
-                    
-                    // Use local file storage as fallback
-                    const fs = await import('fs');
-                    const path = await import('path');
-                    
-                    // Create uploads directory if it doesn't exist
-                    const uploadsDir = './uploads';
-                    if (!fs.existsSync(uploadsDir)) {
-                        fs.mkdirSync(uploadsDir, { recursive: true });
-                    }
-                    
-                    const imageUrls = [];
-                    for (const file of req.files.images) {
-                        // Generate unique filename
-                        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-                        const fileExtension = path.extname(file.originalname);
-                        const filename = `shop-image-${uniqueSuffix}${fileExtension}`;
-                        const filepath = path.join(uploadsDir, filename);
-                        
-                        // Move file to uploads directory
-                        fs.renameSync(file.path, filepath);
-                        
-                        // Add to images array
-                        imageUrls.push(`/uploads/${filename}`);
-                    }
-                    
-                    shopData.images = imageUrls;
-                    console.log('Images saved locally:', shopData.images);
-                } else {
-                    console.log('Uploading images to Cloudinary...');
-                    const imagePromises = req.files.images.map(file => 
-                        cloudinary.uploader.upload(file.path, {
-                            folder: 'shop-images',
-                            width: 1200,
-                            height: 400,
-                            crop: "fill",
-                            quality: "auto"
-                        })
-                    );
-                    const imageResults = await Promise.all(imagePromises);
-                    shopData.images = imageResults.map(result => result.secure_url);
-                    console.log('Images uploaded successfully:', shopData.images);
-                    
-                    // Clean up temporary files
-                    const fs = await import('fs');
-                    for (const file of req.files.images) {
-                        try {
-                            fs.unlinkSync(file.path);
-                        } catch (cleanupError) {
-                            console.warn('Failed to clean up temporary file:', cleanupError.message);
-                        }
-                    }
-                }
+                console.log('Uploading images to Cloudinary...');
+                const imagePromises = req.files.images.map(file =>
+                    uploadBufferToCloudinary(file.buffer, 'shop-images')
+                );
+                const imageResults = await Promise.all(imagePromises);
+                shopData.images = imageResults.map(result => result.secure_url);
+                console.log('Images uploaded successfully:', shopData.images);
             } catch (uploadError) {
                 console.error('Images upload error:', uploadError);
-                
-                // Clean up temporary files
-                try {
-                    const fs = await import('fs');
-                    for (const file of req.files.images) {
-                        fs.unlinkSync(file.path);
-                    }
-                } catch (cleanupError) {
-                    console.warn('Failed to clean up temporary files after error:', cleanupError.message);
-                }
-                
                 return res.status(500).json({
                     success: false,
                     message: "Failed to upload images",
-                    error: uploadError.message || "Upload service error"
+                    error: uploadError.message
                 });
             }
         }
@@ -295,14 +165,14 @@ export const updateShopDetails = async (req, res) => {
     try {
         const vendorId = req.vendorId;
         const updates = req.body;
-        
+
         console.log('Update shop details request:', {
             vendorId,
             updates: Object.keys(updates),
             hasFiles: !!req.files,
             filesCount: req.files ? Object.keys(req.files).length : 0
         });
-        
+
         // Parse JSON strings for nested objects with error handling
         try {
             if (updates.address) {
@@ -335,177 +205,46 @@ export const updateShopDetails = async (req, res) => {
         // Handle logo upload
         if (req.files && req.files.logo && req.files.logo[0]) {
             try {
-                // Check if Cloudinary is properly configured
-                if (!process.env.CLOUDINARY_NAME || process.env.CLOUDINARY_NAME === 'demo' || 
-                    !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_SECRET_KEY) {
-                    console.warn('⚠️  Cloudinary not properly configured - skipping image upload');
-                    console.warn('CLOUDINARY_NAME:', process.env.CLOUDINARY_NAME);
-                    console.warn('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY ? 'Set' : 'Not set');
-                    console.warn('CLOUDINARY_SECRET_KEY:', process.env.CLOUDINARY_SECRET_KEY ? 'Set' : 'Not set');
-                    
-                    // Use local file storage as fallback
-                    const fs = await import('fs');
-                    const path = await import('path');
-                    
-                    // Create uploads directory if it doesn't exist
-                    const uploadsDir = './uploads';
-                    if (!fs.existsSync(uploadsDir)) {
-                        fs.mkdirSync(uploadsDir, { recursive: true });
-                    }
-                    
-                    // Generate unique filename
-                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-                    const fileExtension = path.extname(req.files.logo[0].originalname);
-                    const filename = `logo-${uniqueSuffix}${fileExtension}`;
-                    const filepath = path.join(uploadsDir, filename);
-                    
-                    // Move file to uploads directory
-                    fs.renameSync(req.files.logo[0].path, filepath);
-                    
-                    // Set the logo URL to the local file path
-                    updates.logo = `/uploads/${filename}`;
-                    console.log('Logo saved locally:', updates.logo);
-                    
-                    // Logo saved locally, continue with shop update
-                    console.log('ℹ️  Shop will be updated with locally stored logo image');
-                } else {
-                    console.log('Uploading logo to Cloudinary...');
-                    console.log('File path:', req.files.logo[0].path);
-                    console.log('File size:', req.files.logo[0].size);
-                    console.log('File mimetype:', req.files.logo[0].mimetype);
-
-                    const result = await cloudinary.uploader.upload(req.files.logo[0].path, {
-                        folder: 'shop-logos',
-                        width: 1200,
-                        height: 400,
-                        crop: "fill",
-                        quality: "auto"
-                    });
-                    
-                    updates.logo = result.secure_url;
-                    console.log('Logo uploaded successfully:', result.secure_url);
-                    
-                    // Clean up the temporary file
-                    const fs = await import('fs');
-                    try {
-                        fs.unlinkSync(req.files.logo[0].path);
-                        console.log('Temporary file cleaned up');
-                    } catch (cleanupError) {
-                        console.warn('Failed to clean up temporary file:', cleanupError.message);
-                    }
-                }
+                const result = await uploadBufferToCloudinary(req.files.logo[0].buffer, 'shop-logos');
+                updates.logo = result.secure_url;
+                console.log('Logo uploaded successfully:', result.secure_url);
             } catch (uploadError) {
                 console.error('Logo upload error:', uploadError);
-                console.error('Error details:', {
-                    message: uploadError.message,
-                    http_code: uploadError.http_code,
-                    name: uploadError.name
-                });
-                
-                // Clean up the temporary file even if upload failed
-                try {
-                    const fs = await import('fs');
-                    fs.unlinkSync(req.files.logo[0].path);
-                } catch (cleanupError) {
-                    console.warn('Failed to clean up temporary file after error:', cleanupError.message);
-                }
-                
                 return res.status(500).json({
                     success: false,
                     message: "Failed to upload logo image",
-                    error: uploadError.message || "Upload service error"
+                    error: uploadError.message
                 });
             }
         }
 
-      
+
         // Handle multiple images upload
         if (req.files && req.files.images && req.files.images.length > 0) {
             try {
-                // Check if Cloudinary is properly configured
-                if (!process.env.CLOUDINARY_NAME || process.env.CLOUDINARY_NAME === 'demo' || 
-                    !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_SECRET_KEY) {
-                    console.warn('⚠️  Cloudinary not properly configured - using local storage for images');
-                    
-                    // Use local file storage as fallback
-                    const fs = await import('fs');
-                    const path = await import('path');
-                    
-                    // Create uploads directory if it doesn't exist
-                    const uploadsDir = './uploads';
-                    if (!fs.existsSync(uploadsDir)) {
-                        fs.mkdirSync(uploadsDir, { recursive: true });
-                    }
-                    
-                    const imageUrls = [];
-                    for (const file of req.files.images) {
-                        // Generate unique filename
-                        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-                        const fileExtension = path.extname(file.originalname);
-                        const filename = `shop-image-${uniqueSuffix}${fileExtension}`;
-                        const filepath = path.join(uploadsDir, filename);
-                        
-                        // Move file to uploads directory
-                        fs.renameSync(file.path, filepath);
-                        
-                        // Add to images array
-                        imageUrls.push(`/uploads/${filename}`);
-                    }
-                    
-                    updates.images = imageUrls;
-                    console.log('Images saved locally:', updates.images);
-                } else {
-                    console.log('Uploading images to Cloudinary...');
-                    const imagePromises = req.files.images.map(file => 
-                        cloudinary.uploader.upload(file.path, {
-                            folder: 'shop-images',
-                            width: 1200,
-                            height: 400,
-                            crop: "fill",
-                            quality: "auto"
-                        })
-                    );
-                    const imageResults = await Promise.all(imagePromises);
-                    updates.images = imageResults.map(result => result.secure_url);
-                    console.log('Images uploaded successfully:', updates.images);
-                    
-                    // Clean up temporary files
-                    const fs = await import('fs');
-                    for (const file of req.files.images) {
-                        try {
-                            fs.unlinkSync(file.path);
-                        } catch (cleanupError) {
-                            console.warn('Failed to clean up temporary file:', cleanupError.message);
-                        }
-                    }
-                }
+                console.log('Uploading images to Cloudinary...');
+                const imagePromises = req.files.images.map(file =>
+                    uploadBufferToCloudinary(file.buffer, 'shop-images')
+                );
+                const imageResults = await Promise.all(imagePromises);
+                updates.images = imageResults.map(result => result.secure_url);
+                console.log('Images uploaded successfully:', updates.images);
             } catch (uploadError) {
                 console.error('Images upload error:', uploadError);
-                
-                // Clean up temporary files
-                try {
-                    const fs = await import('fs');
-                    for (const file of req.files.images) {
-                        fs.unlinkSync(file.path);
-                    }
-                } catch (cleanupError) {
-                    console.warn('Failed to clean up temporary files after error:', cleanupError.message);
-                }
-                
                 return res.status(500).json({
                     success: false,
                     message: "Failed to upload images",
-                    error: uploadError.message || "Upload service error"
+                    error: uploadError.message
                 });
             }
         }
 
         console.log('Updating shop with data:', updates);
-        
+
         // Validate required fields before updating
         const requiredFields = ['businessName', 'description', 'address', 'contactInfo'];
         const missingFields = requiredFields.filter(field => !updates[field]);
-        
+
         if (missingFields.length > 0) {
             console.error('Missing required fields:', missingFields);
             return res.status(400).json({
@@ -514,7 +253,7 @@ export const updateShopDetails = async (req, res) => {
                 error: `Required fields missing: ${missingFields.join(', ')}`
             });
         }
-        
+
         // Validate nested objects
         if (updates.address && (!updates.address.street || !updates.address.city)) {
             return res.status(400).json({
@@ -523,7 +262,7 @@ export const updateShopDetails = async (req, res) => {
                 error: "Address must include street and city"
             });
         }
-        
+
         if (updates.contactInfo && (!updates.contactInfo.email || !updates.contactInfo.phone)) {
             return res.status(400).json({
                 success: false,
@@ -531,7 +270,7 @@ export const updateShopDetails = async (req, res) => {
                 error: "Contact info must include email and phone"
             });
         }
-        
+
         const shop = await ShopModel.findOneAndUpdate(
             { vendorId },
             updates,
@@ -679,11 +418,11 @@ export const getShopStatistics = async (req, res) => {
 //// Get All Shops (Public)
 export const getAllShops = async (req, res) => {
     try {
-        const { 
-            page = 1, 
-            limit = 10, 
-            search, 
-            cuisineType, 
+        const {
+            page = 1,
+            limit = 10,
+            search,
+            cuisineType,
             city,
             isOpen,
             sortBy = 'rating',
@@ -746,10 +485,10 @@ export const getAllShops = async (req, res) => {
 //// Get All Shops for Admin (Admin Dashboard)
 export const getAllShopsForAdmin = async (req, res) => {
     try {
-        const { 
-            page = 1, 
-            limit = 10, 
-            search, 
+        const {
+            page = 1,
+            limit = 10,
+            search,
             status,
             approvalStatus,
             sortBy = 'createdAt',
@@ -1147,7 +886,7 @@ export const addShop = async (req, res) => {
             isApproved: true,
             approvalStatus: 'approved' // Auto-approve admin-created shops
         };
-        
+
         console.log('Creating shop with data:', shopData);
         const shop = new ShopModel(shopData);
 
@@ -1167,7 +906,7 @@ export const addShop = async (req, res) => {
             message: error.message,
             stack: error.stack
         });
-        
+
         // Handle specific MongoDB errors
         if (error.name === 'ValidationError') {
             const validationErrors = Object.values(error.errors).map(err => err.message);
@@ -1177,7 +916,7 @@ export const addShop = async (req, res) => {
                 errors: validationErrors
             });
         }
-        
+
         if (error.code === 11000) {
             const field = Object.keys(error.keyPattern)[0];
             return res.status(400).json({
@@ -1185,7 +924,7 @@ export const addShop = async (req, res) => {
                 message: `${field} already exists`
             });
         }
-        
+
         res.status(500).json({
             success: false,
             message: "Internal server error",
@@ -1250,9 +989,9 @@ export const rateShop = async (req, res) => {
             console.log(`[RateShop] Updated existing rating for shop ${shopId} by admin ${adminId}`);
         } else {
             // Add new rating
-            shop.adminRatings.push({ 
-                adminId: adminId, 
-                rating: rating, 
+            shop.adminRatings.push({
+                adminId: adminId,
+                rating: rating,
                 comment: comment || '',
                 ratedAt: new Date()
             });
@@ -1263,7 +1002,7 @@ export const rateShop = async (req, res) => {
         const totalRatings = shop.adminRatings.reduce((sum, r) => sum + r.rating, 0);
         shop.averageRating = shop.adminRatings.length > 0 ? totalRatings / shop.adminRatings.length : 0;
         shop.totalReviews = shop.adminRatings.length;
-        
+
         console.log(`[RateShop] New average rating for shop ${shopId}: ${shop.averageRating}`);
 
         await shop.save();
@@ -1301,7 +1040,7 @@ export const rateShop = async (req, res) => {
             message: error.message,
             stack: error.stack
         });
-        
+
         res.status(500).json({
             success: false,
             message: "Internal server error",

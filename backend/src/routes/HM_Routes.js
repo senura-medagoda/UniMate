@@ -1,19 +1,19 @@
 import express from 'express';
 import multer from 'multer';
 import {
-    registerHM,
-    loginHM,
-    getCurrentHMProfile,
-    updateCurrentHMProfile,
-    getHMDashboardStats,
-    getHMProfileStats,
-    getHMDetails,
-    updateHMDetails,
-    deleteHM,
-    getAllHMs,
-    changePassword,
-    getAllHMsForAdmin,
-    updateHMStatus
+  registerHM,
+  loginHM,
+  getCurrentHMProfile,
+  updateCurrentHMProfile,
+  getHMDashboardStats,
+  getHMProfileStats,
+  getHMDetails,
+  updateHMDetails,
+  deleteHM,
+  getAllHMs,
+  changePassword,
+  getAllHMsForAdmin,
+  updateHMStatus
 } from '../controllers/HM_Controller.js';
 import { hmAuth } from '../middleware/hmAuth.js';
 import { jpAdminAuth } from '../middleware/jpAdminAuth.js';
@@ -21,17 +21,10 @@ import { jpAdminAuth } from '../middleware/jpAdminAuth.js';
 const router = express.Router();
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'proof-document-' + uniqueSuffix + '-' + file.originalname);
-  }
-});
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit
