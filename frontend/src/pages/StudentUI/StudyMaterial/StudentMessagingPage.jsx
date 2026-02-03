@@ -3,7 +3,7 @@ import React from 'react';
 import { FaEnvelope, FaUser, FaArrowLeft } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Components/Navbar.jsx';
-import StudentMessaging from './components/StudentMessaging.jsx';
+import StudentMessaging from './Components/StudentMessaging.jsx';
 
 const StudentMessagingPage = ({ user, setUser }) => {
   const navigate = useNavigate();
