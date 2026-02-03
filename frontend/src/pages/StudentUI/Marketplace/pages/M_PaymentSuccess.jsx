@@ -43,7 +43,7 @@ const M_PaymentSuccess = ({ user, setUser }) => {
         return;
       }
 
-      const response = await axios.post('http://localhost:5001/api/order/M_stripe-confirm', {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/order/M_stripe-confirm`, {
         sessionId,
         ...orderData
       }, { headers: { token: studentToken } });

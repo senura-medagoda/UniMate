@@ -139,7 +139,7 @@ const SMAdminDashboard = () => {
   const fetchSystemData = async () => {
     setSystemLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/system-data/all');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/system-data/all`);
       const data = await response.json();
       if (data.success) {
         setSystemData(data.data);
@@ -156,7 +156,7 @@ const SMAdminDashboard = () => {
     
     setSystemLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/system-data/campuses', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/system-data/campuses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,7 +179,7 @@ const SMAdminDashboard = () => {
     
     setSystemLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/system-data/courses', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/system-data/courses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -202,7 +202,7 @@ const SMAdminDashboard = () => {
     
     setSystemLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/system-data/years', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/system-data/years`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -226,7 +226,7 @@ const SMAdminDashboard = () => {
     
     setSystemLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/system-data/semesters', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/system-data/semesters`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -471,7 +471,7 @@ const SMAdminDashboard = () => {
     
     setSystemLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/system-data/subjects', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/system-data/subjects`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1007,7 +1007,7 @@ const SMAdminDashboard = () => {
   // Fetch dashboard stats
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/admin/stats');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/admin/stats`);
       const data = await response.json();
       setStats(data);
     } catch (error) {
@@ -1019,7 +1019,7 @@ const SMAdminDashboard = () => {
   const fetchMaterials = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/study-materials/all');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/study-materials/all`);
       const data = await response.json();
       setMaterials(data);
     } catch (error) {
@@ -1033,7 +1033,7 @@ const SMAdminDashboard = () => {
   const fetchForumPosts = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/forum/posts');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/forum/posts`);
       const data = await response.json();
       setForumPosts(data);
     } catch (error) {
@@ -1047,7 +1047,7 @@ const SMAdminDashboard = () => {
   const fetchComplaints = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/admin/complaints');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/admin/complaints`);
       const data = await response.json();
       setComplaints(data);
     } catch (error) {
@@ -1061,7 +1061,7 @@ const SMAdminDashboard = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/admin/users');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/admin/users`);
       const data = await response.json();
       setUsers(data);
     } catch (error) {
@@ -1213,7 +1213,7 @@ const SMAdminDashboard = () => {
   const loadStudentMessages = async () => {
     setMessagesLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/student-messages/admin/all', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/student-messages/admin/all`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('smAdminToken')}`,
           'Content-Type': 'application/json'

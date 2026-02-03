@@ -33,7 +33,7 @@ const Request = ({ user, setUser }) => {
   const fetchSystemData = async () => {
     setSystemDataLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/system-data/all');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/system-data/all`);
       const data = await response.json();
       if (data.success) {
         console.log('System data loaded:', data.data);
@@ -115,7 +115,7 @@ const Request = ({ user, setUser }) => {
       
       console.log('Sending request data:', requestData);
       
-      const response = await fetch('http://localhost:5001/api/study-materials/requests', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/study-materials/requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

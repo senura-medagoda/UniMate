@@ -178,7 +178,7 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
         case 'cod':
               const studentToken = localStorage.getItem('studentToken');
               try {
-                const response= await axios.post('http://localhost:5001/api/order/M_place',orderData,{headers:{token: studentToken}})
+                const response= await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/order/M_place`,orderData,{headers:{token: studentToken}})
                 if (response.data.success) {
                   clearCart() // This clears both context and localStorage
                   navigate('/M_orders')
@@ -200,7 +200,7 @@ const MarketPlace_PlaceOrder = ({ user, setUser }) => {
                 console.log('Storing order data:', orderData);
                 localStorage.setItem('stripeOrderData', JSON.stringify(orderData));
                 
-                const response = await axios.post('http://localhost:5001/api/order/M_stripe-checkout', orderData, {headers: {token: stripeToken}});
+                const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/order/M_stripe-checkout`, orderData, {headers: {token: stripeToken}});
                 if (response.data.success) {
                   // Redirect to Stripe checkout
                   window.location.href = response.data.url;

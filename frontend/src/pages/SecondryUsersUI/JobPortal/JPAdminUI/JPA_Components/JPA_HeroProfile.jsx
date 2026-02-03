@@ -43,7 +43,7 @@ const JPA_HeroProfile = () => {
         setLoading(true);
         setError(null);
         
-        const response = await makeAuthenticatedRequest('http://localhost:5001/api/jpadmin/profile');
+        const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/jpadmin/profile`);
         const result = await response.json();
         
         if (response.ok && result.success) {
@@ -61,7 +61,7 @@ const JPA_HeroProfile = () => {
 
     const fetchStatsData = async () => {
       try {
-        const response = await makeAuthenticatedRequest('http://localhost:5001/api/jpadmin/dashboard/stats');
+        const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/jpadmin/dashboard/stats`);
         const result = await response.json();
         
         if (response.ok && result.success) {
@@ -214,7 +214,7 @@ const JPA_HeroProfile = () => {
         return;
       }
 
-      const response = await makeAuthenticatedRequest('http://localhost:5001/api/jpadmin/profile', {
+      const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/jpadmin/profile`, {
         method: 'PUT',
         body: JSON.stringify({
           jpa_phone: editData.phone || null,

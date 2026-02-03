@@ -63,7 +63,7 @@ function HM_HeroMyjobs({ user }) {
       setLoading(true);
       setError(null);
 
-      const response = await makeAuthenticatedRequest('http://localhost:5001/api/job/my-jobs', {
+      const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/job/my-jobs`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'

@@ -156,7 +156,7 @@ const JPA_HeroReports = () => {
       setReportError(null);
       setReportSuccess(false);
 
-      const response = await makeAuthenticatedRequest('http://localhost:5001/api/jpadmin/reports/generate', {
+      const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/jpadmin/reports/generate`, {
         method: 'POST',
         body: JSON.stringify({
           reportType,
@@ -206,7 +206,7 @@ const JPA_HeroReports = () => {
       setReportError(null);
       setReportSuccess(false);
 
-      const response = await makeAuthenticatedRequest('http://localhost:5001/api/jpadmin/reports/generate', {
+      const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/jpadmin/reports/generate`, {
         method: 'POST',
         body: JSON.stringify({
           reportType,

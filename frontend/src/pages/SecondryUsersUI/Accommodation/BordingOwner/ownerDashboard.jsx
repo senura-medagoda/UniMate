@@ -49,7 +49,7 @@ const OwnerDashboard = () => {
     setLoading(true);
     try {
       const res = await axios.get(
-        "http://localhost:5001/api/boarding-places/owner/dashboard",
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/boarding-places/owner/dashboard`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

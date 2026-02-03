@@ -62,7 +62,7 @@ const PaymentSuccessContent = () => {
         
         // Try the Stripe confirmation (now more robust)
         try {
-          const response = await fetch('http://localhost:5001/api/orders/stripe/confirm', {
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/orders/stripe/confirm`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -112,7 +112,7 @@ const PaymentSuccessContent = () => {
             
             console.log('Trying fallback with data:', fallbackData);
             
-            const fallbackResponse = await fetch('http://localhost:5001/api/orders/stripe/fallback', {
+            const fallbackResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/orders/stripe/fallback`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

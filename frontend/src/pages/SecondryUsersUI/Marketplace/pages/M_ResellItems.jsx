@@ -21,7 +21,7 @@ const M_ResellItems = () => {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5001/api/resell/items');
+      const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/resell/items`);
       
       if (response.data.success) {
         setItems(response.data.items);
@@ -61,7 +61,7 @@ const M_ResellItems = () => {
   const handleMarkAsSold = async (itemId) => {
     try {
       const response = await axios.post(
-        'http://localhost:5001/api/resell/mark-sold',
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/resell/mark-sold`,
         { itemId },
         { headers: { token: adminToken } }
       );

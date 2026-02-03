@@ -64,7 +64,7 @@ const AdminDash = () => {
         return;
       }
       
-      const response = await axios.get('http://localhost:5001/api/boarding-places/admin/all', {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/boarding-places/admin/all`, {
         headers: {
           Authorization: `Bearer ${adminToken}`,
         },
@@ -468,7 +468,7 @@ const AdminDash = () => {
         return;
       }
 
-      const response = await axios.get('http://localhost:5001/api/owner/admin/all', {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/owner/admin/all`, {
         headers: {
           Authorization: `Bearer ${adminToken}`,
         },

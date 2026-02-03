@@ -27,7 +27,7 @@ const OrdersManagement = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const resp = await fetch('http://localhost:5001/api/orders', {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await resp.json();
@@ -109,7 +109,7 @@ const OrdersManagement = () => {
   const generateReport = async () => {
     try {
       setReportLoading(true);
-      const resp = await fetch('http://localhost:5001/api/orders/report', {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/orders/report`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -24,9 +24,9 @@ export const OwnerAuthProvider = ({ children }) => {
   const loginOwner = async (email, password) => {
     try {
       console.log("ownerAuthContext: Attempting login with email:", email);
-      console.log("ownerAuthContext: API URL:", "http://localhost:5001/api/owner/login");
+      console.log("ownerAuthContext: API URL:", `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/owner/login`);
       
-      const res = await axios.post("http://localhost:5001/api/owner/login", {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/owner/login`, {
         email,
         password,
       });

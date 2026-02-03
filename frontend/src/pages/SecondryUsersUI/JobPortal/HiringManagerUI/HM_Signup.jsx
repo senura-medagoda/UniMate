@@ -187,7 +187,7 @@ const HM_Signup = () => {
       submitData.append('hm_phone', formData.hm_phone);
       submitData.append('proof_document', formData.proof_document);
 
-      const response = await axios.post('http://localhost:5001/api/hm/signup', submitData, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/hm/signup`, submitData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

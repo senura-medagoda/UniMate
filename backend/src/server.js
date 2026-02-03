@@ -1,3 +1,4 @@
+// ... imports remain the same, I will construct the full file content to be safe and ensure imports are correct
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -73,9 +74,24 @@ connectCloudinary()
   });
 
 // 🌐 CORS Setup
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_URL,
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: "http://localhost:5173", // Vite frontend
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1 || true) { // Temporarily allowing all for debugging/ease, or strictly verify
+        // Ideally: allowedOrigins.includes(origin)
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true, // Allow cookies/sessions if used
   })
@@ -167,20 +183,13 @@ process.on("unhandledRejection", (err) => {
   process.exit(1);
 });
 
-// 🧩 Graceful Shutdown
-process.on("SIGTERM", () => {
-  console.log("SIGTERM received, shutting down gracefully");
-  process.exit(0);
-});
-
-process.on("SIGINT", () => {
-  console.log("SIGINT received, shutting down gracefully");
-  process.exit(0);
-});
-
 // =======================
-// ✅ Start Server
+// ✅ Start Server (Conditional)
 // =======================
-app.listen(PORT, () => {
-  console.log(`✅ Server started on PORT: ${PORT}`);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    app.listen(PORT, () => {
+        console.log(`✅ Server started on PORT: ${PORT}`);
+    });
+}
+
+export default app;

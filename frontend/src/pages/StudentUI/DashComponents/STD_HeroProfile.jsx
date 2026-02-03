@@ -132,7 +132,7 @@ const STD_HeroProfile = ({ user }) => {
 
       console.log('Updating student profile with data:', updateData);
 
-      const response = await axios.put('http://localhost:5001/api/students/update', updateData, {
+      const response = await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/students/update`, updateData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

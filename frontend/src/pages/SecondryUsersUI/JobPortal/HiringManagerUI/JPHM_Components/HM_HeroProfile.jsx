@@ -56,7 +56,7 @@ function HM_HeroProfile({ user }) {
     try {
       console.log('HM_HeroProfile: Fetching statistics for HM:', hm.hm_email);
       
-      const response = await makeAuthenticatedRequest('http://localhost:5001/api/hm/profile/stats', {
+      const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/hm/profile/stats`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -97,7 +97,7 @@ function HM_HeroProfile({ user }) {
         console.log('HM_HeroProfile: Token available:', !!token);
         console.log('HM_HeroProfile: Making request to: http://localhost:5001/api/hm/profile');
 
-        const response = await makeAuthenticatedRequest('http://localhost:5001/api/hm/profile', {
+        const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/hm/profile`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -143,7 +143,7 @@ function HM_HeroProfile({ user }) {
 
       console.log('Saving profile:', { bio: profileData.bio, linkedin: profileData.linkedin });
 
-      const response = await makeAuthenticatedRequest('http://localhost:5001/api/hm/profile', {
+      const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/hm/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

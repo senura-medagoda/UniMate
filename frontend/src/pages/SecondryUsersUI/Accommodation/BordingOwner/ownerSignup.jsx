@@ -123,7 +123,7 @@ const OwnerSignup = () => {
 
     setLoading(true);
     try {
-      await axios.post("http://localhost:5001/api/owner/signup", {
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/owner/signup`, {
         fullName: formData.fullName,
         email: formData.email,
         password: formData.password,

@@ -20,7 +20,7 @@ const ComplaintForm = ({ isOpen, onClose, type = "material", targetId = null, ta
     setError("");
 
     try {
-      const response = await fetch("http://localhost:5001/api/admin/complaints", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/admin/complaints`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

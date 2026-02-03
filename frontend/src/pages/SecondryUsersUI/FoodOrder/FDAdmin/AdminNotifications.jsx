@@ -32,7 +32,7 @@ const AdminNotifications = () => {
       setLoading(true);
       const token = localStorage.getItem('adminToken');
       
-      const response = await fetch('http://localhost:5001/api/notifications/admin', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/notifications/admin`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

@@ -94,7 +94,7 @@ const M_List = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        "http://localhost:5001/api/product/M_list",
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/product/M_list`,
         {
           headers: { token },
         }
@@ -122,7 +122,7 @@ const M_List = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5001/api/product/M_remove",
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/product/M_remove`,
         { id },
         { headers: { token } }
       );
@@ -213,7 +213,7 @@ const M_List = () => {
       if (editImages.image4) formData.append("image4", editImages.image4);
 
       const response = await axios.post(
-        "http://localhost:5001/api/product/M_update",
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/product/M_update`,
         formData,
         {
           headers: {

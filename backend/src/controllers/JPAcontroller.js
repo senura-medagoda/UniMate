@@ -35,8 +35,8 @@ export const registerJPAdmin = async (req, res) => {
         if (existingAdmin) {
             return res.status(400).json({
                 success: false,
-                message: existingAdmin.jpa_email === jpa_email 
-                    ? 'Job Portal Admin with this email already exists' 
+                message: existingAdmin.jpa_email === jpa_email
+                    ? 'Job Portal Admin with this email already exists'
                     : 'Job Portal Admin with this Work ID already exists'
             });
         }
@@ -58,8 +58,8 @@ export const registerJPAdmin = async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
-            { 
-                id: newAdmin._id, 
+            {
+                id: newAdmin._id,
                 email: newAdmin.jpa_email,
                 role: 'job_portal_admin'
             },
@@ -88,7 +88,7 @@ export const registerJPAdmin = async (req, res) => {
 
     } catch (error) {
         console.error('JP Admin Registration error:', error);
-        
+
         // Handle validation errors
         if (error.name === 'ValidationError') {
             const validationErrors = Object.values(error.errors).map(err => err.message);
@@ -98,7 +98,7 @@ export const registerJPAdmin = async (req, res) => {
                 errors: validationErrors
             });
         }
-        
+
         // Handle duplicate key errors
         if (error.code === 11000) {
             const field = Object.keys(error.keyPattern)[0];
@@ -107,7 +107,7 @@ export const registerJPAdmin = async (req, res) => {
                 message: `${field} already exists`
             });
         }
-        
+
         res.status(500).json({
             success: false,
             message: 'Registration failed',
@@ -162,14 +162,17 @@ export const loginJPAdmin = async (req, res) => {
         }
 
         // Update login information
-        admin.lastLogin = new Date();
-        admin.loginCount += 1;
-        await admin.save();
+        await JPAdmin.findByIdAndUpdate(admin._id, {
+            $set: {
+                lastLogin: new Date(),
+                loginCount: (admin.loginCount || 0) + 1
+            }
+        });
 
         // Generate JWT token
         const token = jwt.sign(
-            { 
-                id: admin._id, 
+            {
+                id: admin._id,
                 email: admin.jpa_email,
                 role: 'job_portal_admin'
             },
@@ -336,11 +339,11 @@ export const getReportsData = async (req, res) => {
     try {
         console.log('Reports endpoint called with period:', req.query.period);
         const { period = '30days' } = req.query;
-        
+
         // Calculate date range based on period
         const now = new Date();
         let startDate;
-        
+
         switch (period) {
             case '7days':
                 startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -475,7 +478,7 @@ export const getReportsData = async (req, res) => {
 export const testPDFGeneration = async (req, res) => {
     try {
         console.log('Testing PDF generation...');
-        
+
         // Try a very simple HTML first
         const simpleHTML = `
         <!DOCTYPE html>
@@ -491,32 +494,32 @@ export const testPDFGeneration = async (req, res) => {
         </body>
         </html>
         `;
-        
+
         // Try html-pdf-node directly
         const htmlPdf = await import('html-pdf-node');
         const options = {
             format: 'A4',
             margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' }
         };
-        
+
         const file = { content: simpleHTML };
         const pdfBuffer = await htmlPdf.default.generatePdf(file, options);
-        
+
         if (!pdfBuffer || pdfBuffer.length === 0) {
             throw new Error('Generated PDF buffer is empty');
         }
-        
+
         console.log('Simple test PDF generated successfully, size:', pdfBuffer.length);
-        
+
         // Set headers for PDF download
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename="simple_test.pdf"');
         res.setHeader('Content-Length', pdfBuffer.length);
         res.setHeader('Cache-Control', 'no-cache');
-        
+
         // Send PDF buffer
         res.send(pdfBuffer);
-        
+
     } catch (error) {
         console.error('Simple test PDF generation error:', error);
         console.error('Error stack:', error.stack);
@@ -532,11 +535,11 @@ export const testPDFGeneration = async (req, res) => {
 export const generateReport = async (req, res) => {
     try {
         const { reportType, format = 'pdf', period = '30days' } = req.body;
-        
+
         // Calculate date range based on period
         const now = new Date();
         let startDate;
-        
+
         switch (period) {
             case '7days':
                 startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -565,7 +568,7 @@ export const generateReport = async (req, res) => {
                 const liveJobs = await Job.countDocuments({ status: 'live' });
                 const verifiedManagers = await HiringManager.countDocuments({ hm_status: 'Verified' });
                 const hiredApplications = await JobApplication.countDocuments({ status: 'hired' });
-                
+
                 reportData = {
                     title: 'Platform Overview Report',
                     period,
@@ -585,7 +588,7 @@ export const generateReport = async (req, res) => {
                 // Get detailed job analytics
                 const jobsInPeriod = await Job.find({ createdAt: { $gte: startDate } })
                     .sort({ createdAt: -1 });
-                
+
                 const jobStats = {
                     total: jobsInPeriod.length,
                     live: jobsInPeriod.filter(job => job.status === 'live').length,
@@ -606,7 +609,7 @@ export const generateReport = async (req, res) => {
                 // Get manager activity data
                 const managersInPeriod = await HiringManager.find({ createdAt: { $gte: startDate } })
                     .sort({ createdAt: -1 });
-                
+
                 const managerStats = {
                     total: managersInPeriod.length,
                     verified: managersInPeriod.filter(m => m.hm_status === 'Verified').length,
@@ -628,7 +631,7 @@ export const generateReport = async (req, res) => {
                 const applicationsInPeriod = await JobApplication.find({ appliedAt: { $gte: startDate } })
                     .populate('jobId', 'title company')
                     .sort({ appliedAt: -1 });
-                
+
                 const applicationStats = {
                     total: applicationsInPeriod.length,
                     pending: applicationsInPeriod.filter(app => app.status === 'pending').length,
@@ -658,21 +661,21 @@ export const generateReport = async (req, res) => {
             try {
                 console.log('Generating PDF for:', reportType, period);
                 console.log('Report data keys:', Object.keys(reportData));
-                
+
                 const pdfBuffer = await generatePDFReport(reportData, reportType, period);
-                
+
                 if (!pdfBuffer || pdfBuffer.length === 0) {
                     throw new Error('Generated PDF buffer is empty');
                 }
-                
+
                 console.log('PDF generated successfully, size:', pdfBuffer.length);
-                
+
                 // Set headers for PDF download
                 res.setHeader('Content-Type', 'application/pdf');
                 res.setHeader('Content-Disposition', `attachment; filename="${reportType}_report_${period}.pdf"`);
                 res.setHeader('Content-Length', pdfBuffer.length);
                 res.setHeader('Cache-Control', 'no-cache');
-                
+
                 // Send PDF buffer
                 res.send(pdfBuffer);
                 return;
@@ -686,7 +689,7 @@ export const generateReport = async (req, res) => {
                 });
             }
         }
-        
+
         // For other formats, return JSON data
         res.status(200).json({
             success: true,
@@ -746,12 +749,12 @@ export const getJPDashboardStats = async (req, res) => {
 
         // Format recent activity
         const recentActivity = [];
-        
+
         // Add recent job activities
         recentJobs.forEach(job => {
             let action = '';
             let status = '';
-            
+
             switch (job.status) {
                 case 'live':
                     action = 'Job Approved';
@@ -770,7 +773,7 @@ export const getJPDashboardStats = async (req, res) => {
                     status = 'info';
                     break;
             }
-            
+
             if (action) {
                 recentActivity.push({
                     id: `job_${job._id}`,
@@ -788,7 +791,7 @@ export const getJPDashboardStats = async (req, res) => {
         recentManagers.forEach(manager => {
             let action = '';
             let status = '';
-            
+
             switch (manager.hm_status) {
                 case 'Verified':
                     action = 'Manager Verified';
@@ -803,7 +806,7 @@ export const getJPDashboardStats = async (req, res) => {
                     status = 'info';
                     break;
             }
-            
+
             if (action) {
                 recentActivity.push({
                     id: `manager_${manager._id}`,
@@ -855,7 +858,7 @@ export const getJPDashboardStats = async (req, res) => {
 const formatTimeAgo = (date) => {
     const now = new Date();
     const diffInSeconds = Math.floor((now - date) / 1000);
-    
+
     if (diffInSeconds < 60) {
         return `${diffInSeconds} seconds ago`;
     } else if (diffInSeconds < 3600) {

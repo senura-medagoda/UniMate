@@ -83,7 +83,7 @@ const BookingModal = ({ place, onClose, onSuccess, user }) => {
 
       console.log('Submitting booking data:', bookingData);
       
-      const response = await axios.post('http://localhost:5001/api/boarding-bookings', bookingData);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/boarding-bookings`, bookingData);
       
       console.log('Booking response:', response.data);
       toast.success('Booking request submitted successfully!');

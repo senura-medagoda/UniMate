@@ -23,7 +23,7 @@ const MarketPlace_Orders = ({ user, setUser }) => {
       setLoading(true);
 
       const { data } = await axios.post(
-        'http://localhost:5001/api/order/M_userorders',
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/order/M_userorders`,
         {},
         { headers: { token: studentToken } }
       );
@@ -116,7 +116,7 @@ const MarketPlace_Orders = ({ user, setUser }) => {
         try {
           const studentToken = localStorage.getItem('studentToken');
           const { data } = await axios.post(
-            "http://localhost:5001/api/order/M_userorders",
+            `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/order/M_userorders`,
             {},
             { headers: { token: studentToken } }
           );

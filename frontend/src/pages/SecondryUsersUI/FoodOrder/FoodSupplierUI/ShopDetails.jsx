@@ -54,7 +54,7 @@ const ShopDetails = () => {
   const checkShopExists = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5001/api/shop/details', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/shop/details`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('vendorToken')}`,
           'Content-Type': 'application/json'
@@ -191,7 +191,7 @@ const ShopDetails = () => {
       setSubmitting(true);
       const newStatus = !isShopOpen;
       
-      const response = await fetch('http://localhost:5001/api/shop/toggle-status', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/shop/toggle-status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('vendorToken')}`,
@@ -257,7 +257,7 @@ const ShopDetails = () => {
     try {
       setSubmitting(true);
       
-      const url = hasShop ? 'http://localhost:5001/api/shop/details' : 'http://localhost:5001/api/shop/create';
+      const url = hasShop ? `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/shop/details` : `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/shop/create`;
       const method = hasShop ? 'PUT' : 'POST';
       
       let response;

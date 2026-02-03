@@ -29,7 +29,7 @@ const MaterialsPage = ({ user, setUser }) => {
   const fetchSystemData = async () => {
     setSystemDataLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/system-data/all');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/system-data/all`);
       const data = await response.json();
       if (data.success) {
         setSystemData(data.data);
@@ -47,9 +47,9 @@ const MaterialsPage = ({ user, setUser }) => {
     try {
       let url = '';
       if (filters.sortBy === "top") {
-        url = 'http://localhost:5001/api/study-materials/top?';
+        url = `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/study-materials/top?`;
       } else {
-        url = 'http://localhost:5001/api/study-materials/all?';
+        url = `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/study-materials/all?`;
       }
       
       const params = new URLSearchParams();

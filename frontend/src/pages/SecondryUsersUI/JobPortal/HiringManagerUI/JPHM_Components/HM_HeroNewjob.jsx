@@ -83,7 +83,7 @@ function HM_HeroNewjob({ user }) {
       console.log('HM token available:', !!token);
       console.log('HM data:', hm);
 
-      const response = await makeAuthenticatedRequest('http://localhost:5001/api/job', {
+      const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/job`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

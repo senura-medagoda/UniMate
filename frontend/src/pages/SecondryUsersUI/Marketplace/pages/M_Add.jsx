@@ -113,7 +113,7 @@ const M_Add = () => {
       const token = localStorage.getItem("adminToken");
 
       const response = await axios.post(
-        "http://localhost:5001/api/product/M_add",
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/product/M_add`,
         formData,
         {
           headers: {

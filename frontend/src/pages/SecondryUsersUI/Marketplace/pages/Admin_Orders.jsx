@@ -40,7 +40,7 @@ const Admin_Orders = () => {
     try {
       setLoading(true);
       const { data } = await axios.post(
-        "http://localhost:5001/api/order/M_list",
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/order/M_list`,
         {},
         { headers: { token: tkn } }
       );
@@ -73,7 +73,7 @@ const Admin_Orders = () => {
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       const { data } = await axios.post(
-        "http://localhost:5001/api/order/M_status",
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/order/M_status`,
         { orderId, status: newStatus },
         { headers: { token: adminToken } }
       );
@@ -97,7 +97,7 @@ const Admin_Orders = () => {
 
     try {
       const { data } = await axios.post(
-        "http://localhost:5001/api/order/M_delete",
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/order/M_delete`,
         { orderId },
         { headers: { token: adminToken } }
       );

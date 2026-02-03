@@ -107,7 +107,7 @@ import { useNavigate } from "react-router";
     const studentToken = getStudentToken();
     if (studentToken) {
         try {
-            await axios.post('http://localhost:5001/api/cart/MU_add',{itemId,size},{headers:{token: studentToken}})
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/cart/MU_add`,{itemId,size},{headers:{token: studentToken}})
             toast.success(`🛒 ${product.name} added to cart successfully!`);
         } catch (error) {
             console.log('Cart API not available, using local cart:', error.message);
@@ -161,7 +161,7 @@ import { useNavigate } from "react-router";
 
             try {
 
-                await axios.post('http://localhost:5001/api/cart/MU_update',{itemId,size,quantity},{headers:{token: studentToken}})
+                await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/cart/MU_update`,{itemId,size,quantity},{headers:{token: studentToken}})
                 
 
 
@@ -235,7 +235,7 @@ import { useNavigate } from "react-router";
         const studentToken = getStudentToken();
         if (studentToken) {
             try {
-                await axios.post('http://localhost:5001/api/favorites/MU_add', { productId }, { headers: { token: studentToken } });
+                await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/favorites/MU_add`, { productId }, { headers: { token: studentToken } });
                 toast.success(`❤️ ${product.name} added to favorites!`);
             } catch (error) {
                 console.log('Favorites API not available, using local favorites:', error.message);
@@ -261,7 +261,7 @@ import { useNavigate } from "react-router";
         const studentToken = getStudentToken();
         if (studentToken) {
             try {
-                await axios.post('http://localhost:5001/api/favorites/MU_remove', { productId }, { headers: { token: studentToken } });
+                await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/favorites/MU_remove`, { productId }, { headers: { token: studentToken } });
                 toast.success(`💔 ${product.name} removed from favorites`);
             } catch (error) {
                 console.log('Favorites API not available, using local favorites:', error.message);
@@ -285,7 +285,7 @@ import { useNavigate } from "react-router";
     const getProductsData =async ()=>{
 
         try {
-            const response = await axios.get('http://localhost:5001/api/product/M_List')
+            const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/product/M_List`)
             if(response.data.success){
                 setProducts(response.data.products)
             }
@@ -302,7 +302,7 @@ import { useNavigate } from "react-router";
 
         try {
 
-           const response = await axios.post('http://localhost:5001/api/cart/MU_get', {}, { headers: { token: studentToken } })
+           const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/cart/MU_get`, {}, { headers: { token: studentToken } })
             
                 if (response.data.success) {
                     setCartItem(response.data.cartData)

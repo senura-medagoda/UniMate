@@ -41,7 +41,7 @@ const ForumSMM = ({ user, setUser }) => {
   const fetchSystemData = async () => {
     setSystemDataLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/system-data/all');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/system-data/all`);
       const data = await response.json();
       if (data.success) {
         setSystemData(data.data);
@@ -58,7 +58,7 @@ const ForumSMM = ({ user, setUser }) => {
     setLoading(true);
     console.log('Fetching posts...');
     try {
-      let url = 'http://localhost:5001/api/forum/posts?';
+      let url = `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/forum/posts?`;
       const params = new URLSearchParams();
       
       // Only send backend filters, not search query (we do client-side search)
@@ -137,7 +137,7 @@ const ForumSMM = ({ user, setUser }) => {
     e.preventDefault();
     if (newPost.title && newPost.description) {
       try {
-        const response = await fetch('http://localhost:5001/api/forum/posts', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/forum/posts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...newPost, author: 'student123' })

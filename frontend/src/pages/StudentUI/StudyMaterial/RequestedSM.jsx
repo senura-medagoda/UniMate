@@ -51,7 +51,7 @@ const RequestedSM = ({ user, setUser }) => {
   const fetchSystemData = async () => {
     setSystemDataLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/system-data/all');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/system-data/all`);
       const data = await response.json();
       if (data.success) {
         setSystemData(data.data);
@@ -76,7 +76,7 @@ const RequestedSM = ({ user, setUser }) => {
   const fetchRequests = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5001/api/study-materials/requests"
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/study-materials/requests`
       );
       if (response.ok) {
         const data = await response.json();
@@ -570,7 +570,7 @@ const UploadModal = ({ request, onClose, onSuccess }) => {
       }
 
       const response = await fetch(
-        "http://localhost:5001/api/study-materials/upload",
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/study-materials/upload`,
         {
           method: "POST",
           headers: {

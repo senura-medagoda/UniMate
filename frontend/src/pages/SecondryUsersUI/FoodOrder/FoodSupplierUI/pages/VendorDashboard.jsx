@@ -62,7 +62,7 @@ const VendorDashboard = () => {
       const token = localStorage.getItem('vendorToken');
       console.log('Fetching shop data with token:', token ? token.substring(0, 20) + '...' : 'No token');
       
-      const response = await fetch('http://localhost:5001/api/shop/details', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/shop/details`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -113,7 +113,7 @@ const VendorDashboard = () => {
       const token = localStorage.getItem('vendorToken');
       console.log('Vendor token:', token ? token.substring(0, 20) + '...' : 'No token');
       
-      const response = await fetch('http://localhost:5001/api/menu/vendor', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/menu/vendor`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

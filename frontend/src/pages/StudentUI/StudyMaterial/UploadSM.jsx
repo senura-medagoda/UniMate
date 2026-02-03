@@ -33,7 +33,7 @@ const Upload = ({ user, setUser }) => {
   const fetchSystemData = async () => {
     setSystemDataLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/system-data/all');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/system-data/all`);
       const data = await response.json();
       if (data.success) {
         setSystemData(data.data);
@@ -188,7 +188,7 @@ const Upload = ({ user, setUser }) => {
         console.log(key, value);
       }
 
-      console.log('Sending request to:', 'http://localhost:5001/api/study-materials/upload');
+      console.log('Sending request to:', `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/study-materials/upload`);
       
       // Get authentication token
       const token = localStorage.getItem('studentToken');
@@ -198,7 +198,7 @@ const Upload = ({ user, setUser }) => {
         return;
       }
       
-      const response = await fetch('http://localhost:5001/api/study-materials/upload', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/study-materials/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

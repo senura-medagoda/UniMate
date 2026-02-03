@@ -162,7 +162,7 @@ const M_ResellRequestForm = ({ onClose, onSuccess, user }) => {
 
       try {
         const response = await axios.post(
-          "http://localhost:5001/api/resell/submit-request",
+          `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/resell/submit-request`,
           formDataToSend,
           {
             headers: {

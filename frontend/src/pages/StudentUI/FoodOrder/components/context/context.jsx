@@ -75,7 +75,7 @@ export const AppContextProvider = ({ children, user: propUser, setUser: propSetU
       setIsLoading(true);
       setError(null);
       
-      const response = await makeAuthenticatedRequest('http://localhost:5001/api/shop/all');
+      const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/shop/all`);
       const data = await response.json();
       console.log('API Response:', data);
       
@@ -200,7 +200,7 @@ export const AppContextProvider = ({ children, user: propUser, setUser: propSetU
 
   const fetchPopularMenus = async () => {
     try {
-      const response = await makeAuthenticatedRequest('http://localhost:5001/api/menu/popular');
+      const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/menu/popular`);
       const data = await response.json();
       if (data.success) {
         setMenuItems(data.data);
@@ -400,7 +400,7 @@ export const AppContextProvider = ({ children, user: propUser, setUser: propSetU
       if (orderData.paymentMethod === 'COD') {
         console.log('Processing COD order...');
         try {
-          const resp = await makeAuthenticatedRequest('http://localhost:5001/api/orders/cod', {
+          const resp = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/orders/cod`, {
             method: 'POST',
             body: JSON.stringify(payload),
           });
@@ -430,7 +430,7 @@ export const AppContextProvider = ({ children, user: propUser, setUser: propSetU
 
       // Online payment - create Stripe session
       console.log('Creating Stripe session with payload:', payload);
-      const resp = await makeAuthenticatedRequest('http://localhost:5001/api/orders/stripe/create-session', {
+      const resp = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/orders/stripe/create-session`, {
         method: 'POST',
         body: JSON.stringify(payload),
       });

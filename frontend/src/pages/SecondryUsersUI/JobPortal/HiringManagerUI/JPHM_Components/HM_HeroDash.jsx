@@ -52,7 +52,7 @@ function HM_HeroDash({ user }) {
     try {
       setLoading(true);
       
-      const response = await makeAuthenticatedRequest('http://localhost:5001/api/hm/dashboard/stats');
+      const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/hm/dashboard/stats`);
       const result = await response.json();
       
       if (response.ok && result.success) {

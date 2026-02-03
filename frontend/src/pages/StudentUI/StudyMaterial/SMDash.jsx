@@ -21,7 +21,7 @@ const Home = ({ user, setUser }) => {
       setLoading(true);
       try {
         // Fetch all materials to get stats
-        const response = await fetch('http://localhost:5001/api/study-materials/all');
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/study-materials/all`);
         const materials = await response.json();
         
         // Calculate stats

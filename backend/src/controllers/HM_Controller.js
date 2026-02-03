@@ -52,8 +52,8 @@ export const registerHM = async (req, res) => {
         if (existingHM) {
             return res.status(400).json({
                 success: false,
-                message: existingHM.hm_email === hm_email 
-                    ? 'Hiring Manager with this email already exists' 
+                message: existingHM.hm_email === hm_email
+                    ? 'Hiring Manager with this email already exists'
                     : 'Hiring Manager with this Work ID already exists'
             });
         }
@@ -79,8 +79,8 @@ export const registerHM = async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
-            { 
-                id: newHM._id, 
+            {
+                id: newHM._id,
                 email: newHM.hm_email,
                 role: 'hiring_manager'
             },
@@ -106,7 +106,7 @@ export const registerHM = async (req, res) => {
 
     } catch (error) {
         console.error('Registration error:', error);
-        
+
         // Handle validation errors
         if (error.name === 'ValidationError') {
             const validationErrors = Object.values(error.errors).map(err => err.message);
@@ -116,7 +116,7 @@ export const registerHM = async (req, res) => {
                 errors: validationErrors
             });
         }
-        
+
         // Handle duplicate key errors
         if (error.code === 11000) {
             const field = Object.keys(error.keyPattern)[0];
@@ -125,7 +125,7 @@ export const registerHM = async (req, res) => {
                 message: `${field} already exists`
             });
         }
-        
+
         res.status(500).json({
             success: false,
             message: 'Registration failed',
@@ -173,14 +173,17 @@ export const loginHM = async (req, res) => {
         }
 
         // Update login information
-        hm.lastLogin = new Date();
-        hm.loginCount += 1;
-        await hm.save();
+        await HiringManager.findByIdAndUpdate(hm._id, {
+            $set: {
+                lastLogin: new Date(),
+                loginCount: (hm.loginCount || 0) + 1
+            }
+        });
 
         // Generate JWT token
         const token = jwt.sign(
-            { 
-                id: hm._id, 
+            {
+                id: hm._id,
                 email: hm.hm_email,
                 role: 'hiring_manager'
             },
@@ -223,21 +226,21 @@ async function archiveExpiredJobs() {
         const Job = (await import('../models/Job.js')).default;
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Start of today
-        
+
         const result = await Job.updateMany(
-            { 
+            {
                 deadline: { $lt: today },
                 status: { $in: ['pending', 'live'] }
             },
-            { 
-                status: 'archived' 
+            {
+                status: 'archived'
             }
         );
-        
+
         if (result.modifiedCount > 0) {
             console.log(`Archived ${result.modifiedCount} expired jobs`);
         }
-        
+
         return result.modifiedCount;
     } catch (error) {
         console.error('Error archiving expired jobs:', error);
@@ -254,32 +257,32 @@ export const getHMDashboardStats = async (req, res) => {
         // Import models
         const Job = (await import('../models/Job.js')).default;
         const JobApplication = (await import('../models/JobApplication.js')).default;
-        
+
         // First, archive any expired jobs
         await archiveExpiredJobs();
-        
+
         // Get job statistics for this hiring manager
         const totalJobs = await Job.countDocuments({ postedby: hmEmail });
         const activeJobs = await Job.countDocuments({ postedby: hmEmail, status: 'live' });
         const pendingJobs = await Job.countDocuments({ postedby: hmEmail, status: 'pending' });
-        
+
         // Get all jobs posted by this hiring manager to calculate applicant stats
         const hmJobs = await Job.find({ postedby: hmEmail }).select('_id');
         const jobIds = hmJobs.map(job => job._id);
-        
+
         // Get applicant statistics
-        const totalApplicants = await JobApplication.countDocuments({ 
-            jobId: { $in: jobIds } 
+        const totalApplicants = await JobApplication.countDocuments({
+            jobId: { $in: jobIds }
         });
-        
+
         // Get new applicants from the last 7 days
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        const newApplicants = await JobApplication.countDocuments({ 
+        const newApplicants = await JobApplication.countDocuments({
             jobId: { $in: jobIds },
             appliedAt: { $gte: oneWeekAgo }
         });
-        
+
         // Get recent jobs (last 5)
         const recentJobs = await Job.find({ postedby: hmEmail })
             .sort({ createdAt: -1 })
@@ -287,13 +290,13 @@ export const getHMDashboardStats = async (req, res) => {
             .select('title status createdAt deadline');
 
         // Get recent applications (last 5)
-        const recentApplications = await JobApplication.find({ 
-            jobId: { $in: jobIds } 
+        const recentApplications = await JobApplication.find({
+            jobId: { $in: jobIds }
         })
-        .populate('jobId', 'title')
-        .sort({ appliedAt: -1 })
-        .limit(5)
-        .select('studentName studentEmail appliedAt status jobId');
+            .populate('jobId', 'title')
+            .sort({ appliedAt: -1 })
+            .limit(5)
+            .select('studentName studentEmail appliedAt status jobId');
 
         const stats = {
             totalJobs,
@@ -443,26 +446,26 @@ export const getHMProfileStats = async (req, res) => {
         // Import models
         const Job = (await import('../models/Job.js')).default;
         const JobApplication = (await import('../models/JobApplication.js')).default;
-        
+
         // Get job statistics for this hiring manager
         const totalJobs = await Job.countDocuments({ postedby: hmEmail });
         const activeJobs = await Job.countDocuments({ postedby: hmEmail, status: 'live' });
-        
+
         // Get all jobs posted by this hiring manager to calculate applicant stats
         const hmJobs = await Job.find({ postedby: hmEmail }).select('_id');
         const jobIds = hmJobs.map(job => job._id);
-        
+
         // Get applicant statistics
-        const totalApplicants = await JobApplication.countDocuments({ 
-            jobId: { $in: jobIds } 
+        const totalApplicants = await JobApplication.countDocuments({
+            jobId: { $in: jobIds }
         });
-        
+
         // Get hired/approved applicants
-        const hiredApplicants = await JobApplication.countDocuments({ 
+        const hiredApplicants = await JobApplication.countDocuments({
             jobId: { $in: jobIds },
             status: 'hired'
         });
-        
+
         // Calculate hiring rate
         const hiringRate = totalApplicants > 0 ? Math.round((hiredApplicants / totalApplicants) * 100) : 0;
 
@@ -738,14 +741,14 @@ export const changePassword = async (req, res) => {
 export const getAllHMsForAdmin = async (req, res) => {
     try {
         console.log("Getting all hiring managers for JP Admin...");
-        
+
         // Get all hiring managers
         const hms = await HiringManager.find({})
             .select('-hm_password') // Exclude password
             .sort({ createdAt: -1 }); // Sort by newest first
-        
+
         console.log(`Found ${hms.length} hiring managers for JP Admin`);
-        
+
         res.status(200).json({
             success: true,
             data: hms,
@@ -765,9 +768,9 @@ export const updateHMStatus = async (req, res) => {
     try {
         const { hmId } = req.params;
         const { status } = req.body;
-        
+
         console.log(`Updating HM ${hmId} status to ${status}`);
-        
+
         // Validate status
         const validStatuses = ['Unverified', 'Verified', 'Rejected', 'Suspended', 'Banned'];
         if (!validStatuses.includes(status)) {
@@ -776,22 +779,22 @@ export const updateHMStatus = async (req, res) => {
                 message: 'Invalid status. Must be one of: Unverified, Verified, Rejected, Suspended, Banned'
             });
         }
-        
+
         const hm = await HiringManager.findByIdAndUpdate(
             hmId,
             { hm_status: status },
             { new: true, runValidators: true }
         ).select('-hm_password');
-        
+
         if (!hm) {
             return res.status(404).json({
                 success: false,
                 message: 'Hiring Manager not found'
             });
         }
-        
+
         console.log(`HM ${hmId} status updated to ${status}`);
-        
+
         res.status(200).json({
             success: true,
             message: `Hiring Manager status updated to ${status}`,

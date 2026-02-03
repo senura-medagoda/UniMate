@@ -78,7 +78,7 @@ const ShopsManagement = () => {
 
   const fetchVendors = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/food-admin/vendors', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/food-admin/vendors`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
           'Content-Type': 'application/json'
@@ -232,7 +232,7 @@ const ShopsManagement = () => {
     try {
       console.log('Sending shop data:', newShop);
       
-      const response = await fetch('http://localhost:5001/api/food-admin/shops', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/food-admin/shops`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,

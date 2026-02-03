@@ -19,7 +19,7 @@ const ProtectedSMAdminRoute = ({ children }) => {
         }
 
         // Verify token with backend
-        const response = await fetch('http://localhost:5001/api/admin/verify', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/admin/verify`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,

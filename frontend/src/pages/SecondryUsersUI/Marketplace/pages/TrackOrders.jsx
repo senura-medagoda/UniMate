@@ -32,7 +32,7 @@ const TrackOrders = () => {
     try {
       setLoading(true);
       const { data } = await axios.post(
-        "http://localhost:5001/api/order/M_list",
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/order/M_list`,
         {},
         { headers: { token: adminToken } }
       );
@@ -146,7 +146,7 @@ const TrackOrders = () => {
           const { latitude, longitude } = position.coords;
           
           const { data } = await axios.post(
-            "http://localhost:5001/api/order/M_updateLocation",
+            `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/order/M_updateLocation`,
             {
               orderId,
               lat: latitude,

@@ -77,7 +77,7 @@ const SA_HeroProfile = ({ user }) => {
       }
 
       // Real API call for authenticated users
-      const response = await fetch('http://localhost:5001/api/SystemAdmin/profile', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/SystemAdmin/profile`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${user.token}`,
@@ -147,7 +147,7 @@ const SA_HeroProfile = ({ user }) => {
       }
 
       // Real API call for authenticated users
-      const response = await fetch('http://localhost:5001/api/SystemAdmin/dashboard/stats', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/SystemAdmin/dashboard/stats`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${user.token}`,

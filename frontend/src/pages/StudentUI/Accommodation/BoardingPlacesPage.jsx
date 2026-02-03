@@ -46,7 +46,7 @@ const BoardingPlacesPage = ({ user, setUser }) => {
   const fetchBoardingPlaces = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:5001/api/boarding-places');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/boarding-places`);
       const fetched = res.data || [];
       setBoardingPlaces(fetched);
       const computedMaxPrice = fetched.length > 0 ? Math.max(...fetched.map((p) => Number(p.price) || 0)) : 50000;

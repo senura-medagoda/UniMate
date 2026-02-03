@@ -39,7 +39,7 @@ const JPA_HeroJobs = () => {
         setError(null);
         
         console.log('JPA_HeroJobs: Fetching jobs...');
-        const response = await makeAuthenticatedRequest('http://localhost:5001/api/job/admin/all');
+        const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/job/admin/all`);
         console.log('JPA_HeroJobs: Response status:', response.status);
         
         const result = await response.json();

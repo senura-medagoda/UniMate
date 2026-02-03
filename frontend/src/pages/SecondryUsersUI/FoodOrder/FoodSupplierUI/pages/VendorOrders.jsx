@@ -73,7 +73,7 @@ const VendorOrders = () => {
       
       console.log('Fetching vendor orders with token:', token ? 'Token present' : 'No token');
       
-      const response = await fetch('http://localhost:5001/api/orders/vendor', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/orders/vendor`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

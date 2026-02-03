@@ -47,7 +47,7 @@ function HM_HeroApplicants({ user }) {
   // Fetch HM's jobs
   const fetchJobs = async () => {
     try {
-      const response = await makeAuthenticatedRequest('http://localhost:5001/api/job/my-jobs', {
+      const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/job/my-jobs`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -157,7 +157,7 @@ function HM_HeroApplicants({ user }) {
         console.log('HM_HeroApplicants: Token available:', !!token);
         console.log('HM_HeroApplicants: Making request to: http://localhost:5001/api/job-applications/hm-applicants');
 
-        const response = await makeAuthenticatedRequest('http://localhost:5001/api/job-applications/hm-applicants', {
+        const response = await makeAuthenticatedRequest(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/job-applications/hm-applicants`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'

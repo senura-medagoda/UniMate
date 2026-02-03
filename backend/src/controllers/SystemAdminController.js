@@ -18,31 +18,31 @@ export async function addSA(req, res) {
 
         // Input validation
         if (!sa_fname || !sa_lname || !sa_email || !sa_password) {
-            return res.status(400).json({ 
-                message: "Missing required fields: sa_fname, sa_lname, sa_email, and sa_password are required" 
+            return res.status(400).json({
+                message: "Missing required fields: sa_fname, sa_lname, sa_email, and sa_password are required"
             });
         }
 
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(sa_email)) {
-            return res.status(400).json({ 
-                message: "Please provide a valid email address" 
+            return res.status(400).json({
+                message: "Please provide a valid email address"
             });
         }
 
         // Password validation
         if (sa_password.length < 6) {
-            return res.status(400).json({ 
-                message: "Password must be at least 6 characters long" 
+            return res.status(400).json({
+                message: "Password must be at least 6 characters long"
             });
         }
 
         // Check if email already exists
         const existingAdmin = await SystemAdmin.findOne({ sa_email });
         if (existingAdmin) {
-            return res.status(409).json({ 
-                message: "System admin with this email already exists" 
+            return res.status(409).json({
+                message: "System admin with this email already exists"
             });
         }
 
@@ -57,7 +57,7 @@ export async function addSA(req, res) {
         });
 
         await newSysAd.save();
-        
+
         res.status(201).json({
             message: "New System admin added successfully!",
             data: {
@@ -72,18 +72,18 @@ export async function addSA(req, res) {
 
     } catch (error) {
         console.error("Error in addSA:", error);
-        
+
         // Handle specific MongoDB errors
         if (error.name === 'ValidationError') {
             const errors = Object.values(error.errors).map(err => err.message);
-            return res.status(400).json({ 
-                message: "Validation error", 
-                errors 
+            return res.status(400).json({
+                message: "Validation error",
+                errors
             });
         }
-        
-        res.status(500).json({ 
-            message: "Internal server error" 
+
+        res.status(500).json({
+            message: "Internal server error"
         });
     }
 }
@@ -137,7 +137,7 @@ export async function getSystemAdminDashboardStats(req, res) {
 
         // Format recent activity
         const recentActivity = [];
-        
+
         // Add recent student activities
         recentStudents.forEach(student => {
             recentActivity.push({
@@ -147,8 +147,8 @@ export async function getSystemAdminDashboardStats(req, res) {
                 user: 'System',
                 time: getTimeAgo(student.updatedAt),
                 updatedAt: student.updatedAt,
-                status: student.s_status === 'Verified' ? 'success' : 
-                       student.s_status === 'Rejected' ? 'error' : 'warning',
+                status: student.s_status === 'Verified' ? 'success' :
+                    student.s_status === 'Rejected' ? 'error' : 'warning',
                 type: 'student'
             });
         });
@@ -162,8 +162,8 @@ export async function getSystemAdminDashboardStats(req, res) {
                 user: 'System',
                 time: getTimeAgo(hm.updatedAt),
                 updatedAt: hm.updatedAt,
-                status: hm.hm_status === 'Verified' ? 'success' : 
-                       hm.hm_status === 'Rejected' ? 'error' : 'warning',
+                status: hm.hm_status === 'Verified' ? 'success' :
+                    hm.hm_status === 'Rejected' ? 'error' : 'warning',
                 type: 'hiring_manager'
             });
         });
@@ -177,8 +177,8 @@ export async function getSystemAdminDashboardStats(req, res) {
                 user: 'System',
                 time: getTimeAgo(job.updatedAt),
                 updatedAt: job.updatedAt,
-                status: job.status === 'live' ? 'success' : 
-                       job.status === 'rejected' ? 'error' : 'info',
+                status: job.status === 'live' ? 'success' :
+                    job.status === 'rejected' ? 'error' : 'info',
                 type: 'job'
             });
         });
@@ -224,10 +224,10 @@ export async function getSystemAdminDashboardStats(req, res) {
 
     } catch (error) {
         console.error("Error in getSystemAdminDashboardStats:", error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: "Internal server error",
-            error: error.message 
+            error: error.message
         });
     }
 }
@@ -236,7 +236,7 @@ export async function getSystemAdminDashboardStats(req, res) {
 function getTimeAgo(date) {
     const now = new Date();
     const diffInSeconds = Math.floor((now - date) / 1000);
-    
+
     if (diffInSeconds < 60) return 'Just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
@@ -329,59 +329,60 @@ export async function loginSA(req, res) {
 
         // Input validation - accept either email or adminId
         if ((!email && !adminId) || !password) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: "Email/Admin ID and password are required" 
+                message: "Email/Admin ID and password are required"
             });
         }
 
-        // Find system admin by email or adminId (for backward compatibility)
-        let sa;
-        if (email) {
-            sa = await SystemAdmin.findOne({ sa_email: email });
-        } else if (adminId) {
-            // Try to find by adminId (could be email or a different field)
-            sa = await SystemAdmin.findOne({ 
-                $or: [
-                    { sa_email: adminId },
-                    { sa_fname: { $regex: adminId, $options: 'i' } },
-                    { sa_lname: { $regex: adminId, $options: 'i' } }
-                ]
-            });
-        }
+        // Find system admin by generic search across fields
+        // Escape special regex characters
+        const loginIdentifier = email || adminId;
+        const escapeRegex = (text) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+        const regex = new RegExp(`^${escapeRegex(loginIdentifier)}$`, 'i');
+
+        const sa = await SystemAdmin.findOne({
+            $or: [
+                { sa_email: regex },
+                { sa_NIC: regex },
+                { sa_fname: regex },
+                { sa_lname: regex }
+            ]
+        });
 
         if (!sa) {
-            return res.status(401).json({ 
+            return res.status(401).json({
                 success: false,
-                message: "Invalid credentials" 
+                message: "Invalid credentials"
             });
         }
 
         // Check if admin is active
         if (!sa.isActive) {
-            return res.status(401).json({ 
+            return res.status(401).json({
                 success: false,
-                message: "Account is deactivated" 
+                message: "Account is deactivated"
             });
         }
 
         // Verify password
         const isPasswordValid = await sa.correctPassword(password);
         if (!isPasswordValid) {
-            return res.status(401).json({ 
+            return res.status(401).json({
                 success: false,
-                message: "Invalid credentials" 
+                message: "Invalid credentials"
             });
         }
 
         // Update last login
-        sa.lastLogin = new Date();
-        await sa.save();
+        await SystemAdmin.findByIdAndUpdate(sa._id, {
+            $set: { lastLogin: new Date() }
+        });
 
         // Generate JWT token
         const token = jwt.sign(
-            { 
-                saId: sa._id, 
+            {
+                saId: sa._id,
                 saEmail: sa.sa_email,
                 role: 'system_admin'
             },
@@ -407,9 +408,9 @@ export async function loginSA(req, res) {
 
     } catch (error) {
         console.error("Error in loginSA:", error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: "Internal server error" 
+            message: "Internal server error"
         });
     }
 }

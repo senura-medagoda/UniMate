@@ -194,7 +194,7 @@ const MarketPlace_Collection = ({ user, setUser }) => {
   // Fetch resell items
   const fetchResellItems = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/resell/items');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/resell/items`);
       const data = await response.json();
       if (data.success) {
         setResellItems(data.items);

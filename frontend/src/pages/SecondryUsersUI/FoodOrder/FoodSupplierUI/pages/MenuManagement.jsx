@@ -128,7 +128,7 @@ const MenuManagement = () => {
 
   const checkVendorShop = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/shop/details', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/shop/details`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('vendorToken')}`,
           'Content-Type': 'application/json'
@@ -152,7 +152,7 @@ const MenuManagement = () => {
   const fetchMenuItems = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5001/api/menu/vendor', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/menu/vendor`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('vendorToken')}`,
           'Content-Type': 'application/json'
@@ -284,7 +284,7 @@ const MenuManagement = () => {
        
                const url = editingItem 
           ? `http://localhost:5001/api/menu/vendor/${editingItem._id}`
-          : 'http://localhost:5001/api/menu/create';
+          : `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/menu/create`;
        
        const method = editingItem ? 'PUT' : 'POST';
        

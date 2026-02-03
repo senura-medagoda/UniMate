@@ -51,7 +51,7 @@ const M_Analytics = () => {
     try {
       const payload = { startDate, endDate };
       const { data } = await axios.post(
-        "http://localhost:5001/api/order/M_analytics",
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/order/M_analytics`,
         payload,
         { headers: { token: adminToken } }
       );
