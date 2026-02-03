@@ -101,11 +101,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 📂 Serve static files
-app.use("/uploads", express.static("uploads"));
+// 📂 Serve static files - REMOVED for Vercel/Serverless
+// app.use("/uploads", express.static("uploads"));
 
 // =======================
 // 🚀 API Endpoints
 // =======================
+
+// Health Check
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, message: "Backend is running!" });
+});
 
 // System Admin
 app.use("/api/SystemAdmin", SystemAdminRoutes);
@@ -187,9 +193,9 @@ process.on("unhandledRejection", (err) => {
 // ✅ Start Server (Conditional)
 // =======================
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-    app.listen(PORT, () => {
-        console.log(`✅ Server started on PORT: ${PORT}`);
-    });
+  app.listen(PORT, () => {
+    console.log(`✅ Server started on PORT: ${PORT}`);
+  });
 }
 
 export default app;
