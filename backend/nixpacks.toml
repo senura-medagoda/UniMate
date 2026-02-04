@@ -1,0 +1,15 @@
+# Nixpacks Configuration for Railway + Puppeteer
+# This file tells Railway how to build the container
+
+[phases.setup]
+nixPkgs = ["...", "chromium", "ffmpeg"]
+
+[phases.build]
+cmds = ["npm install"]
+
+[start]
+cmd = "npm start"
+
+[variables]
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+PUPPETEER_EXECUTABLE_PATH = "/usr/bin/chromium"
