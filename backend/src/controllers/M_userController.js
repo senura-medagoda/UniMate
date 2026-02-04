@@ -1,10 +1,10 @@
 import validator from "validator";
 import userModel from "../models/M_userModel.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
 
 const createToken = (id) => {
-    return jwt.sign({id}, process.env.JWT_SECRET)
+    return jwt.sign({ id }, process.env.JWT_SECRET)
 }
 
 // login user
@@ -76,7 +76,7 @@ const registerUser = async (req, res) => {
 const adminLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
-        
+
         if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
             const token = jwt.sign(email + password, process.env.JWT_SECRET);
             res.json({ success: true, token })
@@ -93,7 +93,7 @@ const adminLogin = async (req, res) => {
 const getUser = async (req, res) => {
     try {
         const { token } = req.headers;
-        
+
         if (!token) {
             return res.json({ success: false, message: "Token not provided" });
         }
@@ -101,7 +101,7 @@ const getUser = async (req, res) => {
         // Verify token and get user ID
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await userModel.findById(decoded.id).select('-password');
-        
+
         if (!user) {
             return res.json({ success: false, message: "User not found" });
         }
