@@ -1,27 +1,28 @@
 import mongoose from "mongoose";
 
-let cachedConnection = null;
+let cached = global._mongoose;
+if (!cached) cached = global._mongoose = { conn: null, promise: null };
 
 export const connectDB = async () => {
-    if (cachedConnection) {
-        console.log("Using cached MongoDB connection");
-        return cachedConnection;
-    }
+  const mongoURI = process.env.MONGO_URI;
 
-    try {
-        const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/unimate';
+  // ✅ Don't fallback to localhost in production / Railway
+  if (!mongoURI) {
+    throw new Error("MONGO_URI is missing (Railway Variables not set)");
+  }
 
-        const conn = await mongoose.connect(mongoURI, {
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-        });
+  // ✅ Reuse connection
+  if (cached.conn) return cached.conn;
 
-        cachedConnection = conn;
-        console.log("MONGODB CONNECTED SUCCESSFULLY..!");
-        return conn;
-    } catch (error) {
-        console.error(`Error connecting to mongo DB: ${error.message}`);
-        // Do not exit process in serverless environment
-        throw new Error('Database connection failed');
-    }
-}
+  if (!cached.promise) {
+    cached.promise = mongoose
+      .connect(mongoURI, {
+        serverSelectionTimeoutMS: 10000
+      })
+      .then((m) => m);
+  }
+
+  cached.conn = await cached.promise;
+  console.log("✅ MongoDB connected");
+  return cached.conn;
+};
